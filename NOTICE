@@ -1,0 +1,14 @@
+specops-unity-reference-implementation
+Copyright 2026 Infinite Monkey Theorem AB
+
+This repository is published by Infinite Monkey Theorem AB (IMT AB)
+as a reference implementation showing how SpecOps AI Framework and
+Unity Clean Architecture can be combined in practice.
+
+Licensed under the Apache License, Version 2.0.
+You may obtain a copy of the License in the LICENSE file in this repository
+or at http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.

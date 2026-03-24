@@ -1,0 +1,107 @@
+# TOOLING_RULES.md
+
+## Allowed Actions
+
+-   Add runtime code under `Assets/Project/Code/Runtime/<Layer>/`
+-   Add editor-only code under `Assets/Project/Editor/`
+-   Add EditMode and PlayMode tests under `Assets/Project/Code/Tests/`
+-   Add new files required by specifications
+-   Execute Unity batchmode tests (non-destructive)
+
+------------------------------------------------------------------------
+
+## Prohibited Actions
+
+-   Do NOT modify `ProjectSettings/*`
+-   Do NOT modify `Packages/*`
+-   Do NOT delete or regenerate `.meta` files
+-   Do NOT perform large structural refactors unless explicitly
+    requested
+-   Do NOT introduce new dependencies unless explicitly requested
+
+------------------------------------------------------------------------
+
+## Formatting Rules
+
+-   Only format or modify files that are directly touched
+-   Do NOT reformat unrelated files
+-   Keep diffs minimal and focused
+
+------------------------------------------------------------------------
+
+## CLI / Environment Constraints (Authoritative)
+
+### Environment
+
+-   Windows 11
+-   Rider IDE
+-   Plastic SCM (Unity Version Control)
+
+### Version Control
+
+-   This repository does NOT use Git
+-   Do NOT execute `git` commands
+-   Do NOT assume Git is installed
+
+### Shell Tools
+
+-   Do NOT assume `rg`, `grep`, `sed`, `awk`, `bash`, or other Unix
+    utilities exist
+-   Do NOT assume a Unix-like shell environment
+-   Assume PowerShell environment only
+
+### Text Encoding (Authoritative)
+
+- Do NOT assume Windows PowerShell 5.1 default encoding is UTF-8.
+- Treat all repository text files as UTF-8.
+- When reading or searching text files in PowerShell, always force UTF-8 explicitly.
+
+Required command patterns:
+
+- Read file:
+    - Get-Content -Encoding utf8 -Path "<path>"
+
+- Search file:
+    - Select-String -Encoding utf8 -Path "<path>" -Pattern "<pattern>"
+
+If using .NET APIs in PowerShell:
+
+- Prefer:
+    - [System.IO.File]::ReadAllText("<path>", [System.Text.Encoding]::UTF8)
+
+Preferred shell:
+
+- Use PowerShell 7+ (pwsh) if available, as UTF-8 defaults are safer than Windows PowerShell 5.1.
+
+### Repository Inspection
+
+-   Prefer scoped, user-provided context over broad inspection.
+-   If repository inspection is required, request one of the following
+    (in order of preference):
+    -   Semantic anchors: target layer/assembly (asmdef) and root
+        namespace, plus relevant type names (classes/interfaces) if
+        known.
+    -   A small folder tree (2--4 levels) rooted at the relevant area.
+    -   File contents for the relevant files.
+-   Request exact file paths only when required to avoid writing to the
+    wrong location (e.g., creating new files, or multiple plausible
+    target files exist).
+-   Do NOT attempt to infer repository state using shell commands.
+-   Prefer static reasoning over command execution.
+
+------------------------------------------------------------------------
+
+## CLI Safety Policy
+
+### Allowed
+
+-   Unity batchmode test execution
+-   Non-destructive PowerShell commands when explicitly required
+
+### Forbidden
+
+-   Destructive commands (e.g., deleting folders, force resets, mass
+    file removal)
+-   Git commands
+-   Unix-only tooling
+-   Repository state mutation via CLI

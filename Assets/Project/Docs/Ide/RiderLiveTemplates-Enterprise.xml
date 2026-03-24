@@ -1,0 +1,254 @@
+<!-- AI Template Pack v1.0 -->
+<templateSet group="AI">
+
+    <!-- ========================================================= -->
+    <!-- AI: Codex – Implementation Slice -->
+    <!-- ========================================================= -->
+    <template
+            name="codex"
+            description="AI – Codex: Implementation Slice"
+            value="You are working in a Unity 6000.3 repository using Plastic SCM.&#10;&#10;You MUST follow:&#10;- /AI_RULES.md&#10;- /TOOLING_RULES.md&#10;- Assets/Project/Docs/Specifications/$FEATURE$/CONSTRAINTS.md (if applicable)&#10;- Assets/Project/Docs/Standards/GLOBAL_CONSTRAINTS.md (if present)&#10;- Assets/Project/Docs/Architecture/ARCHITECTURE_DECISIONS.md (if present)&#10;- Assets/Project/Docs/Architecture/ARCHITECTURE.md&#10;&#10;Testing rules:&#10;- Follow the Testing section in /AI_RULES.md exactly.&#10;&#10;Rules:&#10;- If requirements are ambiguous or conflict with constraints, STOP and propose spec changes.&#10;- Make the smallest possible diff.&#10;- Do NOT modify ProjectSettings/* or Packages/* unless explicitly requested.&#10;- Respect asmdef boundaries.&#10;- Never delete or regenerate .meta files.&#10;&#10;Before implementing anything:&#10;&#10;1) Read SPEC.md / CONSTRAINTS.md / ACCEPTANCE.md for feature: $FEATURE$&#10;2) Propose 3–7 appropriate vertical slices that are:&#10;   - Each slice maps to exactly one acceptance criterion (AC-xx), or a clearly scoped sub-slice of one AC if that AC is too large.&#10;   - Each slice includes: AC id(s), target layer(s), new/modified files, and required tests (EditMode preferred unless runtime is required).&#10;   - Slices must respect Clean Architecture layering and asmdef boundaries.&#10;&#10;Output format:&#10;&#10;## Proposed Vertical Slices&#10;&#10;Slice 1:&#10;- Scope: (AC-xx)&#10;- Layer(s):&#10;- Files (new/modified):&#10;- Tests:&#10;- Manual Setup Required (if any):&#10;&#10;Slice 2:&#10;- Scope:&#10;- Layer(s):&#10;- Files:&#10;- Tests:&#10;- Manual Setup Required:&#10;&#10;...&#10;&#10;STOP after proposing slices.&#10;Do NOT implement until I reply with the chosen slice number.&#10;&#10;Task:&#10;$END$"
+            toReformat="false"
+            toShortenFQNames="false">
+        <variable name="FEATURE" expression="" defaultValue="" alwaysStopAt="true"/>
+        <variable name="END" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="OTHER" value="true"/>
+            <option name="MARKDOWN" value="true"/>
+        </context>
+    </template>
+
+    <!-- ========================================================= -->
+    <!-- AI: Junie – Feasibility / Navigation -->
+    <!-- ========================================================= -->
+    <template
+        name="junie"
+        description="AI – Junie: Feasibility / Navigation"
+        value="You are Junie operating in this Unity 6000.3 repository using Plastic SCM.&#10;&#10;You MUST follow:&#10;- /AI_RULES.md&#10;- /TOOLING_RULES.md&#10;- Assets/Project/Docs/Architecture/ARCHITECTURE.md&#10;- Assets/Project/Docs/Standards/GLOBAL_CONSTRAINTS.md (if present)&#10;- Assets/Project/Docs/Architecture/ARCHITECTURE_DECISIONS.md (if present)&#10;- Apply all rules from .junie/guidelines.md&#10;&#10;Goal:&#10;$END$&#10;&#10;Checks:&#10;- Project fit within Assets/Project structure&#10;- Correct layer placement (Domain → Application → AI → Infrastructure / Presentation)&#10;- asmdef boundaries respected (noEngineReferences where required)&#10;- Testing constraints (Moq, VContainer, no reflection, AddComponent usage)&#10;- Minimal diff only&#10;- Identify any required manual Unity artifacts (Addressables/InputActions/Scenes/Profiles/etc.)"
+        toReformat="false"
+        toShortenFQNames="false">
+        <variable name="END" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="OTHER" value="true"/>
+            <option name="MARKDOWN" value="true"/>
+        </context>
+    </template>
+
+    <!-- ========================================================= -->
+    <!-- AI: Claude – Spec Author / Reviewer -->
+    <!-- ========================================================= -->
+    <template
+        name="claudespec"
+        description="AI – Claude: Spec Author / Reviewer"
+        value="You are Claude acting as Specification Author &amp; Reviewer.&#10;&#10;You MUST follow:&#10;- /AI_RULES.md&#10;- /TOOLING_RULES.md&#10;- Assets/Project/Docs/Architecture/ARCHITECTURE.md&#10;- Assets/Project/Docs/Standards/GLOBAL_CONSTRAINTS.md (if present)&#10;- Assets/Project/Docs/Architecture/ARCHITECTURE_DECISIONS.md (if present)&#10;&#10;Role constraints:&#10;- Do NOT write code. Documentation only.&#10;&#10;Input (provide via @ references; max 3 if needed):&#10;- Draft SPEC.md (or feature idea)&#10;- Existing CONSTRAINTS.md (if any)&#10;- Relevant ADRs / global constraints (if applicable)&#10;&#10;Tasks:&#10;- Clarify goals and non-goals&#10;- Identify ambiguities (do not guess)&#10;- Propose precise, testable wording&#10;- Suggest missing constraints or edge cases&#10;- Ensure compatibility with Clean Architecture layering&#10;- Ensure spec governance header is present for new features (dependencies, ADR impact, supersession notes)&#10;- Consider testability under Unity testing rules (EditMode preferred unless runtime required)&#10;&#10;$END$"
+        toReformat="false"
+        toShortenFQNames="false">
+        <variable name="END" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="OTHER" value="true"/>
+            <option name="MARKDOWN" value="true"/>
+        </context>
+    </template>
+
+    <!-- ========================================================= -->
+    <!-- AI: Claude – Acceptance Criteria -->
+    <!-- ========================================================= -->
+    <template
+        name="claudeac"
+        description="AI – Claude: Acceptance Criteria"
+        value="You are Claude acting as Specification Author &amp; Reviewer.&#10;&#10;You MUST follow:&#10;- /AI_RULES.md&#10;- /TOOLING_RULES.md&#10;- Assets/Project/Docs/Architecture/ARCHITECTURE.md&#10;- Assets/Project/Docs/Standards/GLOBAL_CONSTRAINTS.md (if present)&#10;- Assets/Project/Docs/Architecture/ARCHITECTURE_DECISIONS.md (if present)&#10;&#10;Role constraints:&#10;- Do NOT write code. Documentation only.&#10;&#10;Input (provide via @ references):&#10;- SPEC.md&#10;- CONSTRAINTS.md&#10;- (Optional) ADRs / GLOBAL_CONSTRAINTS if the feature depends on them&#10;&#10;Tasks:&#10;- Write Given / When / Then acceptance criteria (AC-01…)&#10;- Mark [EditMode] or [PlayMode] per AC&#10;- Ensure each criterion is deterministic and testable&#10;- Prefer EditMode unless runtime behavior is required&#10;- Avoid reflection and unsafe MonoBehaviour instantiation&#10;- Ensure constraints and ADRs are reflected (no contradictions)&#10;&#10;$END$"
+        toReformat="false"
+        toShortenFQNames="false">
+        <variable name="END" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="OTHER" value="true"/>
+            <option name="MARKDOWN" value="true"/>
+        </context>
+    </template>
+
+    <!-- ========================================================= -->
+    <!-- AI: Claude – Drift Prevention Check -->
+    <!-- ========================================================= -->
+    <template
+        name="claudedrift"
+        description="AI – Claude: Drift Prevention Check"
+        value="You are Claude acting as Specification Author &amp; Reviewer.&#10;&#10;You MUST follow:&#10;- /AI_RULES.md&#10;- /TOOLING_RULES.md&#10;- Assets/Project/Docs/Architecture/ARCHITECTURE.md&#10;- ARCHITECTURE_CONTEXT_SNAPSHOT.md (if present)&#10;- Assets/Project/Docs/Standards/GLOBAL_CONSTRAINTS.md&#10;- Assets/Project/Docs/Architecture/ARCHITECTURE_DECISIONS.md&#10;&#10;Role constraints:&#10;- Verification only (drift prevention gate).&#10;- Do NOT propose runtime code changes.&#10;- Do NOT propose ProjectSettings/* or Packages/* changes.&#10;&#10;Goal:&#10;Perform a Drift Prevention Check before implementation of a new feature.&#10;&#10;Files under review (use @ references; max 3):&#10;- @Assets/Project/Docs/Specifications/&lt;NewFeature&gt;/SPEC.md&#10;- @Assets/Project/Docs/Standards/GLOBAL_CONSTRAINTS.md&#10;- @Assets/Project/Docs/Architecture/ARCHITECTURE_DECISIONS.md&#10;&#10;Task:&#10;1) Verify the Spec Governance Header is complete (if present) or flag missing governance markers.&#10;2) Detect implicit architectural redefinitions (ownership, lifecycle authority, DI/logging/testing conventions).&#10;3) Confirm whether an ADR is required before implementation.&#10;4) Confirm whether earlier specs must be amended or marked superseded.&#10;5) Confirm the feature does not contradict global invariants.&#10;&#10;Output:&#10;A) Drift risks&#10;B) Required ADRs&#10;C) Required amendments/supersessions to earlier specs&#10;D) Verdict: Safe to implement / ADR required first / Spec amendments required first&#10;&#10;Do not invent repository content.&#10;&#10;$END$"
+        toReformat="false"
+        toShortenFQNames="false">
+        <variable name="END" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="OTHER" value="true"/>
+            <option name="MARKDOWN" value="true"/>
+        </context>
+    </template>
+
+
+
+    <!-- ========================================================= -->
+    <!-- AI: Codex – Spec Implementability Check -->
+    <!-- ========================================================= -->
+    <template
+        name="codexspec"
+        description="AI – Codex: Spec Implementability Check"
+        value="You are Codex performing a spec validation pass.&#10;&#10;Do NOT implement anything.&#10;&#10;You MUST follow:&#10;- /AI_RULES.md&#10;- /TOOLING_RULES.md&#10;- Assets/Project/Docs/Architecture/ARCHITECTURE.md&#10;- Assets/Project/Docs/Standards/GLOBAL_CONSTRAINTS.md (if present)&#10;- Assets/Project/Docs/Architecture/ARCHITECTURE_DECISIONS.md (if present)&#10;&#10;Review (provide via @ references):&#10;- SPEC.md&#10;- CONSTRAINTS.md&#10;- ACCEPTANCE.md&#10;&#10;Tasks:&#10;- Identify ambiguous or untestable acceptance criteria&#10;- Identify missing constraints required for implementation&#10;- Verify compatibility with Clean Architecture layering and asmdef boundaries&#10;- Verify compatibility with Unity testing rules (EditMode preferred, no reflection, AddComponent for MBs)&#10;- Identify required manual Unity project artifacts implied by the spec (Addressables groups/labels, Input Actions assets, ScriptableObject configs, Rendering profiles, Scene registrations, etc.)&#10;- List these explicitly under a section titled &quot;Manual Setup Required&quot;&#10;- Do NOT modify or generate ProjectSettings, Addressables configuration, Build Settings, or other Unity-generated assets&#10;&#10;$END$"
+        toReformat="false"
+        toShortenFQNames="false">
+        <variable name="END" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="OTHER" value="true"/>
+            <option name="MARKDOWN" value="true"/>
+        </context>
+    </template>
+
+
+
+    <!-- ========================================================= -->
+    <!-- SPEC: Draft -->
+    <!-- ========================================================= -->
+    <template
+        name="specdraft"
+        description="Spec – Draft (Feature Proposal)"
+        value="# SPEC — &lt;Feature Name&gt;&#10;&#10;Status: Draft / Aligned / Requires ADR / Superseded  &#10;Last Alignment Check: &lt;YYYY-MM-DD&gt;&#10;&#10;---&#10;&#10;## Spec Governance Header (Mandatory)&#10;&#10;### Architectural Dependencies&#10;This feature explicitly depends on:&#10;- GLOBAL_CONSTRAINTS.md&#10;- ARCHITECTURE_DECISIONS.md&#10;&#10;### Introduces New Architectural Decision?&#10;- [ ] No&#10;- [ ] Yes → ADR required before implementation&#10;&#10;If Yes:&#10;- Proposed ADR Title:&#10;- Summary of architectural change:&#10;&#10;### Modifies or Supersedes Existing Behavior?&#10;- [ ] No&#10;- [ ] Yes → Must list impacted feature(s)&#10;&#10;Impacted Feature(s):&#10;- &lt;FeatureName&gt; — &lt;What changes?&gt;&#10;&#10;### Cross-Feature Contracts Touched&#10;- &lt;Service / Interface&gt;&#10;- &lt;Lifecycle / Ownership model&gt;&#10;- &lt;Shared state&gt;&#10;- &lt;Global invariant&gt;&#10;&#10;### Testing Impact&#10;- Primary test type: EditMode / PlayMode&#10;- Any new runtime-only assumptions?&#10;- Any DI pattern changes?&#10;- Any lifecycle authority changes?&#10;&#10;### Drift Self-Check (Author must answer explicitly)&#10;- Does this feature redefine ownership of a shared system?&#10;- Does it change lifecycle authority?&#10;- Does it change logging conventions?&#10;- Does it change DI conventions?&#10;- Does it change global invariants?&#10;&#10;If YES to any → ADR required before implementation.&#10;&#10;---&#10;&#10;## Goals&#10;- $END$&#10;&#10;## Non-goals&#10;-&#10;&#10;## User stories&#10;- As a &lt;role&gt;, I want &lt;goal&gt;, so that &lt;benefit&gt;.&#10;&#10;## Requirements&#10;- Functional:&#10;  -&#10;- Non-functional:&#10;  -&#10;&#10;## Edge cases&#10;-&#10;&#10;## Performance&#10;- Budget:&#10;  - Frame time:&#10;  - CPU:&#10;  - GC allocations:&#10;&#10;## Telemetry / logging&#10;- Events:&#10;  -&#10;- Metrics:&#10;  -&#10;&#10;## Out of scope&#10;-"
+        toReformat="false"
+        toShortenFQNames="false">
+        <variable name="END" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="MARKDOWN" value="true"/>
+            <option name="OTHER" value="true"/>
+        </context>
+    </template>
+
+    <!-- ========================================================= -->
+    <!-- SPEC: Acceptance Criteria -->
+    <!-- ========================================================= -->
+    <template
+        name="acceptance"
+        description="Spec – Acceptance Criteria (Given / When / Then)"
+        value="AC-01&#10;Given ...&#10;When ...&#10;Then ...&#10;&#10;AC-02&#10;Given ...&#10;When ...&#10;Then ...&#10;&#10;$END$"
+        toReformat="false"
+        toShortenFQNames="false">
+        <variable name="END" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="MARKDOWN" value="true"/>
+            <option name="OTHER" value="true"/>
+        </context>
+    </template>
+
+
+    <!-- ========================================================= -->
+    <!-- TESTS: EditMode Test Class (VContainer + Moq) -->
+    <!-- ========================================================= -->
+    <template
+        name="edittest"
+        description="Tests – EditMode: VContainer + Moq"
+        value="using System;&#10;using Moq;&#10;using NUnit.Framework;&#10;using UnityEngine;&#10;using VContainer;&#10;using VContainer.Unity;&#10;&#10;/// &lt;summary&gt;&#10;/// EditMode tests for $CLASS$.&#10;/// Follows AI_RULES testing constraints (Moq + VContainer, no reflection).&#10;/// &lt;/summary&gt;&#10;public class $CLASS$Tests&#10;{&#10;    private IObjectResolver _container;&#10;&#10;    [SetUp]&#10;    public void SetUp()&#10;    {&#10;        var builder = new ContainerBuilder();&#10;&#10;        // TODO: Register dependencies using Moq&#10;        // builder.RegisterInstance(new Mock&lt;IDependency&gt;().Object);&#10;&#10;        builder.Register&lt;$CLASS$&gt;(Lifetime.Singleton);&#10;&#10;        _container = builder.Build();&#10;    }&#10;&#10;    [TearDown]&#10;    public void TearDown()&#10;    {&#10;        _container?.Dispose();&#10;    }&#10;&#10;    /// &lt;summary&gt;&#10;    /// Should behave correctly when ...&#10;    /// &lt;/summary&gt;&#10;    [Test]&#10;    public void $METHOD$_Should_DoExpectedBehavior()&#10;    {&#10;        // Arrange&#10;        var sut = _container.Resolve&lt;$CLASS$&gt;();&#10;&#10;        // Act&#10;&#10;        // Assert&#10;        Assert.Pass();&#10;    }&#10;}&#10;$END$"
+        toReformat="false"
+        toShortenFQNames="false">
+        <variable name="CLASS" expression="" defaultValue="MyService" alwaysStopAt="true"/>
+        <variable name="METHOD" expression="" defaultValue="Method" alwaysStopAt="true"/>
+        <variable name="END" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="C_SHARP" value="true"/>
+        </context>
+    </template>
+
+    <!-- ========================================================= -->
+    <!-- TESTS: MonoBehaviour EditMode scaffold (AddComponent + cleanup) -->
+    <!-- ========================================================= -->
+    <template
+        name="mbtest"
+        description="Tests – EditMode: MonoBehaviour (AddComponent + Cleanup)"
+        value="using NUnit.Framework;&#10;using UnityEngine;&#10;&#10;/// &lt;summary&gt;&#10;/// EditMode tests for $COMPONENT$ MonoBehaviour.&#10;/// &lt;/summary&gt;&#10;public class $COMPONENT$Tests&#10;{&#10;    private GameObject _gameObject;&#10;    private $COMPONENT$ _component;&#10;&#10;    [SetUp]&#10;    public void SetUp()&#10;    {&#10;        _gameObject = new GameObject(&quot;$COMPONENT$TestObject&quot;);&#10;        _component = _gameObject.AddComponent&lt;$COMPONENT$&gt;();&#10;    }&#10;&#10;    [TearDown]&#10;    public void TearDown()&#10;    {&#10;        if (_gameObject != null)&#10;        {&#10;            Object.DestroyImmediate(_gameObject);&#10;        }&#10;    }&#10;&#10;    /// &lt;summary&gt;&#10;    /// Should behave correctly when ...&#10;    /// &lt;/summary&gt;&#10;    [Test]&#10;    public void Should_DoExpectedBehavior()&#10;    {&#10;        // Arrange&#10;&#10;        // Act&#10;&#10;        // Assert&#10;        Assert.Pass();&#10;    }&#10;}&#10;$END$"
+        toReformat="false"
+        toShortenFQNames="false">
+        <variable name="COMPONENT" expression="" defaultValue="MyComponent" alwaysStopAt="true"/>
+        <variable name="END" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="C_SHARP" value="true"/>
+        </context>
+    </template>
+
+    <!-- ========================================================= -->
+    <!-- TESTS: Moq + VContainer binding snippet -->
+    <!-- ========================================================= -->
+    <template
+        name="moqbind"
+        description="Tests – Snippet: Moq Setup + VContainer Register"
+        value="// Create mock&#10;var mock = new Mock&lt;$INTERFACE$&gt;();&#10;&#10;// Setup behavior&#10;mock.Setup(x =&gt; x.$METHOD$).Returns($RETURN$);&#10;&#10;// Register to builder&#10;builder.RegisterInstance&lt;$INTERFACE$&gt;(mock.Object);&#10;$END$"
+        toReformat="false"
+        toShortenFQNames="false">
+        <variable name="INTERFACE" expression="" defaultValue="IMyService" alwaysStopAt="true"/>
+        <variable name="METHOD" expression="" defaultValue="SomeMethod" alwaysStopAt="true"/>
+        <variable name="RETURN" expression="" defaultValue="true" alwaysStopAt="true"/>
+        <variable name="END" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="C_SHARP" value="true"/>
+        </context>
+    </template>
+
+    <!-- ========================================================= -->
+    <!-- TESTS: InternalsVisibleTo snippet -->
+    <!-- ========================================================= -->
+    <template
+        name="ivt"
+        description="Tests – Snippet: InternalsVisibleTo"
+        value="using System.Runtime.CompilerServices;&#10;&#10;[assembly: InternalsVisibleTo(&quot;InfiniteMonkey.EditModeTests&quot;)]&#10;$END$"
+        toReformat="false"
+        toShortenFQNames="false">
+        <variable name="END" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="C_SHARP" value="true"/>
+        </context>
+    </template>
+
+
+    <!-- ========================================================= -->
+    <!-- PLAYMODE: VContainer integration test fixture -->
+    <!-- ========================================================= -->
+    <template
+        name="pmtest"
+        description="Tests – PlayMode: VContainer + UnityTest"
+        value="using System.Collections;&#10;using Moq;&#10;using NUnit.Framework;&#10;using UnityEngine;&#10;using UnityEngine.TestTools;&#10;using VContainer;&#10;using VContainer.Unity;&#10;&#10;/// &lt;summary&gt;&#10;/// PlayMode integration tests for $CLASS$.&#10;/// Follows AI_RULES testing constraints (Moq + VContainer, no reflection, cleanup).&#10;/// &lt;/summary&gt;&#10;public class $CLASS$PlayModeTests&#10;{&#10;    private IObjectResolver _container;&#10;    private GameObject _root;&#10;&#10;    [SetUp]&#10;    public void SetUp()&#10;    {&#10;        _root = new GameObject(&quot;$CLASS$TestRoot&quot;);&#10;        var builder = new ContainerBuilder();&#10;&#10;        // TODO: builder.Register&lt;T&gt;()... using Moq where appropriate&#10;&#10;        _container = builder.Build();&#10;    }&#10;&#10;    [TearDown]&#10;    public void TearDown()&#10;    {&#10;        _container?.Dispose();&#10;        if (_root != null)&#10;        {&#10;            Object.Destroy(_root);&#10;        }&#10;    }&#10;&#10;    /// &lt;summary&gt;&#10;    /// Should behave correctly over frames when ...&#10;    /// &lt;/summary&gt;&#10;    [UnityTest]&#10;    public IEnumerator $METHOD$_Should_DoExpectedBehavior_OverFrames()&#10;    {&#10;        // Arrange&#10;&#10;        // Act&#10;        yield return null; // allow a frame&#10;&#10;        // Assert&#10;        Assert.Pass();&#10;    }&#10;}&#10;$END$"
+        toReformat="false"
+        toShortenFQNames="false">
+        <variable name="CLASS" expression="" defaultValue="MySystem" alwaysStopAt="true"/>
+        <variable name="METHOD" expression="" defaultValue="Behavior" alwaysStopAt="true"/>
+        <variable name="END" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="C_SHARP" value="true"/>
+        </context>
+    </template>
+
+    <!-- ========================================================= -->
+    <!-- PLAYMODE: MonoBehaviour PlayMode scaffold -->
+    <!-- ========================================================= -->
+    <template
+        name="pmmbtest"
+        description="Tests – PlayMode: MonoBehaviour (AddComponent + UnityTest + Cleanup)"
+        value="using System.Collections;&#10;using NUnit.Framework;&#10;using UnityEngine;&#10;using UnityEngine.TestTools;&#10;&#10;/// &lt;summary&gt;&#10;/// PlayMode tests for $COMPONENT$ MonoBehaviour.&#10;/// Ensures AddComponent instantiation and cleanup.&#10;/// &lt;/summary&gt;&#10;public class $COMPONENT$PlayModeTests&#10;{&#10;    private GameObject _gameObject;&#10;    private $COMPONENT$ _component;&#10;&#10;    [SetUp]&#10;    public void SetUp()&#10;    {&#10;        _gameObject = new GameObject(&quot;$COMPONENT$TestObject&quot;);&#10;        _component = _gameObject.AddComponent&lt;$COMPONENT$&gt;();&#10;    }&#10;&#10;    [TearDown]&#10;    public void TearDown()&#10;    {&#10;        if (_gameObject != null)&#10;        {&#10;            Object.Destroy(_gameObject);&#10;        }&#10;    }&#10;&#10;    /// &lt;summary&gt;&#10;    /// Should behave correctly over frames when ...&#10;    /// &lt;/summary&gt;&#10;    [UnityTest]&#10;    public IEnumerator Should_DoExpectedBehavior_OverFrames()&#10;    {&#10;        // Arrange&#10;&#10;        // Act&#10;        yield return null; // allow a frame&#10;&#10;        // Assert&#10;        Assert.Pass();&#10;    }&#10;}&#10;$END$"
+        toReformat="false"
+        toShortenFQNames="false">
+        <variable name="COMPONENT" expression="" defaultValue="MyComponent" alwaysStopAt="true"/>
+        <variable name="END" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="C_SHARP" value="true"/>
+        </context>
+    </template>
+
+    <!-- ========================================================= -->
+    <!-- PLAYMODE: UnityTest coroutine snippet -->
+    <!-- ========================================================= -->
+    <template
+        name="unitytest"
+        description="Tests – PlayMode: UnityTest Coroutine Snippet"
+        value="/// &lt;summary&gt;&#10;/// Should ... over frames.&#10;/// &lt;/summary&gt;&#10;[UnityTest]&#10;public IEnumerator $NAME$()&#10;{&#10;    // Arrange&#10;&#10;    // Act&#10;    yield return null; // allow a frame&#10;&#10;    // Assert&#10;    Assert.Pass();&#10;}&#10;$END$"
+        toReformat="false"
+        toShortenFQNames="false">
+        <variable name="NAME" expression="" defaultValue="Should_DoExpectedBehavior_OverFrames" alwaysStopAt="true"/>
+        <variable name="END" expression="" defaultValue="" alwaysStopAt="true"/>
+        <context>
+            <option name="C_SHARP" value="true"/>
+        </context>
+    </template>
+
+</templateSet>

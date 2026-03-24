@@ -1,0 +1,74 @@
+
+# ==========================================================
+# Codex Ignore File .codexignore (Unity + Clean Architecture Optimized)
+# ==========================================================
+# Purpose:
+# Reduce AI context size, prevent scanning of generated,
+# external, and non-code-heavy directories.
+# This improves performance and reduces hallucinated coupling.
+
+# ----------------------------------------------------------
+# Unity Generated Folders (ALWAYS IGNORE)
+# ----------------------------------------------------------
+Library/
+Temp/
+Obj/
+Logs/
+Build/
+Builds/
+UserSettings/
+
+# ----------------------------------------------------------
+# IDE / Solution Artifacts
+# ----------------------------------------------------------
+.vs/
+.idea/
+*.csproj
+*.sln
+*.DotSettings.user
+
+# ----------------------------------------------------------
+# External Dependencies
+# ----------------------------------------------------------
+Packages/
+ProjectSettings/
+
+# ----------------------------------------------------------
+# Addressables Build Artifacts
+# ----------------------------------------------------------
+Assets/AddressableAssetsData/Library/
+
+# ----------------------------------------------------------
+# Large Asset Directories (Visual/Audio)
+# ----------------------------------------------------------
+Assets/Project/Art/**
+Assets/Project/Audio/**
+
+# ----------------------------------------------------------
+# Binary / Media Files
+# ----------------------------------------------------------
+*.fbx
+*.png
+*.jpg
+*.jpeg
+*.tga
+*.psd
+*.wav
+*.mp3
+*.ogg
+*.mp4
+*.mov
+*.asset
+*.prefab
+
+# ----------------------------------------------------------
+# Notes:
+# - Runtime C# code is under:
+#   Assets/Project/Code/Runtime/
+# - Tests are under:
+#   Assets/Project/Code/Tests/
+# - Editor code is under:
+#   Assets/Project/Editor/
+#
+# Codex should focus primarily on these folders.
+# ----------------------------------------------------------

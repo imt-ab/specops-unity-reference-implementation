@@ -30,7 +30,7 @@ This repository is not the framework itself and it is not a finished product. It
 
 - Unity developers evaluating Clean Architecture in practice.
 - Teams looking for a bounded example of AI-assisted engineering.
-- Readers who want a reference implementation, not a framework manifesto.
+- Readers who want a reference implementation, not a general-purpose framework.
 
 ## What You Will Find Here
 
@@ -79,7 +79,7 @@ Copyright 2026 Infinite Monkey Theorem AB.
 
 ## Contributing
 
-Contributions are welcome, but this repository is intentionally scoped as a reference implementation / proof-of-work.
+Contributions are welcome, but this repository is intentionally scoped as a reference implementation.
 
 Issues and small pull requests are welcome within the scope above.
 
@@ -118,4 +118,4 @@ Not a fit:
 
 ## Current Scope
 
-This is a reference implementation, so parts of the project are scaffolded rather than complete. Some folders intentionally contain only documentation or structural placeholders. The runtime structure and core documentation are representative; other areas are intentionally partial. Treat the code, assembly boundaries, documentation, and tests as the source of truth for the intended shape of the system.
+This is a reference implementation. Some areas are scaffolded or documentation-only by design. Treat the code, assembly boundaries, documentation, and tests as the source of truth for the intended shape of the system.

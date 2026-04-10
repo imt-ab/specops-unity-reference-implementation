@@ -67,6 +67,6 @@ body:
     attributes:
       label: Architecture / settings check
       description: Does this touch ProjectSettings, Packages, dependencies, or architectural boundaries?
-      placeholder: "No" or "Yes - explain briefly"
+      placeholder: No or Yes - explain briefly
     validations:
       required: true

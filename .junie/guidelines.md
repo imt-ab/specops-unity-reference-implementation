@@ -1,0 +1,12 @@
+- This file is auto-loaded by Junie.
+- Reference AI_RULES.md and TOOLING_RULES.md for authoritative rules.
+- Non-negotiable rules:
+    - Make the smallest possible diff. Modifications to existing files are permitted but must be strictly limited to the task scope.
+    - Favor additive changes (new files, classes, or methods) when they can achieve the goal with less risk to existing logic.
+    - Do NOT touch ProjectSettings/* or Packages/*.
+    - Do NOT delete, move, or regenerate any .meta files.
+    - New dependencies or cross-assembly references must be minimal, strictly necessary, and respect architectural boundaries.
+    - Do not reformat existing code.
+- Refer to: Assets/Project/Docs/Architecture/ARCHITECTURE.md for architectural guidelines.
+- Use Git/GitHub workflows for version control operations.
+- If any instruction is ambiguous, STOP and propose specification changes.

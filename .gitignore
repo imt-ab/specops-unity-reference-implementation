@@ -1,0 +1,85 @@
+# ============================================
+# Unity / generated folders
+# ============================================
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+UserSettings/
+MemoryCaptures/
+Recordings/
+
+# ============================================
+# Plastic SCM / Unity Version Control metadata
+# ============================================
+.plastic/
+
+# ============================================
+# Visual Studio / Rider / IDE generated folders
+# ============================================
+.vs/
+.idea/
+.vscode/
+.fleet/
+
+# ============================================
+# Visual Studio / Mono generated files
+# ============================================
+ExportedObj/
+.consulo/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+# ============================================
+# OS / misc
+# ============================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ============================================
+# Build artifacts / packages
+# ============================================
+*.apk
+*.aab
+
+# ============================================
+# Crash / diagnostics / misc generated
+# ============================================
+sysinfo.txt
+
+# ============================================
+# Keep SpecOps / repo-specific files
+# ============================================
+!.aiignore
+!.junie
+
+# ============================================
+# Keep JetBrains shared settings that matter
+# ============================================
+!*.csproj.DotSettings
+!*.sln.DotSettings
+!*.DotSettings
+
+# ============================================
+# Optional: keep root repo metadata files
+# ============================================
+!.editorconfig
+!.gitattributes
+!.gitignore
+!README.md
+!LICENSE

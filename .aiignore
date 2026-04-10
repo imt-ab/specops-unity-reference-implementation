@@ -1,0 +1,5 @@
+Library/, Temp/, Obj/, Logs/, Build/, Builds/,
+UserSettings/, .vs/, .idea/, *.csproj, *.sln, .DS_Store, .plastic/, *.log
+
+Assets/Project/Art/**
+Assets/Project/Audio/**

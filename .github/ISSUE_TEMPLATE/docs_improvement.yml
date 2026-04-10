@@ -1,0 +1,50 @@
+name: Documentation improvement
+description: Propose a clarification, correction, or missing doc addition.
+labels:
+  - documentation
+  - needs-triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for documentation-only changes. The repo's docs are part of its technical signal, so keep the request precise and scoped.
+  - type: input
+    id: doc_path
+    attributes:
+      label: Document or path
+      description: Which file or section should change?
+      placeholder: Assets/Project/Docs/...
+    validations:
+      required: true
+  - type: textarea
+    id: issue
+    attributes:
+      label: What is unclear or wrong?
+      description: Describe the documentation gap or error.
+      placeholder: Be specific about the problem.
+    validations:
+      required: true
+  - type: textarea
+    id: proposed_edit
+    attributes:
+      label: Proposed edit
+      description: What text or structure should replace it?
+      placeholder: Summarize the desired change.
+    validations:
+      required: true
+  - type: textarea
+    id: why_it_matters
+    attributes:
+      label: Why it matters
+      description: What will improve if this is changed?
+      placeholder: Clarify, remove ambiguity, align with architecture, etc.
+    validations:
+      required: true
+  - type: textarea
+    id: scope_check
+    attributes:
+      label: Scope check
+      description: Does this affect code, specs, ProjectSettings, Packages, or architecture?
+      placeholder: "No" or "Yes - explain briefly"
+    validations:
+      required: true

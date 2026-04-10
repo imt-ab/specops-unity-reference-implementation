@@ -1,0 +1,84 @@
+name: Bug report
+description: Report a reproducible defect in the reference implementation.
+labels:
+  - bug
+  - needs-triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for a reproducible defect in code, tests, docs, or Unity behavior.
+        Keep it scoped. If the issue touches ProjectSettings, Packages, dependencies, or architecture boundaries, discuss first.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What is broken?
+      placeholder: Short description of the defect.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Where is the problem located?
+      options:
+        - Runtime code
+        - Tests
+        - Documentation
+        - Project structure
+        - Unity setup
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Where does it fail?
+      options:
+        - EditMode
+        - PlayMode
+        - Both
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: List the smallest reliable reproduction path.
+      placeholder: |
+        1. Open...
+        2. Run...
+        3. Observe...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: What should happen instead?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      placeholder: What happens now?
+    validations:
+      required: true
+  - type: input
+    id: unity_version
+    attributes:
+      label: Unity version
+      placeholder: 6000.3.7f1
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope check
+      description: Does this touch ProjectSettings, Packages, asmdefs, dependencies, or architecture boundaries?
+      placeholder: "No" or "Yes - explain briefly"
+    validations:
+      required: true

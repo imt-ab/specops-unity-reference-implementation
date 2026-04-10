@@ -1,0 +1,72 @@
+name: Scope-bounded change request
+description: Propose a small, controlled improvement that fits the repo's current scope.
+labels:
+  - enhancement
+  - needs-spec
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this for a narrow change that should stay within the existing reference implementation.
+        Keep the request small and specific. If it requires ProjectSettings, Packages, a new dependency, or an architecture change, raise that explicitly first.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What change do you want?
+      placeholder: One-sentence summary of the requested change.
+    validations:
+      required: true
+  - type: dropdown
+    id: request_type
+    attributes:
+      label: Request type
+      options:
+        - Documentation improvement
+        - Test improvement
+        - Bug fix
+        - Small feature
+        - Refactor
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or opportunity
+      description: What is the current issue or gap?
+      placeholder: Explain the concrete problem this solves.
+    validations:
+      required: true
+  - type: textarea
+    id: proposed_change
+    attributes:
+      label: Proposed change
+      description: What should change, at a high level?
+      placeholder: Keep this to one focused slice.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: What would make this change complete and testable?
+      placeholder: List the minimal measurable outcome.
+    validations:
+      required: true
+  - type: textarea
+    id: scope_and_impact
+    attributes:
+      label: Scope and impact
+      description: Which files, layers, specs, or tests are likely affected?
+      placeholder: Mention any spec, test, or layer impact here.
+    validations:
+      required: true
+  - type: textarea
+    id: architecture_check
+    attributes:
+      label: Architecture / settings check
+      description: Does this touch ProjectSettings, Packages, dependencies, or architectural boundaries?
+      placeholder: "No" or "Yes - explain briefly"
+    validations:
+      required: true

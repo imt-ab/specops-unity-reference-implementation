@@ -1,6 +1,6 @@
 Status: Derived context-export tooling prompt. This prompt is not authority and does not grant permission.
 
-You are operating inside an existing Unity 6000.3 repository whose current instance uses Git/GitHub and whose default IDE target is Rider.
+You are operating inside an existing Unity 6000.5.8f1 repository whose current instance uses Git/GitHub and whose default IDE target is Rider.
 
 Goal:
 Create or update the following files so they reflect the current authoritative architecture and governance rules:

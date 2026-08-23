@@ -66,12 +66,12 @@ The repository uses `InfiniteMonkey.*` assembly names. VContainer is present for
 
 The values below are the observed repository state during migration, not a promise of the final `v2.0.0` baseline:
 
-- Unity editor: `6000.3.7f1`, from `ProjectSettings/ProjectVersion.txt`.
+- Unity editor: `6000.5.8f1` (revision `5cb7df797b7d`), from `ProjectSettings/ProjectVersion.txt`.
 - Unity package declarations: current values in `Packages/manifest.json`.
 - Default IDE target: JetBrains Rider.
 - Repository VCS and hosting: Git and GitHub.
 
-The final Unity and package baseline remains subject to the separately authorized E6 migration slice. E4 does not upgrade Unity, change packages, or prove package restoration.
+The E6 migration established the current Unity and package baseline. Reference implementation completeness, eval and release-evidence foundation, verified default toolchain modernization, bootstrap, fresh-project validation, final public release audit, and human-controlled release remain pending.
 
 Rider is the verified/default Golden Baseline IDE direction for this repository deployment. It is not a SpecOps framework requirement, and user-global Rider or tool settings must never be silently changed. Codex, Junie, and deterministic tools may be deployment executors; they do not define SpecOps logical roles. See [deployment guidance](Assets/Project/Docs/SpecOps/DEPLOYMENT.md).
 

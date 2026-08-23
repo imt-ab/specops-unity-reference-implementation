@@ -1,0 +1,310 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "implementation-plan.schema.json",
+  "title": "SpecOps Implementation Plan",
+  "description": "Derived bounded implementation plan. A conforming plan does not grant permission or approval.",
+  "x-contract-version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "workItemId",
+    "planId",
+    "acceptanceCriteriaIds",
+    "exactPlannedScope",
+    "architecturalImpact",
+    "requiredPermissionProfile",
+    "risk",
+    "requiredApprovals",
+    "validationPlan",
+    "explicitlyExcludedScope",
+    "stopConditions",
+    "permissionGrantedByPlan"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "1.0.0"
+    },
+    "workItemId": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "planId": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "acceptanceCriteriaIds": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+      }
+    },
+    "exactPlannedScope": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/repositoryPath"
+      }
+    },
+    "architecturalImpact": {
+      "$ref": "#/$defs/architecturalImpact"
+    },
+    "requiredPermissionProfile": {
+      "enum": [
+        "READ_ONLY",
+        "DOCS_WRITE",
+        "CODE_WRITE_SCOPED",
+        "VALIDATE",
+        "ELEVATED_CHANGE"
+      ]
+    },
+    "risk": {
+      "enum": [
+        "R0",
+        "R1",
+        "R2",
+        "R3"
+      ]
+    },
+    "requiredApprovals": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/approvalReference"
+      }
+    },
+    "validationPlan": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/validationCheck"
+      }
+    },
+    "explicitlyExcludedScope": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/repositoryPath"
+      }
+    },
+    "stopConditions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "permissionGrantedByPlan": {
+      "const": false
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "risk": {
+            "enum": [
+              "R2",
+              "R3"
+            ]
+          }
+        },
+        "required": [
+          "risk"
+        ]
+      },
+      "then": {
+        "properties": {
+          "requiredApprovals": {
+            "minItems": 1,
+            "contains": {
+              "properties": {
+                "authority": {
+                  "const": "Human Authority"
+                }
+              },
+              "required": [
+                "authority"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "risk": {
+            "const": "R0"
+          }
+        },
+        "required": [
+          "risk"
+        ]
+      },
+      "then": {
+        "properties": {
+          "requiredPermissionProfile": {
+            "enum": [
+              "READ_ONLY",
+              "VALIDATE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "risk": {
+            "enum": [
+              "R1",
+              "R2"
+            ]
+          }
+        },
+        "required": [
+          "risk"
+        ]
+      },
+      "then": {
+        "properties": {
+          "requiredPermissionProfile": {
+            "enum": [
+              "DOCS_WRITE",
+              "CODE_WRITE_SCOPED",
+              "VALIDATE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "risk": {
+            "const": "R3"
+          }
+        },
+        "required": [
+          "risk"
+        ]
+      },
+      "then": {
+        "properties": {
+          "requiredPermissionProfile": {
+            "const": "ELEVATED_CHANGE"
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "repositoryPath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//)(?:[^/\\r\\n]+/)*[^/\\r\\n]+$"
+    },
+    "architecturalImpact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "affected",
+        "layers",
+        "summary"
+      ],
+      "properties": {
+        "affected": {
+          "type": "boolean"
+        },
+        "layers": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "Domain",
+              "Application",
+              "AI",
+              "Infrastructure",
+              "Presentation",
+              "Composition",
+              "Utility",
+              "Editor",
+              "Tests",
+              "None"
+            ]
+          }
+        },
+        "summary": {
+          "type": "string"
+        }
+      }
+    },
+    "approvalReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authority",
+        "status",
+        "reference"
+      ],
+      "properties": {
+        "authority": {
+          "const": "Human Authority"
+        },
+        "status": {
+          "enum": [
+            "PENDING",
+            "APPROVED",
+            "REJECTED"
+          ]
+        },
+        "reference": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "validationCheck": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "category",
+        "required",
+        "evidenceExpectation"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "category": {
+          "enum": [
+            "STATIC",
+            "COMPILATION",
+            "EDIT_MODE",
+            "PLAY_MODE",
+            "MANUAL",
+            "OTHER"
+          ]
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "evidenceExpectation": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

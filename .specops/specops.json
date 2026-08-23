@@ -1,0 +1,127 @@
+{
+  "configVersion": "1.0.0",
+  "frameworkVersion": 2,
+  "classification": "INSTANCE_CONFIGURATION",
+  "authorityStatus": "DERIVED_SUPPORTING",
+  "repository": {
+    "identity": "specops-unity-reference-implementation",
+    "type": "public-reference-implementation",
+    "purpose": [
+      "SpecOps AI v2 Unity reference implementation",
+      "Golden Baseline candidate for new Unity game projects"
+    ],
+    "migrationStatus": "specops-v2-migration-in-progress",
+    "releasedVersion": null
+  },
+  "paths": {
+    "authority": {
+      "framework": "Assets/Project/Docs/SpecOps/SPECOPS_V2.md",
+      "structure": "Assets/Project/Docs/Architecture/ARCHITECTURE.md",
+      "repositoryConstraints": "Assets/Project/Docs/Governance/GLOBAL_CONSTRAINTS.md",
+      "featureRoot": "Assets/Project/Docs/Specifications"
+    },
+    "featureAuthorityFiles": [
+      "SPEC.md",
+      "CONSTRAINTS.md",
+      "ACCEPTANCE.md"
+    ],
+    "skillsRoot": ".agents/skills",
+    "contractsRoot": ".specops/contracts",
+    "permissions": ".specops/permissions.json",
+    "adrRoot": "Assets/Project/Docs/Architecture/Decisions",
+    "evalRoot": ".specops/evals"
+  },
+  "deployment": {
+    "vcs": {
+      "type": "Git",
+      "hosting": "GitHub"
+    },
+    "defaultIde": "JetBrains Rider",
+    "mappingType": "INSTANCE_DEPLOYMENT_DEFAULTS",
+    "frameworkValidityDependsOnMappings": false,
+    "logicalResponsibilityMappings": [
+      {
+        "logicalResponsibility": "intent-and-specification",
+        "defaultExecutors": [
+          "Human",
+          "Codex"
+        ]
+      },
+      {
+        "logicalResponsibility": "governance-and-risk-review",
+        "defaultExecutors": [
+          "Human",
+          "Codex"
+        ]
+      },
+      {
+        "logicalResponsibility": "planning",
+        "defaultExecutors": [
+          "Codex",
+          "Human"
+        ]
+      },
+      {
+        "logicalResponsibility": "implementation",
+        "defaultExecutors": [
+          "Codex",
+          "Junie",
+          "Human"
+        ]
+      },
+      {
+        "logicalResponsibility": "technical-validation",
+        "defaultExecutors": [
+          "Deterministic tools",
+          "Codex",
+          "Junie",
+          "Human"
+        ]
+      },
+      {
+        "logicalResponsibility": "synchronization-and-audit",
+        "defaultExecutors": [
+          "Codex",
+          "Human"
+        ]
+      },
+      {
+        "logicalResponsibility": "human-authority",
+        "defaultExecutors": [
+          "Human"
+        ]
+      }
+    ],
+    "legacyIntegrationStatus": "not-yet-modernized-for-v2"
+  },
+  "protectedConsequentialAreas": [
+    "Packages/*",
+    "ProjectSettings/*",
+    "framework-authority semantic changes",
+    "architecture-authority semantic changes",
+    "repository-wide/global-constraint semantic changes",
+    "dependency addition/removal/upgrade",
+    "assembly topology",
+    "permission elevation",
+    "compatibility-breaking changes",
+    "destructive operations"
+  ],
+  "humanControlledConsequentialActions": [
+    "commit",
+    "push",
+    "merge",
+    "tag",
+    "release",
+    "external publication/deployment",
+    "history mutation"
+  ],
+  "initialization": {
+    "referenceStatus": "authority-and-operational-foundation",
+    "featureStateInstancePresent": false,
+    "evalDefinitionsPresent": false,
+    "evalPathStatus": "planned-not-installed",
+    "bootstrapPresent": false,
+    "releaseEvidencePresent": false
+  },
+  "derivedArtifactsAreAuthority": false
+}

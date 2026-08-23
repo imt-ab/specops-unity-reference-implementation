@@ -1,0 +1,404 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "review-verdict.schema.json",
+  "title": "SpecOps Review Verdict",
+  "description": "Derived structured review evidence. This contract is not authority.",
+  "x-contract-version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "workItemId",
+    "verdict",
+    "risk",
+    "requiredPermissionProfile",
+    "approval",
+    "findings",
+    "evidence",
+    "unresolvedUnknowns"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "1.0.0"
+    },
+    "workItemId": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "verdict": {
+      "enum": [
+        "PASS",
+        "BLOCK",
+        "NEEDS_APPROVAL"
+      ]
+    },
+    "risk": {
+      "enum": [
+        "R0",
+        "R1",
+        "R2",
+        "R3"
+      ]
+    },
+    "requiredPermissionProfile": {
+      "enum": [
+        "READ_ONLY",
+        "DOCS_WRITE",
+        "CODE_WRITE_SCOPED",
+        "VALIDATE",
+        "ELEVATED_CHANGE"
+      ]
+    },
+    "approval": {
+      "$ref": "#/$defs/approval"
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/finding"
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "unresolvedUnknowns": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "risk": {
+            "enum": [
+              "R2",
+              "R3"
+            ]
+          }
+        },
+        "required": [
+          "risk"
+        ]
+      },
+      "then": {
+        "properties": {
+          "approval": {
+            "allOf": [
+              {
+                "$ref": "#/$defs/approval"
+              },
+              {
+                "properties": {
+                  "required": {
+                    "const": true
+                  },
+                  "status": {
+                    "enum": [
+                      "PENDING",
+                      "APPROVED",
+                      "REJECTED"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "risk": {
+            "const": "R0"
+          }
+        },
+        "required": [
+          "risk"
+        ]
+      },
+      "then": {
+        "properties": {
+          "requiredPermissionProfile": {
+            "enum": [
+              "READ_ONLY",
+              "VALIDATE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "risk": {
+            "enum": [
+              "R1",
+              "R2"
+            ]
+          }
+        },
+        "required": [
+          "risk"
+        ]
+      },
+      "then": {
+        "properties": {
+          "requiredPermissionProfile": {
+            "enum": [
+              "DOCS_WRITE",
+              "CODE_WRITE_SCOPED",
+              "VALIDATE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "risk": {
+            "const": "R3"
+          }
+        },
+        "required": [
+          "risk"
+        ]
+      },
+      "then": {
+        "properties": {
+          "requiredPermissionProfile": {
+            "const": "ELEVATED_CHANGE"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "verdict": {
+            "const": "PASS"
+          }
+        },
+        "required": [
+          "verdict"
+        ]
+      },
+      "then": {
+        "properties": {
+          "approval": {
+            "allOf": [
+              {
+                "$ref": "#/$defs/approval"
+              },
+              {
+                "properties": {
+                  "status": {
+                    "enum": [
+                      "NOT_REQUIRED",
+                      "APPROVED"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "verdict": {
+            "const": "NEEDS_APPROVAL"
+          }
+        },
+        "required": [
+          "verdict"
+        ]
+      },
+      "then": {
+        "properties": {
+          "approval": {
+            "allOf": [
+              {
+                "$ref": "#/$defs/approval"
+              },
+              {
+                "properties": {
+                  "required": {
+                    "const": true
+                  },
+                  "status": {
+                    "const": "PENDING"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "repositoryPath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//)(?:[^/\\r\\n]+/)*[^/\\r\\n]+$"
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "required",
+        "authority",
+        "status",
+        "references"
+      ],
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "authority": {
+          "const": "Human Authority"
+        },
+        "status": {
+          "enum": [
+            "NOT_REQUIRED",
+            "PENDING",
+            "APPROVED",
+            "REJECTED"
+          ]
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "required": {
+                "const": false
+              }
+            },
+            "required": [
+              "required"
+            ]
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": "NOT_REQUIRED"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "required": {
+                "const": true
+              }
+            },
+            "required": [
+              "required"
+            ]
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "PENDING",
+                  "APPROVED",
+                  "REJECTED"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "APPROVED"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "references": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "severity",
+        "summary"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "severity": {
+          "enum": [
+            "INFO",
+            "WARNING",
+            "BLOCKING"
+          ]
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "authorityPath": {
+          "$ref": "#/$defs/repositoryPath"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "observation"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "$ref": "#/$defs/repositoryPath"
+        },
+        "observation": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

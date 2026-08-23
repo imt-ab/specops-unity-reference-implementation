@@ -21,6 +21,8 @@ Intent
 
 The lifecycle describes logical responsibilities. It does not assign those responsibilities to named AI products, IDE agents, or tools.
 
+The seven installed derived procedures under `.agents/skills/` map this lifecycle to specification, review, planning, implementation, validation, synchronization, and audit responsibilities. They route through `.specops/specops.json` and remain subordinate to current authority.
+
 ## 1. Establish Intent and Authority
 
 State the requested outcome, exclusions, and completion boundary. Locate the framework, architecture, repository constraints, and feature authority that apply. Missing or conflicting authority is a stop condition.
@@ -54,7 +56,7 @@ Prefer the smallest coherent vertical result. Planning does not authorize implem
 
 Permission is granted for the selected slice only. Confirm allowed actions, targets, risk ceiling, approvals, validation, and expiry before mutation. Availability of tools, credentials, or writable systems does not expand permission.
 
-Structured permission and contract artifacts are planned for a later migration slice; E1 does not claim they already exist. Until installed, scope and approval must remain explicit in the human-authorized task and retained evidence.
+Use the installed `.specops/permissions.json` profiles and `.specops/contracts/implementation-plan.schema.json` contract. These derived structures record scope, permission, and approval but do not grant them. Human-authorized scope and approval must remain explicit and traceable.
 
 ## 6. Implement Minimally
 

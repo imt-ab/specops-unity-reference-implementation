@@ -1,0 +1,360 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "feature-state.schema.json",
+  "title": "SpecOps Feature Traceability State",
+  "description": "Derived non-authoritative lifecycle and traceability state for later feature-state instances.",
+  "x-contract-version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "authorityStatus",
+    "nonAuthoritative",
+    "featureId",
+    "risk",
+    "acceptanceCriteriaIds",
+    "review",
+    "approval",
+    "implementationPlan",
+    "implementationState",
+    "validation",
+    "sync",
+    "adrReferences"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "1.0.0"
+    },
+    "authorityStatus": {
+      "const": "DERIVED"
+    },
+    "nonAuthoritative": {
+      "const": true
+    },
+    "featureId": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "risk": {
+      "enum": [
+        "R0",
+        "R1",
+        "R2",
+        "R3"
+      ]
+    },
+    "acceptanceCriteriaIds": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "review": {
+      "$ref": "#/$defs/reviewState"
+    },
+    "approval": {
+      "$ref": "#/$defs/approvalState"
+    },
+    "implementationPlan": {
+      "$ref": "#/$defs/planState"
+    },
+    "implementationState": {
+      "enum": [
+        "NOT_STARTED",
+        "AUTHORIZED",
+        "IN_PROGRESS",
+        "COMPLETE",
+        "BLOCKED"
+      ]
+    },
+    "validation": {
+      "$ref": "#/$defs/validationState"
+    },
+    "sync": {
+      "$ref": "#/$defs/syncState"
+    },
+    "adrReferences": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/repositoryPath"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "risk": {
+            "enum": [
+              "R2",
+              "R3"
+            ]
+          }
+        },
+        "required": [
+          "risk"
+        ]
+      },
+      "then": {
+        "properties": {
+          "approval": {
+            "allOf": [
+              {
+                "$ref": "#/$defs/approvalState"
+              },
+              {
+                "properties": {
+                  "status": {
+                    "enum": [
+                      "PENDING",
+                      "APPROVED",
+                      "REJECTED"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "implementationState": {
+            "enum": [
+              "AUTHORIZED",
+              "IN_PROGRESS",
+              "COMPLETE"
+            ]
+          }
+        },
+        "required": [
+          "implementationState"
+        ]
+      },
+      "then": {
+        "properties": {
+          "implementationPlan": {
+            "allOf": [
+              {
+                "$ref": "#/$defs/planState"
+              },
+              {
+                "properties": {
+                  "status": {
+                    "const": "APPROVED"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "allOf": [
+          {
+            "properties": {
+              "risk": {
+                "enum": [
+                  "R2",
+                  "R3"
+                ]
+              }
+            },
+            "required": [
+              "risk"
+            ]
+          },
+          {
+            "properties": {
+              "implementationState": {
+                "enum": [
+                  "AUTHORIZED",
+                  "IN_PROGRESS",
+                  "COMPLETE"
+                ]
+              }
+            },
+            "required": [
+              "implementationState"
+            ]
+          }
+        ]
+      },
+      "then": {
+        "properties": {
+          "approval": {
+            "allOf": [
+              {
+                "$ref": "#/$defs/approvalState"
+              },
+              {
+                "properties": {
+                  "status": {
+                    "const": "APPROVED"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "repositoryPath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//)(?:[^/\\r\\n]+/)*[^/\\r\\n]+$"
+    },
+    "nullableRepositoryPath": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/repositoryPath"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "reviewState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "reference"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "NOT_STARTED",
+            "PENDING",
+            "PASS",
+            "BLOCK",
+            "NEEDS_APPROVAL"
+          ]
+        },
+        "reference": {
+          "$ref": "#/$defs/nullableRepositoryPath"
+        }
+      }
+    },
+    "approvalState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "references"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "NOT_REQUIRED",
+            "PENDING",
+            "APPROVED",
+            "REJECTED"
+          ]
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "APPROVED"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "references": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "planState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "reference"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "NOT_STARTED",
+            "DRAFT",
+            "APPROVED",
+            "SUPERSEDED"
+          ]
+        },
+        "reference": {
+          "$ref": "#/$defs/nullableRepositoryPath"
+        }
+      }
+    },
+    "validationState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "reference"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "NOT_STARTED",
+            "PASS",
+            "FAIL",
+            "INCONCLUSIVE"
+          ]
+        },
+        "reference": {
+          "$ref": "#/$defs/nullableRepositoryPath"
+        }
+      }
+    },
+    "syncState": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "reference"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "NOT_STARTED",
+            "NO_GLOBAL_IMPACT",
+            "GLOBAL_UPDATE_REQUIRED",
+            "ADR_REQUIRED",
+            "BLOCK"
+          ]
+        },
+        "reference": {
+          "$ref": "#/$defs/nullableRepositoryPath"
+        }
+      }
+    }
+  }
+}

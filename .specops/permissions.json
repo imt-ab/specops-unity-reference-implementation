@@ -1,0 +1,125 @@
+{
+  "configVersion": "1.0.0",
+  "classification": "DERIVED_SUPPORTING",
+  "authorityStatus": "NOT_AUTHORITY",
+  "authoritySources": [
+    "Assets/Project/Docs/SpecOps/SPECOPS_V2.md",
+    "Assets/Project/Docs/Governance/GLOBAL_CONSTRAINTS.md"
+  ],
+  "riskApprovalInvariant": {
+    "R2": "EXPLICIT_HUMAN_AUTHORITY_REQUIRED",
+    "R3": "EXPLICIT_HUMAN_AUTHORITY_REQUIRED"
+  },
+  "profiles": [
+    {
+      "name": "READ_ONLY",
+      "purpose": "Evidence collection and analysis without mutation.",
+      "repositoryMutation": false,
+      "vcsMutation": false,
+      "userGlobalConfigurationMutation": false,
+      "allowedRisk": [
+        "R0"
+      ],
+      "constraints": [
+        "Scope must be explicit.",
+        "Read-only VCS evidence is allowed only when relevant to the authorized scope.",
+        "External or consequential actions remain prohibited."
+      ]
+    },
+    {
+      "name": "DOCS_WRITE",
+      "purpose": "Approved scoped documentation and derived-artifact changes inside established authority.",
+      "repositoryMutation": true,
+      "allowedRisk": [
+        "R1",
+        "R2"
+      ],
+      "humanAuthorityRequiredFor": [
+        "R2"
+      ],
+      "constraints": [
+        "Profile selection does not override risk classification.",
+        "Markdown or documentation targets do not make framework, architecture, or global-constraint semantic changes non-consequential.",
+        "Authority semantic changes require ELEVATED_CHANGE and explicit Human Authority.",
+        "Protected consequential areas require separate elevation and approval.",
+        "Permission is limited to exact approved paths and expires with the slice."
+      ]
+    },
+    {
+      "name": "CODE_WRITE_SCOPED",
+      "purpose": "Bounded approved implementation inside established authority.",
+      "repositoryMutation": true,
+      "allowedRisk": [
+        "R1",
+        "R2"
+      ],
+      "humanAuthorityRequiredFor": [
+        "R2"
+      ],
+      "constraints": [
+        "Implementation must follow an approved bounded plan.",
+        "No dependency, package, ProjectSettings, assembly-topology, permission, or authority change is authorized.",
+        "Scope expansion requires a new review, risk classification, approval, and permission.",
+        "Permission is limited to exact approved paths and expires with the slice."
+      ]
+    },
+    {
+      "name": "VALIDATE",
+      "purpose": "Execute explicitly authorized validation and collect evidence.",
+      "repositoryMutation": false,
+      "evidenceArtifactMutation": "ONLY_WHEN_EXPLICITLY_AUTHORIZED",
+      "allowedRisk": [
+        "R0",
+        "R1",
+        "R2"
+      ],
+      "humanAuthorityRequiredFor": [
+        "R2"
+      ],
+      "constraints": [
+        "Validation scope and side effects must be explicit.",
+        "This profile does not authorize implementation repair.",
+        "This profile does not authorize package or ProjectSettings mutation.",
+        "Executed and not-executed checks must be distinguished.",
+        "Evidence generation is allowed only at task-authorized locations."
+      ]
+    },
+    {
+      "name": "ELEVATED_CHANGE",
+      "purpose": "Approved R3 mutation of a consequential or elevated boundary.",
+      "repositoryMutation": true,
+      "allowedRisk": [
+        "R3"
+      ],
+      "humanAuthorityRequired": true,
+      "constraints": [
+        "Profile availability alone is not approval.",
+        "Explicit Human Authority must identify the exact elevated boundary, targets, conditions, and validation.",
+        "Permission does not include adjacent R3 actions or human-controlled publication unless separately approved.",
+        "Permission expires at the approved slice boundary."
+      ]
+    }
+  ],
+  "protectedElevatedBoundaries": [
+    "Packages/*",
+    "ProjectSettings/*",
+    "framework-authority semantic changes",
+    "architecture-authority semantic changes",
+    "repository-wide/global-constraint semantic changes",
+    "dependency addition/removal/upgrade",
+    "assembly topology",
+    "permission elevation",
+    "compatibility-breaking changes",
+    "destructive operations"
+  ],
+  "humanControlledConsequentialActions": [
+    "commit",
+    "push",
+    "merge",
+    "tag",
+    "release",
+    "external publication/deployment",
+    "history mutation"
+  ],
+  "toolCapabilityGrantsPermission": false
+}

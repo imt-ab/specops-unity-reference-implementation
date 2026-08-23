@@ -1,0 +1,317 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "validation-result.schema.json",
+  "title": "SpecOps Validation Result",
+  "description": "Derived technical validation evidence. This contract is not authority and cannot fabricate PASS.",
+  "x-contract-version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "workItemId",
+    "acceptanceOrCheckIds",
+    "overallResult",
+    "checks",
+    "actualEvidence",
+    "limitations",
+    "unresolvedUnknowns"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "1.0.0"
+    },
+    "workItemId": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "acceptanceOrCheckIds": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "overallResult": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "INCONCLUSIVE"
+      ]
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/check"
+      }
+    },
+    "actualEvidence": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "unresolvedUnknowns": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "overallResult": {
+            "const": "PASS"
+          }
+        },
+        "required": [
+          "overallResult"
+        ]
+      },
+      "then": {
+        "properties": {
+          "checks": {
+            "not": {
+              "contains": {
+                "properties": {
+                  "result": {
+                    "enum": [
+                      "FAIL",
+                      "INCONCLUSIVE",
+                      "NOT_EXECUTED"
+                    ]
+                  }
+                },
+                "required": [
+                  "result"
+                ]
+              }
+            }
+          },
+          "unresolvedUnknowns": {
+            "maxItems": 0
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "overallResult": {
+            "const": "FAIL"
+          }
+        },
+        "required": [
+          "overallResult"
+        ]
+      },
+      "then": {
+        "properties": {
+          "checks": {
+            "contains": {
+              "properties": {
+                "result": {
+                  "const": "FAIL"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "overallResult": {
+            "const": "INCONCLUSIVE"
+          }
+        },
+        "required": [
+          "overallResult"
+        ]
+      },
+      "then": {
+        "properties": {
+          "checks": {
+            "allOf": [
+              {
+                "not": {
+                  "contains": {
+                    "properties": {
+                      "result": {
+                        "const": "FAIL"
+                      }
+                    },
+                    "required": [
+                      "result"
+                    ]
+                  }
+                }
+              },
+              {
+                "contains": {
+                  "properties": {
+                    "result": {
+                      "enum": [
+                        "INCONCLUSIVE",
+                        "NOT_EXECUTED"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "repositoryPath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//)(?:[^/\\r\\n]+/)*[^/\\r\\n]+$"
+    },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "executed",
+        "result",
+        "actualEvidence",
+        "evidenceLocations",
+        "limitations"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "executed": {
+          "type": "boolean"
+        },
+        "result": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "INCONCLUSIVE",
+            "NOT_EXECUTED"
+          ]
+        },
+        "actualEvidence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "evidenceLocations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/repositoryPath"
+          }
+        },
+        "exitCode": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "limitations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "notExecutedReason": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "executed": {
+                "const": false
+              }
+            },
+            "required": [
+              "executed"
+            ]
+          },
+          "then": {
+            "properties": {
+              "result": {
+                "const": "NOT_EXECUTED"
+              },
+              "actualEvidence": {
+                "maxItems": 0
+              }
+            },
+            "required": [
+              "notExecutedReason"
+            ]
+          },
+          "else": {
+            "properties": {
+              "result": {
+                "enum": [
+                  "PASS",
+                  "FAIL",
+                  "INCONCLUSIVE"
+                ]
+              },
+              "actualEvidence": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "observation"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "$ref": "#/$defs/repositoryPath"
+        },
+        "observation": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

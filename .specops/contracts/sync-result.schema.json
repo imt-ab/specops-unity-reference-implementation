@@ -1,0 +1,332 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sync-result.schema.json",
+  "title": "SpecOps Synchronization Result",
+  "description": "Derived global-impact assessment. This result does not authorize authority mutation.",
+  "x-contract-version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "workItemId",
+    "result",
+    "requiredFollowUpRisk",
+    "requiredPermissionProfile",
+    "findings",
+    "affectedAuthorityPaths",
+    "adrReferences",
+    "approval",
+    "evidence",
+    "authorityMutationAuthorized"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "1.0.0"
+    },
+    "workItemId": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "result": {
+      "enum": [
+        "NO_GLOBAL_IMPACT",
+        "GLOBAL_UPDATE_REQUIRED",
+        "ADR_REQUIRED",
+        "BLOCK"
+      ]
+    },
+    "requiredFollowUpRisk": {
+      "enum": [
+        "R0",
+        "R1",
+        "R2",
+        "R3"
+      ]
+    },
+    "requiredPermissionProfile": {
+      "enum": [
+        "READ_ONLY",
+        "DOCS_WRITE",
+        "CODE_WRITE_SCOPED",
+        "VALIDATE",
+        "ELEVATED_CHANGE"
+      ]
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "affectedAuthorityPaths": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/repositoryPath"
+      }
+    },
+    "adrReferences": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/repositoryPath"
+      }
+    },
+    "approval": {
+      "$ref": "#/$defs/approval"
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "authorityMutationAuthorized": {
+      "const": false
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "requiredFollowUpRisk": {
+            "const": "R0"
+          }
+        },
+        "required": [
+          "requiredFollowUpRisk"
+        ]
+      },
+      "then": {
+        "properties": {
+          "requiredPermissionProfile": {
+            "enum": [
+              "READ_ONLY",
+              "VALIDATE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "requiredFollowUpRisk": {
+            "enum": [
+              "R1",
+              "R2"
+            ]
+          }
+        },
+        "required": [
+          "requiredFollowUpRisk"
+        ]
+      },
+      "then": {
+        "properties": {
+          "requiredPermissionProfile": {
+            "enum": [
+              "DOCS_WRITE",
+              "CODE_WRITE_SCOPED",
+              "VALIDATE"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "requiredFollowUpRisk": {
+            "const": "R3"
+          }
+        },
+        "required": [
+          "requiredFollowUpRisk"
+        ]
+      },
+      "then": {
+        "properties": {
+          "requiredPermissionProfile": {
+            "const": "ELEVATED_CHANGE"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "result": {
+            "enum": [
+              "GLOBAL_UPDATE_REQUIRED",
+              "ADR_REQUIRED"
+            ]
+          }
+        },
+        "required": [
+          "result"
+        ]
+      },
+      "then": {
+        "properties": {
+          "requiredFollowUpRisk": {
+            "const": "R3"
+          },
+          "requiredPermissionProfile": {
+            "const": "ELEVATED_CHANGE"
+          },
+          "approval": {
+            "allOf": [
+              {
+                "$ref": "#/$defs/approval"
+              },
+              {
+                "properties": {
+                  "required": {
+                    "const": true
+                  },
+                  "authority": {
+                    "const": "Human Authority"
+                  },
+                  "status": {
+                    "enum": [
+                      "PENDING",
+                      "APPROVED",
+                      "REJECTED"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "repositoryPath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//)(?:[^/\\r\\n]+/)*[^/\\r\\n]+$"
+    },
+    "approval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "required",
+        "authority",
+        "status",
+        "references"
+      ],
+      "properties": {
+        "required": {
+          "type": "boolean"
+        },
+        "authority": {
+          "const": "Human Authority"
+        },
+        "status": {
+          "enum": [
+            "NOT_REQUIRED",
+            "PENDING",
+            "APPROVED",
+            "REJECTED"
+          ]
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "required": {
+                "const": false
+              }
+            },
+            "required": [
+              "required"
+            ]
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": "NOT_REQUIRED"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "required": {
+                "const": true
+              }
+            },
+            "required": [
+              "required"
+            ]
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "PENDING",
+                  "APPROVED",
+                  "REJECTED"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "APPROVED"
+              }
+            },
+            "required": [
+              "status"
+            ]
+          },
+          "then": {
+            "properties": {
+              "references": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "observation"
+      ],
+      "properties": {
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "$ref": "#/$defs/repositoryPath"
+        },
+        "observation": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

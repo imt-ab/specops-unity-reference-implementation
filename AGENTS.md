@@ -29,8 +29,20 @@ This repository uses Git and GitHub. Read-only inspection is permitted when rele
 
 Do not silently modify user-global IDE, agent, or tool configuration.
 
-## Derived and Planned Structures
+## Derived Operational Structures
 
 This router, `Assets/Project/Docs/SpecOps/WORKFLOW.md`, `DEPLOYMENT.md`, `ONBOARDING.md`, ADRs, plans, reviews, validation results, and context exports are subordinate to current authority.
 
-Future `.specops/*` and Skill artifacts are planned derived/supporting structures. They are not installed by E1 and must not be assumed to exist or to carry independent authority.
+The installed [`.specops/specops.json`](.specops/specops.json) manifest routes to instance paths and deployment defaults. [`.specops/permissions.json`](.specops/permissions.json), [`.specops/contracts/`](.specops/contracts/), and all `.specops/*` content are derived/supporting and never carry independent authority.
+
+Exactly seven derived logical Skills are installed under `.agents/skills/`:
+
+- `specops-spec`
+- `specops-review`
+- `specops-plan`
+- `specops-implement`
+- `specops-validate`
+- `specops-sync`
+- `specops-audit`
+
+Use the Skills as executor-neutral procedures after authority routing. Eval definitions and feature-state instances remain uninstalled; do not assume that planned paths contain artifacts.

@@ -25,6 +25,8 @@
       "CONSTRAINTS.md",
       "ACCEPTANCE.md"
     ],
+    "featureTemplateRoot": "Assets/Project/Docs/Specifications/_templates/feature",
+    "featureStateSchema": ".specops/contracts/feature-state.schema.json",
     "skillsRoot": ".agents/skills",
     "contractsRoot": ".specops/contracts",
     "permissions": ".specops/permissions.json",
@@ -117,6 +119,7 @@
   ],
   "initialization": {
     "referenceStatus": "authority-and-operational-foundation",
+    "featureTemplatesInstalled": true,
     "featureStateInstancePresent": false,
     "evalDefinitionsPresent": false,
     "evalPathStatus": "planned-not-installed",

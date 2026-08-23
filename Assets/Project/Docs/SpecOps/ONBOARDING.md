@@ -11,7 +11,7 @@ This repository is a public reference implementation and Golden Baseline candida
 3. Read the [repository-wide engineering constraints](../Governance/GLOBAL_CONSTRAINTS.md).
 4. For feature work, read that feature's `SPEC.md`, `CONSTRAINTS.md`, and `ACCEPTANCE.md` under `../Specifications/<feature>/`.
 
-The root [`AGENTS.md`](../../../../AGENTS.md) is an operational router, not authority. ADRs, workflow guides, deployment guidance, plans, reviews, validation results, templates, and future Skills or `.specops/*` files are subordinate.
+The root [`AGENTS.md`](../../../../AGENTS.md) is an operational router, not authority. ADRs, workflow guides, deployment guidance, plans, reviews, validation results, templates, installed Skills, and `.specops/*` files are subordinate.
 
 ## Repository Identity and Structure
 
@@ -25,7 +25,7 @@ The selected architecture contains Domain, Application, AI, Infrastructure, Pres
 
 Use the derived [`WORKFLOW.md`](WORKFLOW.md) to navigate intent, specification, governance, risk, approval, planning, scoped permission, implementation, validation, traceability, global-impact review, and human-controlled publication.
 
-The specification root is [`Assets/Project/Docs/Specifications`](../Specifications/README.md). Templates are scaffolding only. A template is not feature authority, and E1 does not claim that a current feature instance exists.
+The specification root is [`Assets/Project/Docs/Specifications`](../Specifications/README.md). The sole canonical feature-template location is [`../Specifications/_templates/feature/`](../Specifications/_templates/feature/), containing the authority triplet plus derived `SPECOPS_STATE.json`. The state template conforms to [the feature-state schema](../../../../.specops/contracts/feature-state.schema.json). Templates are unapproved scaffolding only; no feature or feature-state instance is installed by E3.
 
 ## Git and GitHub
 

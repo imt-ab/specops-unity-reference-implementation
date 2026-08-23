@@ -33,6 +33,8 @@ Create or review explicit feature intent, constraints, and deterministic accepta
 
 Acceptance criteria remain stable during an implementation slice. Material changes return the work to specification and invalidate the affected downstream plan and permission.
 
+For a new feature, copy the four files from the canonical [`../Specifications/_templates/feature/`](../Specifications/_templates/feature/) directory. Templates are unapproved scaffolding. The copied authority triplet requires review and approval; derived `SPECOPS_STATE.json` must conform to [the feature-state schema](../../../../.specops/contracts/feature-state.schema.json) and cannot grant authority or permission.
+
 ## 3. Review Governance and Risk
 
 Check authority alignment, cross-feature effects, architectural drift, protected areas, external effects, and evidence gaps. Assign R0–R3 using the framework authority. Obtain explicit Human Authority approval where the risk or repository policy requires it.

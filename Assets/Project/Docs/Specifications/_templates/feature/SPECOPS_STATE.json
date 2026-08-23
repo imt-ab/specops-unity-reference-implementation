@@ -1,0 +1,30 @@
+{
+  "contractVersion": "1.0.0",
+  "authorityStatus": "DERIVED",
+  "nonAuthoritative": true,
+  "featureId": "TEMPLATE_FEATURE_ID",
+  "risk": "R3",
+  "acceptanceCriteriaIds": [],
+  "review": {
+    "status": "NOT_STARTED",
+    "reference": null
+  },
+  "approval": {
+    "status": "PENDING",
+    "references": []
+  },
+  "implementationPlan": {
+    "status": "NOT_STARTED",
+    "reference": null
+  },
+  "implementationState": "NOT_STARTED",
+  "validation": {
+    "status": "NOT_STARTED",
+    "reference": null
+  },
+  "sync": {
+    "status": "NOT_STARTED",
+    "reference": null
+  },
+  "adrReferences": []
+}

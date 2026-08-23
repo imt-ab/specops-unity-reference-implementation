@@ -1,20 +1,9 @@
-# ACCEPTANCE
+# Legacy Feature Acceptance Template Router
 
-Provide testable acceptance criteria using Given/When/Then.
+Status: LEGACY — NOT CANONICAL — NOT CURRENT AUTHORITY — NOT APPROVED
 
-## Scenarios
+Do not instantiate this file. The canonical template is [`feature/ACCEPTANCE.md`](feature/ACCEPTANCE.md).
 
-### Scenario 1
-- Given
-- When
-- Then
+Its testable-scenario responsibility is preserved through stable acceptance identifiers, observable outcomes, deterministic validation methods, evidence expectations, validation categories, manual requirements, and optional Given/When/Then framing.
 
-### Scenario 2
-- Given
-- When
-- Then
-
-### Scenario 3
-- Given
-- When
-- Then
+This path remains only so retained documentation links do not break during migration.

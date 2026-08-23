@@ -1,19 +1,9 @@
-# CONSTRAINTS
+# Legacy Feature Constraints Template Router
 
-## Must
--
+Status: LEGACY — NOT CANONICAL — NOT CURRENT AUTHORITY — NOT APPROVED
 
-## Must not
--
+Do not instantiate this file. The canonical template is [`feature/CONSTRAINTS.md`](feature/CONSTRAINTS.md).
 
-## Platforms
-- Target platforms:
-- Minimum Unity: 6000.3
+Its useful responsibilities have been preserved there, including must/must-not rules, platform and Unity/runtime constraints, dependency constraints, performance and allocation budgets, compatibility, build/tooling, data, security, and operational limitations.
 
-## Performance budget
-- Frame time:
-- Memory:
-- GC allocations:
-
-## Compatibility
-- Backward/interop constraints:
+This path remains only so retained documentation links do not break during migration.

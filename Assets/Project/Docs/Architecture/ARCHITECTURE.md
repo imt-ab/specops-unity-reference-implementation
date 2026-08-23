@@ -1,6 +1,8 @@
 # Architecture (Clean Architecture — Authoritative)
 
-This document defines responsibilities and dependencies for project layers. It complements the Project Structure README without duplicating it.
+Status: Sole current structural authority for this repository.
+
+This document defines responsibilities and allowed dependency directions for project layers. It complements the Project Structure README without duplicating it. Explanatory architecture documents, ADRs, workflow guidance, templates, and context exports are subordinate and cannot supersede this document. Accepted structural decisions must be synchronized here before they become current structural truth.
 
 ## Layers & Responsibilities
 - Domain
@@ -25,6 +27,9 @@ This document defines responsibilities and dependencies for project layers. It c
   - Cross-cutting helpers and shared utilities (e.g., logging interfaces).
 
 ## Dependency Graph (textual)
+
+The arrows and references below express allowed dependency directions. They do not require every allowed dependency to exist physically when an assembly has no implementation need for it.
+
 - Domain: depends on nothing.
 - Application: -> Domain
 - AI: -> Application, Domain

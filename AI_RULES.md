@@ -1,160 +1,22 @@
-### Project
-- Unity version: Unity 6000.3 (Unity 6.3)
-- Language: C#
-- Version control: Git/GitHub
+# Legacy AI Rules Compatibility Router
 
-### Documentation Boundaries
-- `Assets/Project/Docs/SpecOpsAI.md` defines the operating model for AI-assisted work.
-- `Assets/Project/Docs/UnityCleanArchitecture.md` defines the structural model for runtime code.
-- This file captures repository rules and enforcement details for agents.
+Status: **NOT current authority.** This file is retained only as a legacy compatibility path during the SpecOps v2 migration.
 
-### Repository Safety
-- Never delete or regenerate .meta files.
-- Always commit matching .meta files.
-- Never modify generated folders:
-  Library/, Temp/, Obj/, Logs/, Build/, Builds/
-- Do NOT modify ProjectSettings/* or Packages/* unless explicitly requested.
+[`AGENTS.md`](AGENTS.md) is a derived operational router. Current authority consists of the following four authority domains:
 
-## Encoding Invariant
+1. [SpecOps v2 framework authority](Assets/Project/Docs/SpecOps/SPECOPS_V2.md)
+2. [Unity structural authority](Assets/Project/Docs/Architecture/ARCHITECTURE.md)
+3. [Repository-wide engineering constraints](Assets/Project/Docs/Governance/GLOBAL_CONSTRAINTS.md)
+4. Approved feature authority under [`Assets/Project/Docs/Specifications/`](Assets/Project/Docs/Specifications/README.md): `SPEC.md`, `CONSTRAINTS.md`, and `ACCEPTANCE.md`
 
-- Treat all repository text as UTF-8.
-- When reading or searching files via PowerShell, follow TOOLING_RULES.md "Text Encoding (Authoritative)" exactly.
-- Do NOT rely on default Windows PowerShell encoding.
-- 
-### Folder Placement Rules (Aligned to Project Structure README)
+This compatibility router contains no independent normative rules. If any historical reference, retained tooling artifact, or prior version of this file conflicts with current authority, current authority wins.
 
-All new files must follow this structure:
+## E5 Migration Traceability
 
-Assets/Project/
-Art/
-Audio/
-Content/
-Code/
-Docs/
-Editor/
+- Mandatory XML documentation on every test was intentionally dropped. Meaningful XML documentation and comments remain allowed when they explain non-obvious intent, rationale, constraints, regressions, or setup.
+- `<TargetClass>Tests.cs` naming for tests with one clear target type is deferred to E9 as a default tooling/style convention. It is not current repository-wide authority and is not mandatory for integration, architecture, acceptance, cross-cutting, multi-type, or similar tests.
+- Test directory placement is governed by the `Testing and Validation` section of [`GLOBAL_CONSTRAINTS.md`](Assets/Project/Docs/Governance/GLOBAL_CONSTRAINTS.md).
+- Production API visibility for testing is governed by the `Testing and Validation` section of [`GLOBAL_CONSTRAINTS.md`](Assets/Project/Docs/Governance/GLOBAL_CONSTRAINTS.md).
+- PascalCase for applicable C# identifiers is deferred to E9 coding-style and tooling reconciliation. It is not established here as governance authority.
 
-Rules:
-- Runtime C# code must live under:
-  Assets/Project/Code/Runtime/<Layer>
-- Tests must live under:
-  Assets/Project/Code/Tests/EditMode or PlayMode
-- Editor-only scripts must live under:
-  Assets/Project/Editor
-- Scenes must live under:
-  Assets/Project/Content/Scenes
-- Prefabs must live under:
-  Assets/Project/Content/Prefabs
-- UI prefabs must live under:
-  Assets/Project/Content/UI
-- Input System assets must live under:
-  Assets/Project/Content/Input
-- Addressables must live under:
-  Assets/Project/Content/Addressables
-- Rendering settings must live under:
-  Assets/Project/Content/Settings/Rendering
-    - Global/
-    - Pipeline/
-    - Renderers/
-    - Volumes/
-- Lighting settings must live under:
-  Assets/Project/Content/Settings/Lighting
-- Quality settings must live under:
-  Assets/Project/Content/Settings/Quality
-- Art assets must live under:
-  Assets/Project/Art
-- Audio assets must live under:
-  Assets/Project/Audio
-- All C# scripts must use the root namespace defined in their corresponding assembly (e.g., namespace InfiniteMonkey.Domain). Avoid nested namespaces unless the folder structure justifies it.
-
-Do NOT create scripts in:
-Assets/
-Assets/Scripts
-Assets/Scenes
-Assets/Resources
-unless explicitly instructed.
-
-### Architecture (Clean Architecture - Authoritative)
-
-For the repository-level structural model, refer to `Assets/Project/Docs/UnityCleanArchitecture.md`.
-
-Layer order:
-Domain → Application → AI → Infrastructure / Presentation
-Composition wires everything.
-
-Dependency rules:
-- Domain:
-    - No UnityEngine references.
-    - No MonoBehaviours.
-- Application:
-    - Depends only on Domain.
-    - No UnityEngine.
-- AI:
-    - Depends on Application + Domain.
-- Infrastructure:
-    - Depends on Application + Domain.
-- Presentation:
-    - Contains UnityEngine references.
-    - Translates Unity input into Application calls.
-- Composition:
-    - VContainer lifetime scopes only.
-    - No gameplay logic.
-- Utility:
-    - Cross-cutting helpers only.
-
-Each Runtime folder corresponds to an asmdef:
-InfiniteMonkey.Domain
-InfiniteMonkey.Application
-InfiniteMonkey.AI
-InfiniteMonkey.Infrastructure
-InfiniteMonkey.Presentation
-InfiniteMonkey.Utility
-InfiniteMonkey.Composition
-
-For InfiniteMonkey.Domain and InfiniteMonkey.Application, ensure the .asmdef file has "noEngineReferences": true to enforce the 'No UnityEngine' rule.
-
-Do not introduce new cross-assembly references casually.
-
-### Unity Constraints
-- Respect Unity lifecycle methods.
-- Avoid per-frame allocations in Update/LateUpdate/FixedUpdate.
-- Avoid LINQ and closures in hot paths.
-- Prefer [SerializeField] over runtime lookups.
-- Avoid Find() and scene-wide searches.
-
-### Logging
-- Use IMonkeyLogger (interface in InfiniteMonkey.Utility.Interfaces) exclusively for logging.
-- Do not introduce UnityEngine.Debug calls.
-
-### Testing (Unity EditMode – Authoritative)
-- Use MOQ for mocking.
-- Use VContainer for dependency injection.
-- Do NOT use reflection.
-- Use internal + InternalsVisibleTo for test access.
-- MonoBehaviours must be created with GameObject.AddComponent<T>().
-- Destroy created GameObjects in TearDown.
-- Add XML documentation comments to test classes and methods.
-- Test files should be named <TargetClass>Tests.cs and follow the same folder hierarchy as the code they test under Assets/Project/Code/Tests/EditMode or PlayMode.
-
-### Formatting And Naming (Authoritative: .editorconfig)
-- Always follow `.editorconfig` for any file you create or modify.
-- Use `utf-8` charset.
-- Use `LF` line endings.
-- Trim trailing whitespace.
-- Keep diffs minimal: do not reformat unrelated files.
-
-#### Indentation By File Type
-- Default: spaces, 4-space indent.
-- `*.asmdef`, `*.asmref`, `*.json`, `*.jsonc`, `*.yaml`, `*.yml`: spaces, 2-space indent.
-- `*.cs`: spaces, 4-space indent.
-
-#### C# Style
-- Keep opening braces on new line for methods/types/properties/control blocks.
-- Prefer `var` when type is apparent or elsewhere.
-- Do not prefer `var` for built-in types (`int`, `string`, etc.).
-- Respect configured qualification preferences (`this.` usage) from `.editorconfig`.
-- Preserve existing formatting/layout unless directly touching that code block.
-
-#### Unity Naming
-- Unity serialized field names must be `lowerCamelCase` (no leading underscore).
-- Keep type names (`class`, `struct`, `interface`) in `PascalCase`.
-- Keep method/property names in `PascalCase`.
+Concrete legacy PowerShell, encoding, command-safety, and Rider migration information remains temporarily available in [`TOOLING_RULES.md`](TOOLING_RULES.md), which is an E9 tooling migration source and not governance authority.

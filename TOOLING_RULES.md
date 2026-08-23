@@ -1,5 +1,9 @@
 # TOOLING_RULES.md
 
+> **Status — E9 tooling migration source; NOT SpecOps or repository governance authority.**
+>
+> This file is retained temporarily for concrete PowerShell, UTF-8/encoding, command-safety, and related tooling information needed by E9. Normative governance comes only from the current authority domains routed through [`AGENTS.md`](AGENTS.md). `AGENTS.md` is a derived operational router. [`.specops/specops.json`](.specops/specops.json) and [`.specops/permissions.json`](.specops/permissions.json) provide instance and permission configuration; they do not define independent authority. Any conflicting legacy VCS, role, product, permission, or authority statement below is superseded and must not be treated as operative policy.
+
 ## Allowed Actions
 
 -   Add runtime code under `Assets/Project/Code/Runtime/<Layer>/`
@@ -29,7 +33,7 @@
 
 ------------------------------------------------------------------------
 
-## CLI / Environment Constraints (Authoritative)
+## CLI / Environment Constraints (E9 Migration Source)
 
 ### Environment
 
@@ -52,7 +56,7 @@
 -   Do NOT assume a Unix-like shell environment
 -   Assume PowerShell environment only
 
-### Text Encoding (Authoritative)
+### Text Encoding (E9 Migration Source)
 
 - Do NOT assume Windows PowerShell 5.1 default encoding is UTF-8.
 - Treat all repository text files as UTF-8.

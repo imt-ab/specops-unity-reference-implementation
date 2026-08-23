@@ -1,7 +1,8 @@
 # Team Member Onboarding Guide
 
-This document orients new contributors to the repository. It is an
-onboarding index, not the source of truth for every rule.
+> **Status — legacy E9 environment/tooling migration source; NOT current onboarding or governance authority.**
+>
+> Current onboarding is [`SpecOps/ONBOARDING.md`](SpecOps/ONBOARDING.md). Current governance uses the four-domain authority model routed by the root [`AGENTS.md`](../../../AGENTS.md). The body below is retained temporarily for environment, Rider, and PowerShell migration evidence. Legacy Plastic SCM guidance and product-bound Claude, Codex, or Junie role assignments are non-operative. Do not execute or rely on retained instructions where they conflict with current authority, Git/GitHub instance policy, or scoped permission.
 
 ---
 
@@ -26,7 +27,8 @@ onboarding index, not the source of truth for every rule.
 
 - **Unity Version:** Unity 6000.3 (Unity 6.3)
 - **Language:** C# 9.0 (net471)
-- **Version Control:** Plastic SCM (Unity Version Control)
+- **Version Control (current instance):** Git/GitHub
+- **Legacy VCS material retained for E9:** Plastic SCM (Unity Version Control), non-operative
 - **Dependency Injection:** VContainer
 - **Testing Frameworks:** MOQ (mocking), VContainer
 - **IDE:** JetBrains Rider (with Live Templates)
@@ -34,12 +36,12 @@ onboarding index, not the source of truth for every rule.
 ### Core Principles
 
 This repository uses **SpecOps AI** as the operating model and
-**Unity Clean Architecture** as the structural model. The authoritative
-details live in:
+**Unity Clean Architecture** as the selected structural model. Current
+authority and retained explanation are routed through:
 
-- [`SpecOpsAI.md`](SpecOpsAI.md) for the method
+- [`SpecOps/SPECOPS_V2.md`](SpecOps/SPECOPS_V2.md) for framework authority
 - [`UnityCleanArchitecture.md`](UnityCleanArchitecture.md) for layers and dependencies
-- [`AI_WORKFLOW_TEAM.md`](AI_WORKFLOW_TEAM.md) for the team operating model
+- [`SpecOps/WORKFLOW.md`](SpecOps/WORKFLOW.md) for the current derived workflow
 
 ---
 
@@ -55,9 +57,9 @@ details live in:
    - Preferred IDE for this project
    - Import the provided Live Templates for consistency
 
-3. **Plastic SCM (Unity Version Control)**
-   - Configure your Plastic SCM credentials
-   - Familiarize yourself with basic Plastic SCM commands
+3. **Legacy Plastic SCM setup material (non-operative)**
+   - Retained only as E9 migration evidence
+   - Current repository instance policy is Git/GitHub; do not follow the Plastic setup steps as current guidance
 
 ### PowerShell 7+ (Recommended)
 
@@ -101,7 +103,7 @@ Use pwsh instead of powershell when running commands manually.
 
 AI agents should prefer PowerShell 7+ when available.
 
-UTF-8 encoding must still be explicitly enforced when reading files as defined in TOOLING_RULES.md.
+Concrete UTF-8 handling remains recorded in the non-authoritative E9 migration source `TOOLING_RULES.md`; current governance and permission come from the v2 authority model.
 
 #### Set pwsh as Default Shell in Rider’s Integrated Terminal
 
@@ -121,7 +123,7 @@ Now, when you open the Terminal pane in Rider (View > Tool Windows > Terminal or
 
 ### Initial Repository Setup
 
-1. Clone the repository using Plastic SCM
+1. Legacy setup step (non-operative): clone using Plastic SCM. For current work, use the human-approved Git/GitHub repository flow.
 2. Open the project in Unity (let it compile and import all packages)
 3. Open the project in Rider
 4. Verify all assembly definitions compile without errors
@@ -252,10 +254,11 @@ The `noEngineReferences` setting enforces the "No UnityEngine" rule at compile t
 
 ## AI-Assisted Development Workflow
 
+> The product-bound mappings in this retained section are legacy and non-operative. Current logical responsibilities are defined without product ownership by [`SpecOps/SPECOPS_V2.md`](SpecOps/SPECOPS_V2.md); executor mappings are deployment defaults in [`SpecOps/DEPLOYMENT.md`](SpecOps/DEPLOYMENT.md) and `.specops/specops.json`.
+
 ### The Hybrid AI Model
 
-This project follows the [AI Workflow Team Operating Model](AI_WORKFLOW_TEAM.md)
-using three specialized AI agents with distinct roles:
+This retained legacy section predates the [current SpecOps workflow](SpecOps/WORKFLOW.md) and describes a non-operative model that used three specialized AI agents with distinct roles:
 
 #### 1. **Claude** (Specification Author & Reviewer)
 - **Purpose:** Drafts and refines specifications
@@ -300,10 +303,10 @@ Idea → Spec → Constraints → Acceptance → Feasibility → Implementation 
 ### Workflow Summary
 
 1. **Claude** authors or updates a feature spec under `Assets/Project/Docs/Specifications/<feature>/`
-2. **Junie** validates structure, constraints, and feasibility against `AI_RULES.md` and `TOOLING_RULES.md`
+2. **Junie** historically validated structure, constraints, and feasibility against legacy `AI_RULES.md` and `TOOLING_RULES.md`; this mapping is non-operative
 3. **Codex** implements code under the correct layer (`Assets/Project/Code/Runtime/<Layer>`) and adds tests under `Assets/Project/Code/Tests`
 4. Tests are executed in Unity batchmode; logs are reviewed for failures
-5. Changes are committed to Plastic SCM with matching `.meta` files and without touching generated folders
+5. The legacy workflow committed changes to Plastic SCM; current Git/GitHub publication remains human-controlled and this legacy step is non-operative
 
 ### Rider Live Templates
 
@@ -329,7 +332,7 @@ The project uses standardized Rider Live Templates for consistency. Key template
 - **`unitytest`** - Coroutine-based tests
 - **`ivt`** - Adding InternalsVisibleTo for test access
 
-**For detailed workflow instructions, see the [AI Workflow Team Operating Model](AI_WORKFLOW_TEAM.md).**
+**For current workflow instructions, see the [SpecOps v2 workflow](SpecOps/WORKFLOW.md).**
 
 ---
 
@@ -614,7 +617,7 @@ junie (understand impact) → codex (fix) → edittest/pmtest (regression test)
 - No cross-assembly shortcuts
 - Lock behavior with tests before refactoring
 
-**For more details on the mandatory daily workflow and stage-by-stage process, see the [AI Workflow Team Operating Model](AI_WORKFLOW_TEAM.md).**
+**For current lifecycle guidance, see the [SpecOps v2 workflow](SpecOps/WORKFLOW.md).**
 
 ---
 
@@ -635,14 +638,14 @@ junie (understand impact) → codex (fix) → edittest/pmtest (regression test)
 
 ### Core Documentation
 
-- **AI Rules:** `AI_RULES.md` (repository root)
-- **Tooling Rules:** `TOOLING_RULES.md` (repository root)
+- **Operational Router:** `AGENTS.md` (repository root)
+- **Legacy Tooling Migration Source:** `TOOLING_RULES.md` (repository root; non-authoritative)
 - **Junie Guidelines:** `.junie/guidelines.md`
 - **Architecture:** `Assets/Project/Docs/Architecture/ARCHITECTURE.md`
-- **SpecOps AI:** `Assets/Project/Docs/SpecOpsAI.md`
+- **SpecOps v2 Framework:** `Assets/Project/Docs/SpecOps/SPECOPS_V2.md`
 - **Unity Clean Architecture:** `Assets/Project/Docs/UnityCleanArchitecture.md`
 - **Architecture Context Snapshot:** `Assets/Project/Docs/Architecture/ARCHITECTURE_CONTEXT_SNAPSHOT.md`
-- **AI Workflow:** [AI Workflow Team Operating Model](AI_WORKFLOW_TEAM.md)
+- **Current Workflow:** [SpecOps v2 Workflow](SpecOps/WORKFLOW.md)
 
 ### Specification Templates
 
@@ -656,37 +659,9 @@ junie (understand impact) → codex (fix) → edittest/pmtest (regression test)
 
 ---
 
-## Issue Resolution Protocol (Balanced Mode)
+## Current Review and Issue Resolution Routing
 
-All specification validation issues (e.g., findings from `codexspec`) must be resolved using the formal:
-
-**ISSUE_RESOLUTION_PROTOCOL.md (Version 1.4 – Balanced Mode)**
-
-Location:
-```
-ISSUE_RESOLUTION_PROTOCOL.md (repository root)
-```
-
-This protocol defines:
-
-- Canonical issue normalization
-- Classification (A/B/C)
-- Governance Framing Pass (B issues)
-- Structured Rewrite Proposal (C issues)
-- Deterministic patch generation
-- Hard token guardrails
-- Agent responsibility per step
-
-No ad-hoc conversational issue resolution is permitted.
-
-Balanced Mode is mandatory when:
-- Governance conflicts exist
-- Structural ambiguity exists
-- Architecture boundaries are implicated
-
-Strict Mode may be used when issues are purely mechanical.
-
-Refer to ISSUE_RESOLUTION_PROTOCOL.md before attempting to resolve specification validation findings.
+The deleted Balanced Mode protocol is superseded by the [current SpecOps workflow](SpecOps/WORKFLOW.md), the derived [`specops-review`](../../../.agents/skills/specops-review/SKILL.md) procedure, and the structured [review-verdict contract](../../../.specops/contracts/review-verdict.schema.json). These derived procedures route findings through current authority and Human Authority rather than assigning governance decisions to products.
 
 ## Cultural Rules
 

@@ -1,4 +1,6 @@
-You are operating inside an existing Unity 6000.3 repository using Plastic SCM and Rider.
+Status: Derived context-export tooling prompt. This prompt is not authority and does not grant permission.
+
+You are operating inside an existing Unity 6000.3 repository whose current instance uses Git/GitHub and whose default IDE target is Rider.
 
 Goal:
 Create or update the following files so they reflect the current authoritative architecture and governance rules:
@@ -18,15 +20,17 @@ Non-negotiable rules:
 SOURCE OF TRUTH
 ────────────────────────────────
 
-Use these files as authoritative input sources:
+Use `AGENTS.md` to route to the applicable current authority. Read these current authority and instance sources:
 
-- /AI_RULES.md
-- /TOOLING_RULES.md
+- /AGENTS.md
+- Assets/Project/Docs/SpecOps/SPECOPS_V2.md
 - Assets/Project/Docs/Architecture/ARCHITECTURE.md
+- Assets/Project/Docs/Governance/GLOBAL_CONSTRAINTS.md
 - Assets/Project/Docs/Specifications/README.md (for structure overview)
+- .specops/specops.json (derived instance configuration; not authority)
 
 Do NOT invent architectural rules.
-If information is missing, infer only from existing documentation.
+If required authority or information is missing or contradictory, stop and report the gap rather than inferring a rule.
 
 ────────────────────────────────
 FILE 1: ARCHITECTURE_CONTEXT_SNAPSHOT.md
@@ -42,7 +46,7 @@ Requirements:
     - Dependency direction rules
     - asmdef constraints (including noEngineReferences for Domain and Application)
     - Folder placement rules (runtime, tests, content, editor)
-    - Testing rules summary (Moq, VContainer, no reflection, AddComponent, cleanup)
+    - Testing rules summary derived from the current `Testing and Validation` constraints
     - Logging rule (IMonkeyLogger only)
     - Repository safety rules (no meta deletion, no ProjectSettings edits)
     - Specification governance (see below)
@@ -131,15 +135,8 @@ Before writing the files:
   Domain → Application → AI → Infrastructure / Presentation
   Composition wires everything.
 - Ensure logging rule references IMonkeyLogger.
-- Ensure test constraints include:
-    - MOQ
-    - VContainer
-    - No reflection
-    - AddComponent<T>() for MonoBehaviours
-    - TearDown cleanup
-
-If any of these are missing in the source documentation,
-include them based on authoritative architecture rules already defined.
+- Ensure the testing summary reflects the current `Testing and Validation` section of `GLOBAL_CONSTRAINTS.md` without turning available frameworks or template conventions into mandatory ceremony.
+- Do not add a rule that is missing from current authority.
 
 ────────────────────────────────
 OUTPUT FORMAT

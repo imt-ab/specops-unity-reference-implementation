@@ -61,8 +61,10 @@ This repository remains a public reference implementation and Golden Baseline ca
 
 - Acceptance criteria and implementation claims require deterministic evidence appropriate to the behavior.
 - Prefer EditMode tests for pure logic; use PlayMode tests when frames, scenes, lifecycle, or other runtime behavior is material.
+- Tests targeting a specific runtime layer or production responsibility **SHOULD** mirror the corresponding production directory structure beneath the appropriate EditMode or PlayMode test root. Architecture, integration, acceptance, cross-cutting, and multi-layer tests **MAY** use dedicated descriptive test directories when no meaningful production-path mirror exists. Here, **SHOULD** is the repository-wide default and **MAY** is an explicit legitimate exception.
 - Use NUnit through the Unity Test Framework. Use Moq and VContainer where isolation or container behavior requires them; their availability does not make them mandatory ceremony for every test.
 - Do not use reflection to bypass intended architecture or visibility boundaries.
+- Production API visibility **MUST NOT** be widened solely to make code accessible to tests. Prefer testing through the intended architectural contract. Where justified direct access to an internal production type or member is required, prefer internal visibility plus narrowly scoped `InternalsVisibleTo` for the relevant test assembly rather than changing the production API to public. This does not require direct testing of internal implementation.
 - Create `MonoBehaviour` test subjects with `GameObject.AddComponent<T>()` and clean up created objects.
 - Do not claim compilation, test coverage, or PASS based only on scaffolds, package presence, or documentation.
 

@@ -1,5 +1,7 @@
 # Rider Live Templates - AI Enterprise Pack
 
+Status: Derived legacy tooling documentation retained for E9 modernization. It is not SpecOps, structural, or repository governance authority. Product-named template abbreviations are deployment/tooling labels only and do not assign logical SpecOps roles. Follow [`AGENTS.md`](../../../../AGENTS.md), current authority, [`.specops/specops.json`](../../../../.specops/specops.json), and scoped permission before using a template.
+
 This folder contains Rider Live Templates designed for AI-assisted development with Clean Architecture and VContainer.
 
 ------------------------------------------------------------------------
@@ -24,6 +26,8 @@ This project uses two template systems in Rider:
 ### 1. Install Templates
 
 right-click on [install-rider-live-templates.ps1](install-rider-live-templates.ps1) → Run with PowerShell and then restart Rider to load the new templates
+
+The installer mutates user-global Rider template configuration. Run it only with explicit user authorization; repository access or template availability is not permission.
 
 
 After importing, you'll see a template group called **AI**.
@@ -76,14 +80,9 @@ After importing, you'll see a template group called **AI**.
 
 ## Detailed Workflow Guides
 
-### [AI_WORKFLOW_TEAM.md](../AI_WORKFLOW_TEAM.md)
-Complete daily development workflow guide covering:
-- Daily feature development workflow
-- Context-specific template usage
-- Best practices and golden rules
-- AI agent coordination
-- EditMode and PlayMode test workflows
-- AI fill-in prompts and operational discipline
+### [Current SpecOps workflow](../SpecOps/WORKFLOW.md)
+
+The current derived lifecycle is documented in `WORKFLOW.md`; repository executor/tool mappings are documented in [`DEPLOYMENT.md`](../SpecOps/DEPLOYMENT.md). The retained live-template names do not define logical roles.
 
 ------------------------------------------------------------------------
 

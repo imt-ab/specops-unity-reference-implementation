@@ -1,5 +1,7 @@
 - This file is auto-loaded by Junie.
-- Reference AI_RULES.md and TOOLING_RULES.md for authoritative rules.
+- This is a derived Junie deployment adapter, not authority and not a definition of a logical SpecOps role.
+- Start with `AGENTS.md`, then read the applicable framework, structural, repository-wide, and feature authority it routes to.
+- Read `.specops/specops.json` and `.specops/permissions.json` for repository-instance routing and scoped permission. Tool availability does not grant authorization.
 - Non-negotiable rules:
     - Make the smallest possible diff. Modifications to existing files are permitted but must be strictly limited to the task scope.
     - Favor additive changes (new files, classes, or methods) when they can achieve the goal with less risk to existing logic.
@@ -7,6 +9,6 @@
     - Do NOT delete, move, or regenerate any .meta files.
     - New dependencies or cross-assembly references must be minimal, strictly necessary, and respect architectural boundaries.
     - Do not reformat existing code.
-- Refer to: Assets/Project/Docs/Architecture/ARCHITECTURE.md for architectural guidelines.
+- Refer to `Assets/Project/Docs/Architecture/ARCHITECTURE.md` as sole structural authority and `Assets/Project/Docs/Governance/GLOBAL_CONSTRAINTS.md` for repository-wide constraints.
 - Use Git/GitHub workflows for version control operations.
 - If any instruction is ambiguous, STOP and propose specification changes.

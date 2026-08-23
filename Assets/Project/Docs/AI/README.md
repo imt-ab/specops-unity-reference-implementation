@@ -1,11 +1,13 @@
 # AI Documentation & Automation
 
+Status: Derived tooling index. This file and the prompts it indexes are not authority.
+
 This folder contains AI meta-files used to automate documentation, governance exports, and architectural consistency across the project.
 
 These files are not runtime code and are not architecture definitions. They are instructions and tooling artifacts used by AI agents to maintain consistency.
 
-For the operating model, see [`SpecOpsAI.md`](../SpecOpsAI.md).
-For structural rules, see [`UnityCleanArchitecture.md`](../UnityCleanArchitecture.md).
+For framework authority, see [`SpecOps/SPECOPS_V2.md`](../SpecOps/SPECOPS_V2.md); for the derived lifecycle, see [`SpecOps/WORKFLOW.md`](../SpecOps/WORKFLOW.md).
+For structural authority, see [`Architecture/ARCHITECTURE.md`](../Architecture/ARCHITECTURE.md). [`UnityCleanArchitecture.md`](../UnityCleanArchitecture.md) is a subordinate explainer.
 
 ---
 
@@ -20,7 +22,7 @@ The `/Docs/AI/` folder centralizes:
 
 This keeps AI automation separate from:
 
-- `/Docs/Architecture` -> authoritative system design
+- `/Docs/Architecture/ARCHITECTURE.md` -> sole structural authority
 - `/Docs/Specifications` -> feature specs
 - `/Docs/Ide` -> Rider tooling
 
@@ -38,9 +40,9 @@ Master prompt used to generate or update:
 
 This file instructs AI agents to:
 
-- Extract architecture rules from authoritative documents
+- Extract architecture rules from current authority
 - Build discussion-ready exports
-- Maintain consistency with `AI_RULES.md` and `ARCHITECTURE.md`
+- Maintain consistency with `AGENTS.md`, current authority, and `.specops/specops.json`
 - Avoid inventing new architectural rules
 
 Use this when:
@@ -60,8 +62,9 @@ These files are generated or referenced by the prompts in this folder:
 - `CHAT_CONTEXT_EXPORT.md` -> Ultra-condensed chat-ready export
 
 ### Repo Root
-- `AI_RULES.md` -> AI enforcement rules
-- `TOOLING_RULES.md` -> Tooling constraints
+- `AGENTS.md` -> derived operational authority router
+- `AI_RULES.md` -> legacy compatibility router; not authority
+- `TOOLING_RULES.md` -> retained E9 tooling migration source; not governance authority
 
 ---
 
@@ -76,7 +79,7 @@ These files are generated or referenced by the prompts in this folder:
 
 # Philosophy
 
-Architecture is the source of truth.
+`Architecture/ARCHITECTURE.md` is the sole structural authority within the four-domain authority model.
 AI prompts are automation around that truth.
 
 This folder ensures:

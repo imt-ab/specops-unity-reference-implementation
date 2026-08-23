@@ -1,5 +1,11 @@
 # Unity Clean Architecture
 
+## Authority Status
+
+Status: Explanatory and subordinate documentation. This document is **not structural authority**.
+
+The sole structural authority is [`Assets/Project/Docs/Architecture/ARCHITECTURE.md`](Architecture/ARCHITECTURE.md). This document preserves Unity-specific rationale and explanation only. If its wording conflicts with `ARCHITECTURE.md`, `ARCHITECTURE.md` wins.
+
 ## Purpose
 
 This repository uses Clean Architecture as the structural model for Unity code.
@@ -78,7 +84,7 @@ Clean Architecture keeps those pressures under control. It gives the repository 
 
 ## Relationship To SpecOps AI
 
-SpecOps AI is the method that governs how work is introduced.
+The [SpecOps v2 framework authority](SpecOps/SPECOPS_V2.md) governs how work is introduced.
 Unity Clean Architecture is the structural model that governs where the work belongs.
 
 The two are linked, but they are not the same thing. The method controls the change process. The architecture controls the code shape.

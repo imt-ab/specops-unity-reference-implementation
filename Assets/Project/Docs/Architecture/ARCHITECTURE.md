@@ -10,19 +10,19 @@ This document defines responsibilities and allowed dependency directions for pro
   - Pure C#; no `UnityEngine`, no `MonoBehaviour`.
 - Application
   - Use cases, orchestration, and ports (interfaces) to drive Domain.
-  - Depends only on Domain; no `UnityEngine`.
+  - Depends only on Domain and the cross-cutting Utility leaf; no `UnityEngine`.
 - AI
   - Application of AI strategies and policies.
-  - Depends on Application + Domain.
+  - Depends on Application + Domain + Utility.
 - Infrastructure
   - Adapters: persistence, files, networking, platform services.
-  - Depends on Application + Domain.
+  - Depends on Application + Domain + Utility.
 - Presentation
   - Unity-facing layer: views, input translation, scene hooks.
-  - Depends on Application; can reference `UnityEngine`.
+  - Depends on Application + Utility; can reference `UnityEngine`.
 - Composition
   - VContainer LifetimeScopes and registrations only; no gameplay logic.
-  - Wires all concrete implementations to interfaces.
+  - Wires all concrete implementations to interfaces; may depend on Application, Domain, Infrastructure, Presentation, and Utility.
 - Utility
   - Cross-cutting helpers and shared utilities (e.g., logging interfaces).
 
@@ -31,14 +31,14 @@ This document defines responsibilities and allowed dependency directions for pro
 The arrows and references below express allowed dependency directions. They do not require every allowed dependency to exist physically when an assembly has no implementation need for it.
 
 - Domain: depends on nothing.
-- Application: -> Domain
-- AI: -> Application, Domain
-- Infrastructure: -> Application, Domain
-- Presentation: -> Application (and Unity APIs as needed)
-- Composition: -> Application, Domain, Infrastructure, Presentation (wiring only)
-- Utility: standalone; can be referenced by other layers for cross-cutting concerns.
+- Application: -> Domain, Utility
+- AI: -> Application, Domain, Utility
+- Infrastructure: -> Application, Domain, Utility
+- Presentation: -> Application, Utility (and Unity APIs as needed)
+- Composition: -> Application, Domain, Infrastructure, Presentation, Utility (wiring only)
+- Utility: depends on no runtime layer; it is a standalone cross-cutting leaf that may be referenced by Application, AI, Infrastructure, Presentation, and Composition, but deliberately not by Domain.
 
-No other dependencies are allowed. Violations are not permitted.
+No runtime-layer dependencies other than those listed above are allowed. Violations are not permitted.
 
 ## Assemblies
 Each Runtime layer has an `asmdef`:

@@ -1,0 +1,154 @@
+{
+  "contractVersion": "1.0.0",
+  "definitionId": "specops-core-contract-integrity",
+  "definitionVersion": "1.0.0",
+  "contentIdentity": {
+    "algorithm": "specops-json-jcs-sha256-v1",
+    "value": "c9406453833d46e6813186cfbae5ba249a0c8e7c76af460b292073412cd23dd2"
+  },
+  "description": "Derived deterministic definition for integrity checks over the installed SpecOps contract set; it is not authority and records no execution result.",
+  "targetScope": [
+    {
+      "type": "framework-contract-set",
+      "id": "specops-core-contracts",
+      "reference": ".specops/contracts"
+    }
+  ],
+  "governingReferences": [
+    {
+      "type": "framework-authority",
+      "id": "specops-v2",
+      "reference": "Assets/Project/Docs/SpecOps/SPECOPS_V2.md"
+    },
+    {
+      "type": "repository-constraint-authority",
+      "id": "global-constraints",
+      "reference": "Assets/Project/Docs/Governance/GLOBAL_CONSTRAINTS.md"
+    },
+    {
+      "type": "derived-contract",
+      "id": "eval-definition.schema.json",
+      "version": "1.0.0",
+      "reference": ".specops/contracts/eval-definition.schema.json"
+    },
+    {
+      "type": "normative-calculation-profile",
+      "id": "specops-json-jcs-sha256-v1",
+      "version": "1",
+      "reference": ".specops/contracts/content-identity-profile-v1.md"
+    }
+  ],
+  "checks": [
+    {
+      "id": "contracts-json-parse",
+      "description": "Every tracked contract-schema document is strict parseable JSON.",
+      "evaluationMethod": "static-json-inspection",
+      "passCondition": {
+        "type": "all-items-conform",
+        "value": {
+          "inventory": {
+            "root": ".specops/contracts",
+            "include": [
+              "*.schema.json"
+            ],
+            "selection": "tracked-subject-files",
+            "order": "repository-relative-ordinal"
+          },
+          "rule": {
+            "operation": "strict-json-parse",
+            "commentsAllowed": false,
+            "trailingCommasAllowed": false,
+            "duplicateMemberNamesAllowed": false
+          }
+        }
+      }
+    },
+    {
+      "id": "contracts-id-unique",
+      "description": "Every contract has one non-empty root $id and those values are ordinally unique.",
+      "evaluationMethod": "static-json-inspection",
+      "passCondition": {
+        "type": "all-items-conform",
+        "value": {
+          "inventoryReference": "contracts-json-parse",
+          "rule": {
+            "operation": "root-property-nonempty-and-unique",
+            "property": "$id",
+            "equality": "ordinal",
+            "diagnosticOrder": "ordinal"
+          }
+        }
+      }
+    },
+    {
+      "id": "contracts-version-consistent",
+      "description": "Each contract's root x-contract-version exactly equals properties.contractVersion.const.",
+      "evaluationMethod": "static-json-inspection",
+      "passCondition": {
+        "type": "all-items-conform",
+        "value": {
+          "inventoryReference": "contracts-json-parse",
+          "rule": {
+            "operation": "root-property-equality",
+            "leftJsonPointer": "/x-contract-version",
+            "rightJsonPointer": "/properties/contractVersion/const",
+            "equality": "ordinal-string"
+          }
+        }
+      }
+    },
+    {
+      "id": "contracts-draft-declared",
+      "description": "Every contract declares the repository's approved JSON Schema draft URI.",
+      "evaluationMethod": "static-json-inspection",
+      "passCondition": {
+        "type": "all-items-conform",
+        "value": {
+          "inventoryReference": "contracts-json-parse",
+          "rule": {
+            "operation": "root-property-equals",
+            "jsonPointer": "/$schema",
+            "expected": "https://json-schema.org/draft/2020-12/schema",
+            "equality": "ordinal-string"
+          }
+        }
+      }
+    },
+    {
+      "id": "contracts-references-resolve",
+      "description": "Repository-local contract references resolve within the contract root without network retrieval.",
+      "evaluationMethod": "reference-resolution",
+      "passCondition": {
+        "type": "references-resolve",
+        "value": {
+          "inventoryReference": "contracts-json-parse",
+          "referenceProperty": "$ref",
+          "allowedRoot": ".specops/contracts",
+          "repositoryLocalOnly": true,
+          "networkAllowed": false,
+          "schemaDeclarationUrisExcluded": true,
+          "fragmentsMustResolve": true,
+          "diagnosticOrder": "repository-relative-ordinal"
+        }
+      }
+    },
+    {
+      "id": "contracts-schema-valid",
+      "description": "Every contract document conforms as a Draft 2020-12 schema under an approved validator adapter.",
+      "evaluationMethod": "schema-validation",
+      "passCondition": {
+        "type": "all-items-conform",
+        "value": {
+          "inventoryReference": "contracts-json-parse",
+          "rule": {
+            "operation": "schema-document-valid",
+            "dialect": "https://json-schema.org/draft/2020-12/schema",
+            "externalReferencePolicy": "repository-local-contract-root",
+            "networkAllowed": false,
+            "validatorAdapter": "approved-draft-2020-12"
+          }
+        }
+      }
+    }
+  ]
+}

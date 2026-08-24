@@ -1,0 +1,196 @@
+{
+  "contractVersion": "1.0.0",
+  "definitionId": "unity-editmode-validation",
+  "definitionVersion": "1.0.0",
+  "contentIdentity": {
+    "algorithm": "specops-json-jcs-sha256-v1",
+    "value": "e1b74181d6229313d9c379d51b095325bdfc924ceea6e98436fd0db3dd233033"
+  },
+  "description": "Derived deterministic definition for a later controlled Unity EditMode execution; this definition does not execute Unity or record a result.",
+  "targetScope": [
+    {
+      "type": "unity-project-editmode-suite",
+      "id": "InfiniteMonkey.EditModeTests",
+      "reference": "Assets/Project/Code/Tests/EditMode/InfiniteMonkey.EditModeTests.asmdef"
+    }
+  ],
+  "governingReferences": [
+    {
+      "type": "structural-authority",
+      "id": "clean-architecture",
+      "reference": "Assets/Project/Docs/Architecture/ARCHITECTURE.md"
+    },
+    {
+      "type": "repository-constraint-authority",
+      "id": "global-constraints",
+      "reference": "Assets/Project/Docs/Governance/GLOBAL_CONSTRAINTS.md"
+    },
+    {
+      "type": "feature-authority",
+      "id": "reference-architecture-example-acceptance",
+      "reference": "Assets/Project/Docs/Specifications/reference-architecture-example/ACCEPTANCE.md"
+    },
+    {
+      "type": "derived-contract",
+      "id": "eval-definition.schema.json",
+      "version": "1.0.0",
+      "reference": ".specops/contracts/eval-definition.schema.json"
+    },
+    {
+      "type": "normative-calculation-profile",
+      "id": "specops-json-jcs-sha256-v1",
+      "version": "1",
+      "reference": ".specops/contracts/content-identity-profile-v1.md"
+    }
+  ],
+  "checks": [
+    {
+      "id": "unity-version-match",
+      "description": "The executing Unity editor version and revision exactly match the project-declared values.",
+      "evaluationMethod": "unity-editmode-execution",
+      "passCondition": {
+        "type": "equals",
+        "value": {
+          "actual": {
+            "source": "unity-execution-context",
+            "versionField": "editorVersion",
+            "revisionField": "editorRevision"
+          },
+          "expected": {
+            "source": "repository-file",
+            "reference": "ProjectSettings/ProjectVersion.txt",
+            "versionField": "m_EditorVersion",
+            "combinedVersionRevisionField": "m_EditorVersionWithRevision",
+            "extraction": {
+              "operation": "parenthesized-revision-suffix",
+              "combinedFormat": "version-space-parenthesized-revision",
+              "versionResult": "substring-before-space-open-parenthesis",
+              "revisionResult": "content-inside-parentheses",
+              "versionPrefixMustEqualField": "m_EditorVersion"
+            }
+          },
+          "comparison": {
+            "editorVersionToDeclaredVersion": "ordinal-string",
+            "editorRevisionToExtractedRevision": "ordinal-string"
+          }
+        }
+      }
+    },
+    {
+      "id": "unity-compilation-success",
+      "description": "The controlled Unity execution completes project compilation with zero compilation errors; warnings are not a failure condition here.",
+      "evaluationMethod": "unity-editmode-execution",
+      "passCondition": {
+        "type": "zero-count",
+        "value": {
+          "source": "unity-compilation-result",
+          "field": "errors",
+          "warningPolicy": "record-but-do-not-fail",
+          "requiredCompilationCompleted": true
+        }
+      }
+    },
+    {
+      "id": "editmode-suite-executed",
+      "description": "The complete InfiniteMonkey.EditModeTests assembly is selected and executed by the Unity Test Framework.",
+      "evaluationMethod": "unity-editmode-execution",
+      "passCondition": {
+        "type": "equals",
+        "value": {
+          "source": "unity-test-execution",
+          "field": "executedAssembly",
+          "expected": "InfiniteMonkey.EditModeTests",
+          "comparison": "ordinal-string",
+          "completeAssemblySelectionRequired": true
+        }
+      }
+    },
+    {
+      "id": "editmode-required-tests-discovered",
+      "description": "The later run discovers the stable architecture, reference-feature, composition, and Moq smoke test inventory present in the authoritative EditMode assembly.",
+      "evaluationMethod": "unity-editmode-execution",
+      "passCondition": {
+        "type": "required-items-present",
+        "value": {
+          "source": "unity-test-discovery",
+          "field": "fullyQualifiedTestNames",
+          "requiredItems": [
+            "InfiniteMonkey.EditModeTests.ArchitectureBoundaryTests.DomainAndApplication_KeepNoEngineReferences",
+            "InfiniteMonkey.EditModeTests.ArchitectureBoundaryTests.DomainAndApplication_CompiledAssembliesExcludeUnityReferences",
+            "InfiniteMonkey.EditModeTests.ArchitectureBoundaryTests.RuntimeAsmdefs_ContainOnlyAllowedProjectReferences",
+            "InfiniteMonkey.EditModeTests.ReferenceMessageTests.Constructor_WithValidText_PreservesText",
+            "InfiniteMonkey.EditModeTests.ReferenceMessageTests.Constructor_WithNull_ThrowsArgumentNullException",
+            "InfiniteMonkey.EditModeTests.ReferenceMessageTests.Constructor_WithEmpty_ThrowsArgumentException",
+            "InfiniteMonkey.EditModeTests.ReferenceMessageTests.Constructor_WithWhitespace_ThrowsArgumentException",
+            "InfiniteMonkey.EditModeTests.CreateReferenceMessageTests.Execute_ObtainsTextAndReturnsAcceptedString",
+            "InfiniteMonkey.EditModeTests.CreateReferenceMessageTests.Execute_WhenSourceReturnsInvalidText_UsesDomainValidation",
+            "InfiniteMonkey.EditModeTests.FixedReferenceTextSourceTests.GetText_ReturnsStableReferenceText",
+            "InfiniteMonkey.EditModeTests.ReferenceMessagePresenterTests.Present_ForwardsApplicationResult",
+            "InfiniteMonkey.EditModeTests.ReferenceMessagePresenterTests.Present_BeforeInitialize_ThrowsInvalidOperationException",
+            "InfiniteMonkey.EditModeTests.ReferenceCompositionTests.LifetimeScope_BuildsAndExecutesCompleteFlowWithoutScene",
+            "InfiniteMonkey.EditModeTests.MoqSmokeTest.Can_mock_interface"
+          ],
+          "equality": "ordinal-string",
+          "duplicates": "reject",
+          "diagnosticOrder": "ordinal"
+        }
+      }
+    },
+    {
+      "id": "editmode-zero-failures",
+      "description": "The complete executed InfiniteMonkey.EditModeTests assembly reports zero failed, inconclusive, or not-executed tests.",
+      "evaluationMethod": "unity-editmode-execution",
+      "passCondition": {
+        "type": "zero-count",
+        "value": {
+          "source": "unity-test-result",
+          "scope": {
+            "type": "executed-test-assembly",
+            "assembly": "InfiniteMonkey.EditModeTests"
+          },
+          "fields": [
+            "failed",
+            "inconclusive",
+            "notExecuted"
+          ],
+          "allDiscoveredAndExecutedTestsMustHaveTerminalResult": true
+        }
+      }
+    },
+    {
+      "id": "unity-exit-success",
+      "description": "The controlled Unity process returns the adapter-defined successful exit code.",
+      "evaluationMethod": "unity-editmode-execution",
+      "passCondition": {
+        "type": "equals",
+        "value": {
+          "source": "unity-process-result",
+          "field": "exitCode",
+          "expected": 0,
+          "comparison": "integer-exact"
+        }
+      }
+    },
+    {
+      "id": "unity-tracked-state-preserved",
+      "description": "The controlled Unity execution produces zero added, removed, or exact-byte-modified tracked subject entries; ignored generated caches remain outside this state-delta comparison.",
+      "evaluationMethod": "unity-editmode-execution",
+      "passCondition": {
+        "type": "zero-count",
+        "value": {
+          "source": "tracked-subject-state-delta",
+          "field": "changedEntries",
+          "changeSemantics": {
+            "pathIdentity": "repository-relative-ordinal",
+            "contentComparison": "exact-byte-equivalence",
+            "addedEntry": "change",
+            "removedEntry": "change",
+            "modifiedEntryBytes": "change"
+          },
+          "ignoredGeneratedPathsExcluded": true,
+          "trackedProjectSettingsChangesAllowed": false
+        }
+      }
+    }
+  ]
+}

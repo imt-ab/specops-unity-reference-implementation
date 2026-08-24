@@ -121,8 +121,8 @@
     "referenceStatus": "authority-and-operational-foundation",
     "featureTemplatesInstalled": true,
     "featureStateInstancePresent": false,
-    "evalDefinitionsPresent": false,
-    "evalPathStatus": "planned-not-installed",
+    "evalDefinitionsPresent": true,
+    "evalPathStatus": "installed",
     "bootstrapPresent": false,
     "releaseEvidencePresent": false
   },

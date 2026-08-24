@@ -1,0 +1,228 @@
+{
+  "contractVersion": "1.0.0",
+  "definitionId": "specops-derived-state-consistency",
+  "definitionVersion": "1.0.0",
+  "contentIdentity": {
+    "algorithm": "specops-json-jcs-sha256-v1",
+    "value": "4702aae1c11777990afab0073fbe35f07e86611d0837b3748998f8801a9c5612"
+  },
+  "description": "Derived deterministic definition for routing and feature-state consistency; it does not elevate derived state to authority or prove evidence authenticity.",
+  "targetScope": [
+    {
+      "type": "project-instance-derived-state",
+      "id": "specops-routing-and-feature-state",
+      "reference": "Assets/Project/Docs/Specifications"
+    }
+  ],
+  "governingReferences": [
+    {
+      "type": "framework-authority",
+      "id": "specops-v2",
+      "reference": "Assets/Project/Docs/SpecOps/SPECOPS_V2.md"
+    },
+    {
+      "type": "repository-constraint-authority",
+      "id": "global-constraints",
+      "reference": "Assets/Project/Docs/Governance/GLOBAL_CONSTRAINTS.md"
+    },
+    {
+      "type": "derived-operational-guide",
+      "id": "feature-specifications-index",
+      "reference": "Assets/Project/Docs/Specifications/README.md"
+    },
+    {
+      "type": "derived-contract",
+      "id": "feature-state.schema.json",
+      "version": "1.0.0",
+      "reference": ".specops/contracts/feature-state.schema.json"
+    },
+    {
+      "type": "derived-contract",
+      "id": "eval-definition.schema.json",
+      "version": "1.0.0",
+      "reference": ".specops/contracts/eval-definition.schema.json"
+    },
+    {
+      "type": "normative-calculation-profile",
+      "id": "specops-json-jcs-sha256-v1",
+      "version": "1",
+      "reference": ".specops/contracts/content-identity-profile-v1.md"
+    }
+  ],
+  "checks": [
+    {
+      "id": "authority-routes-resolve",
+      "description": "Required configured authority, contract, permission, Skill, ADR, and eval routes resolve inside the repository without changing their authority status.",
+      "evaluationMethod": "reference-resolution",
+      "passCondition": {
+        "type": "references-resolve",
+        "value": {
+          "source": ".specops/specops.json",
+          "jsonPointers": [
+            "/paths/authority/framework",
+            "/paths/authority/structure",
+            "/paths/authority/repositoryConstraints",
+            "/paths/authority/featureRoot",
+            "/paths/featureStateSchema",
+            "/paths/skillsRoot",
+            "/paths/contractsRoot",
+            "/paths/permissions",
+            "/paths/adrRoot",
+            "/paths/evalRoot"
+          ],
+          "allowedRoot": ".",
+          "repositoryRelative": true,
+          "targetMustExist": true,
+          "networkAllowed": false,
+          "diagnosticOrder": "json-pointer-ordinal"
+        }
+      }
+    },
+    {
+      "id": "feature-authority-triplets",
+      "description": "Every instantiated feature directory contains the exact required authority triplet; template directories are excluded.",
+      "evaluationMethod": "static-repository-inspection",
+      "passCondition": {
+        "type": "required-items-present",
+        "value": {
+          "root": "Assets/Project/Docs/Specifications",
+          "directorySelection": {
+            "depth": 1,
+            "excludeNames": [
+              "_templates"
+            ],
+            "instantiatedWhenAnyPresent": [
+              "SPEC.md",
+              "CONSTRAINTS.md",
+              "ACCEPTANCE.md",
+              "SPECOPS_STATE.json"
+            ],
+            "order": "directory-name-ordinal"
+          },
+          "requiredItems": [
+            "SPEC.md",
+            "CONSTRAINTS.md",
+            "ACCEPTANCE.md"
+          ],
+          "exactFileNames": true
+        }
+      }
+    },
+    {
+      "id": "feature-state-schema-valid",
+      "description": "Every instantiated feature state validates against the current feature-state contract.",
+      "evaluationMethod": "schema-validation",
+      "passCondition": {
+        "type": "all-items-conform",
+        "value": {
+          "selectionReference": "feature-authority-triplets",
+          "fileName": "SPECOPS_STATE.json",
+          "schemaReference": ".specops/contracts/feature-state.schema.json",
+          "externalReferencePolicy": "repository-local-contract-root",
+          "networkAllowed": false
+        }
+      }
+    },
+    {
+      "id": "feature-id-directory-match",
+      "description": "Each instantiated feature state's featureId exactly equals its containing directory name.",
+      "evaluationMethod": "static-json-inspection",
+      "passCondition": {
+        "type": "all-items-conform",
+        "value": {
+          "selectionReference": "feature-authority-triplets",
+          "fileName": "SPECOPS_STATE.json",
+          "rule": {
+            "operation": "json-property-equals-containing-directory",
+            "jsonPointer": "/featureId",
+            "equality": "ordinal-string"
+          }
+        }
+      }
+    },
+    {
+      "id": "acceptance-id-exact-match",
+      "description": "Acceptance heading IDs are parsed by one exact rule and exactly match the feature state's acceptanceCriteriaIds set.",
+      "evaluationMethod": "exact-set-comparison",
+      "passCondition": {
+        "type": "exact-set",
+        "value": {
+          "selectionReference": "feature-authority-triplets",
+          "acceptanceFile": "ACCEPTANCE.md",
+          "stateFile": "SPECOPS_STATE.json",
+          "stateJsonPointer": "/acceptanceCriteriaIds",
+          "lineParsing": {
+            "encoding": "UTF-8",
+            "lineEndings": "LF-or-CRLF",
+            "candidatePrefix": "### AC-",
+            "headingPattern": "^### (AC-[0-9]{3}) — .+$",
+            "captureGroup": 1,
+            "nonMatchingCandidate": "reject",
+            "duplicateIds": "reject",
+            "caseSensitive": true
+          },
+          "comparison": "ordinal-exact-set",
+          "diagnosticOrder": "ordinal"
+        }
+      }
+    },
+    {
+      "id": "state-reference-resolution",
+      "description": "Every non-null repository-relative feature-state reference resolves inside the repository; contract-permitted null values remain valid.",
+      "evaluationMethod": "reference-resolution",
+      "passCondition": {
+        "type": "references-resolve",
+        "value": {
+          "selectionReference": "feature-authority-triplets",
+          "fileName": "SPECOPS_STATE.json",
+          "selectors": [
+            {
+              "jsonPointer": "/review/reference",
+              "selection": "scalar"
+            },
+            {
+              "jsonPointer": "/implementationPlan/reference",
+              "selection": "scalar"
+            },
+            {
+              "jsonPointer": "/validation/reference",
+              "selection": "scalar"
+            },
+            {
+              "jsonPointer": "/sync/reference",
+              "selection": "scalar"
+            },
+            {
+              "jsonPointer": "/adrReferences",
+              "selection": "all-array-items"
+            }
+          ],
+          "nullPolicy": "allowed-and-skipped",
+          "allowedRoot": ".",
+          "repositoryRelative": true,
+          "targetMustExist": true,
+          "networkAllowed": false,
+          "diagnosticOrder": "repository-relative-ordinal"
+        }
+      }
+    },
+    {
+      "id": "state-lifecycle-consistency",
+      "description": "Every instantiated feature state satisfies the feature-state contract's lifecycle and conditional status constraints without inferring evidence authenticity.",
+      "evaluationMethod": "schema-validation",
+      "passCondition": {
+        "type": "all-items-conform",
+        "value": {
+          "selectionReference": "feature-authority-triplets",
+          "fileName": "SPECOPS_STATE.json",
+          "rule": {
+            "operation": "schema-conditional-lifecycle-conformance",
+            "schemaReference": ".specops/contracts/feature-state.schema.json",
+            "nullEvidenceReferenceDoesNotImplyFailure": true,
+            "schemaValidityDoesNotProveEvidenceAuthenticity": true
+          }
+        }
+      }
+    }
+  ]
+}

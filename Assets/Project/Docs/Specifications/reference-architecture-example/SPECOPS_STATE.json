@@ -28,9 +28,9 @@
     "status": "APPROVED",
     "reference": null
   },
-  "implementationState": "IN_PROGRESS",
+  "implementationState": "COMPLETE",
   "validation": {
-    "status": "NOT_STARTED",
+    "status": "PASS",
     "reference": null
   },
   "sync": {

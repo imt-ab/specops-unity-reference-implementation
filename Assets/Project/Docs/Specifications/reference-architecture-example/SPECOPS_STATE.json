@@ -1,0 +1,41 @@
+{
+  "contractVersion": "1.0.0",
+  "authorityStatus": "DERIVED",
+  "nonAuthoritative": true,
+  "featureId": "reference-architecture-example",
+  "risk": "R3",
+  "acceptanceCriteriaIds": [
+    "AC-001",
+    "AC-002",
+    "AC-003",
+    "AC-004",
+    "AC-005",
+    "AC-006",
+    "AC-007",
+    "AC-008"
+  ],
+  "review": {
+    "status": "PASS",
+    "reference": null
+  },
+  "approval": {
+    "status": "APPROVED",
+    "references": [
+      "Human Authority decision recorded in E7B.2: E7B FEATURE AUTHORITY: APPROVED"
+    ]
+  },
+  "implementationPlan": {
+    "status": "NOT_STARTED",
+    "reference": null
+  },
+  "implementationState": "NOT_STARTED",
+  "validation": {
+    "status": "NOT_STARTED",
+    "reference": null
+  },
+  "sync": {
+    "status": "NOT_STARTED",
+    "reference": null
+  },
+  "adrReferences": []
+}

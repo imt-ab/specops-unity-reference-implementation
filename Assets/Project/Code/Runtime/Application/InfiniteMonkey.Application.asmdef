@@ -1,7 +1,9 @@
 {
   "name": "InfiniteMonkey.Application",
   "rootNamespace": "InfiniteMonkey.Application",
-  "references": [],
+  "references": [
+    "InfiniteMonkey.Domain"
+  ],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,

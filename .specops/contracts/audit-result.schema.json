@@ -1,0 +1,243 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "audit-result.schema.json",
+  "title": "SpecOps Audit Result",
+  "description": "Derived audit evidence. This contract is not authority, does not amend referenced authority, and does not approve a release. It constrains structural and result consistency; authenticity and execution provenance must be established by the evidence-producing and audit-validation process.",
+  "x-contract-version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "provenance",
+    "overallResult",
+    "findings"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "1.0.0"
+    },
+    "provenance": {
+      "allOf": [
+        {
+          "$ref": "evidence-provenance.schema.json"
+        },
+        {
+          "properties": {
+            "executedDefinition": {
+              "properties": {
+                "type": {
+                  "const": "audit-definition"
+                }
+              },
+              "required": [
+                "type",
+                "id",
+                "version",
+                "reference"
+              ]
+            }
+          }
+        }
+      ],
+      "description": "Records the claimed executed audit definition or procedure binding and execution provenance. This standalone schema does not authenticate the execution or compare the binding with an external definition; future producer or validator tooling must verify those relationships. Limitations and unresolved unknowns are represented by this provenance object."
+    },
+    "overallResult": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "INCONCLUSIVE"
+      ],
+      "description": "The audit outcome, not a release-approval decision."
+    },
+    "findings": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/finding"
+      },
+      "description": "Every findings[].id MUST be unique within this audit result. JSON Schema uniqueItems compares complete finding objects and does not enforce uniqueness by id; future producer or validator tooling must enforce the id invariant."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "overallResult": {
+            "const": "PASS"
+          }
+        },
+        "required": [
+          "overallResult"
+        ]
+      },
+      "then": {
+        "properties": {
+          "provenance": {
+            "properties": {
+              "unresolvedUnknowns": {
+                "maxItems": 0
+              }
+            }
+          },
+          "findings": {
+            "not": {
+              "contains": {
+                "properties": {
+                  "severity": {
+                    "enum": [
+                      "HIGH",
+                      "CRITICAL"
+                    ]
+                  },
+                  "disposition": {
+                    "const": "UNRESOLVED"
+                  }
+                },
+                "required": [
+                  "severity",
+                  "disposition"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "overallResult": {
+            "const": "FAIL"
+          }
+        },
+        "required": [
+          "overallResult"
+        ]
+      },
+      "then": {
+        "properties": {
+          "findings": {
+            "contains": {
+              "properties": {
+                "disposition": {
+                  "const": "UNRESOLVED"
+                }
+              },
+              "required": [
+                "disposition"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "overallResult": {
+            "const": "INCONCLUSIVE"
+          }
+        },
+        "required": [
+          "overallResult"
+        ]
+      },
+      "then": {
+        "properties": {
+          "provenance": {
+            "properties": {
+              "unresolvedUnknowns": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "severity",
+        "disposition",
+        "summary",
+        "observations"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+        },
+        "severity": {
+          "enum": [
+            "INFO",
+            "LOW",
+            "MEDIUM",
+            "HIGH",
+            "CRITICAL"
+          ]
+        },
+        "disposition": {
+          "enum": [
+            "RESOLVED",
+            "UNRESOLVED"
+          ]
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "observations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "evidenceReferences": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "affectedScope": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/scopeReference"
+          }
+        }
+      },
+      "description": "A derived audit observation. A finding and its references do not amend authority or make derived contracts authoritative."
+    },
+    "scopeReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "id"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reference": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

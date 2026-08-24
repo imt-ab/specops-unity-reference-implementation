@@ -2,12 +2,13 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "validation-result.schema.json",
   "title": "SpecOps Validation Result",
-  "description": "Derived technical validation evidence. This contract is not authority and cannot fabricate PASS.",
-  "x-contract-version": "1.0.0",
+  "description": "Derived technical validation evidence. This contract is not authority and constrains structural and result consistency. Authenticity and execution provenance must be established by the evidence-producing and validation process.",
+  "x-contract-version": "2.0.0",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "contractVersion",
+    "provenance",
     "workItemId",
     "acceptanceOrCheckIds",
     "overallResult",
@@ -18,7 +19,32 @@
   ],
   "properties": {
     "contractVersion": {
-      "const": "1.0.0"
+      "const": "2.0.0"
+    },
+    "provenance": {
+      "allOf": [
+        {
+          "$ref": "evidence-provenance.schema.json"
+        },
+        {
+          "properties": {
+            "executedDefinition": {
+              "properties": {
+                "type": {
+                  "const": "validation-definition"
+                }
+              },
+              "required": [
+                "type",
+                "id",
+                "version",
+                "reference"
+              ]
+            }
+          }
+        }
+      ],
+      "description": "Records the claimed executed validation definition or procedure binding and execution provenance. In this validation-result context, provenance limitations and unresolved unknowns concern the execution or provenance context, including the producer, execution environment, subject identity or revision, executed definition or procedure, or provenance establishment. They are separate from top-level result limitations and unresolved unknowns; producers must classify each item by the domain it affects and must not duplicate an item across both domains merely for redundancy. This standalone schema does not authenticate the execution or compare the binding with an external definition; future producer or validator tooling must verify those relationships."
     },
     "workItemId": {
       "type": "string",
@@ -60,14 +86,16 @@
       "items": {
         "type": "string",
         "minLength": 1
-      }
+      },
+      "description": "Limitations of the validation result itself, including validation coverage, check coverage, result interpretation, or other limitations affecting the validation conclusion. This is separate from provenance limitations; producers must classify each item by the domain it affects and must not duplicate an item in both domains merely for redundancy."
     },
     "unresolvedUnknowns": {
       "type": "array",
       "items": {
         "type": "string",
         "minLength": 1
-      }
+      },
+      "description": "Unresolved unknowns affecting the validation result or its conclusion, including unanswered validation or check questions or missing result-level information. This is separate from provenance unresolved unknowns; producers must classify each item by the domain it affects and must not duplicate an item in both domains merely for redundancy."
     }
   },
   "allOf": [
@@ -104,6 +132,13 @@
           },
           "unresolvedUnknowns": {
             "maxItems": 0
+          },
+          "provenance": {
+            "properties": {
+              "unresolvedUnknowns": {
+                "maxItems": 0
+              }
+            }
           }
         }
       }

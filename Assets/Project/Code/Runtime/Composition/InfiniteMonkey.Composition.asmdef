@@ -2,7 +2,10 @@
     "name": "InfiniteMonkey.Composition",
     "rootNamespace": "InfiniteMonkey.Composition",
     "references": [
-        "GUID:b0214a6008ed146ff8f122a6a9c2f6cc"
+        "GUID:b0214a6008ed146ff8f122a6a9c2f6cc",
+        "InfiniteMonkey.Application",
+        "InfiniteMonkey.Infrastructure",
+        "InfiniteMonkey.Presentation"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

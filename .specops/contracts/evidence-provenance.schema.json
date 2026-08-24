@@ -1,0 +1,213 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "evidence-provenance.schema.json",
+  "title": "SpecOps Evidence Provenance",
+  "description": "Derived reusable provenance for machine-generated SpecOps evidence. This contract is not authority and does not define result semantics.",
+  "x-contract-version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "subject",
+    "executionId",
+    "producer",
+    "executedDefinition",
+    "governingContracts",
+    "targetScope",
+    "executedAtUtc",
+    "limitations",
+    "unresolvedUnknowns"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "1.0.0"
+    },
+    "subject": {
+      "$ref": "#/$defs/subject"
+    },
+    "executionId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique identity of the execution that produced the evidence. This contract does not prescribe how the identity is generated."
+    },
+    "producer": {
+      "$ref": "#/$defs/producer"
+    },
+    "executedDefinition": {
+      "$ref": "#/$defs/executedDefinition"
+    },
+    "governingContracts": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/contractReference"
+      },
+      "description": "Contracts or schemas governing the generated result. Listing a derived contract here does not make it governance authority."
+    },
+    "targetScope": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/scopeReference"
+      }
+    },
+    "executedAtUtc": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC instant when execution occurred, not when the evidence was later stored or committed."
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "unresolvedUnknowns": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "$defs": {
+    "subject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "id",
+        "revision"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Generic subject classification selected by the consuming context."
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Identity of the repository, framework, feature, release candidate, project instance, or other evaluated subject."
+        },
+        "revision": {
+          "$ref": "#/$defs/subjectRevision"
+        }
+      }
+    },
+    "subjectRevision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scheme",
+        "identifier"
+      ],
+      "properties": {
+        "scheme": {
+          "type": "string",
+          "minLength": 1,
+          "description": "VCS-neutral scheme that defines how to interpret the subject revision identifier."
+        },
+        "identifier": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Exact revision or state identifier of the subject that was evaluated. It does not identify a later revision containing the evidence."
+        }
+      }
+    },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Identity of the software or process that produced the evidence."
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "executedDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "id"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Generic classification of the executed definition, procedure, or suite."
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reference": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "contractReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reference": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "scopeReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "id"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Generic scope classification selected by the consuming context."
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reference": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

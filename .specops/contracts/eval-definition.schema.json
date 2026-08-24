@@ -1,0 +1,190 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "eval-definition.schema.json",
+  "title": "SpecOps Eval Definition",
+  "description": "Derived deterministic eval definition. This contract is not authority and does not record execution results.",
+  "x-contract-version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "definitionId",
+    "definitionVersion",
+    "contentIdentity",
+    "description",
+    "targetScope",
+    "governingReferences",
+    "checks"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "1.0.0"
+    },
+    "definitionId": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "definitionVersion": {
+      "type": "string",
+      "minLength": 1
+    },
+    "contentIdentity": {
+      "$ref": "#/$defs/contentIdentity"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "targetScope": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/scopeReference"
+      }
+    },
+    "governingReferences": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/governingReference"
+      },
+      "description": "Authority or contract references relevant to the eval. Listing a derived artifact here does not make it governance authority."
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/check"
+      },
+      "description": "Stable checks required to pass this eval definition. Every checks[].id must be unique within the eval definition. uniqueItems compares complete check objects and does not enforce uniqueness by id; future producer or validator tooling must enforce this invariant."
+    }
+  },
+  "$defs": {
+    "contentIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "algorithm",
+        "value"
+      ],
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Identifier of the generic algorithm associated with the content identity. Permitted algorithms and calculation rules are not defined by this schema."
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "description": "Records the algorithm and value associated with the eval definition's content identity. The contentIdentity member itself is excluded from any future calculation convention. This schema does not define canonicalization or calculation rules; future producer or validation tooling, or an applicable calculation profile, must define and verify them."
+    },
+    "scopeReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "id"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Generic target-scope classification selected by the consuming context."
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reference": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "governingReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "id"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "reference": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "description",
+        "evaluationMethod",
+        "passCondition"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "evaluationMethod": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Runner-neutral machine-readable classification of how the check is evaluated."
+        },
+        "passCondition": {
+          "$ref": "#/$defs/passCondition"
+        }
+      }
+    },
+    "passCondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "value"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Machine-readable classification defining how to interpret the condition value."
+        },
+        "value": {
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "object",
+            "array",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}

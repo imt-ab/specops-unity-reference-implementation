@@ -1,0 +1,276 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "eval-result.schema.json",
+  "title": "SpecOps Eval Result",
+  "description": "Derived result artifact for one SpecOps eval definition. This contract is not authority and constrains structural and result consistency; authenticity and actual execution provenance must be established by the evidence-producing or validation process.",
+  "x-contract-version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "provenance",
+    "definitionContentIdentity",
+    "overallResult",
+    "checkResults"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "1.0.0"
+    },
+    "provenance": {
+      "allOf": [
+        {
+          "$ref": "evidence-provenance.schema.json"
+        },
+        {
+          "properties": {
+            "executedDefinition": {
+              "properties": {
+                "type": {
+                  "const": "eval-definition"
+                }
+              },
+              "required": [
+                "type",
+                "id",
+                "version",
+                "reference"
+              ]
+            }
+          }
+        }
+      ],
+      "description": "Records the claimed executed-definition binding. This standalone schema does not compare its id, version, or reference with an external eval definition; future producer or validator tooling must verify that relationship."
+    },
+    "definitionContentIdentity": {
+      "$ref": "eval-definition.schema.json#/$defs/contentIdentity",
+      "description": "Records the content identity claimed for the eval definition referenced by provenance.executedDefinition. This standalone schema does not verify equality with an external eval definition; future producer or validator tooling must verify that relationship."
+    },
+    "overallResult": {
+      "enum": [
+        "PASS",
+        "FAIL",
+        "INCONCLUSIVE"
+      ]
+    },
+    "checkResults": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/checkResult"
+      },
+      "description": "Every checkResults[].id must be unique within the eval result. uniqueItems compares complete check-result objects and does not enforce uniqueness by id; future producer or validator tooling must enforce this invariant and verify that result IDs exactly cover the referenced definition's check IDs."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "overallResult": {
+            "const": "PASS"
+          }
+        },
+        "required": [
+          "overallResult"
+        ]
+      },
+      "then": {
+        "properties": {
+          "provenance": {
+            "properties": {
+              "unresolvedUnknowns": {
+                "maxItems": 0
+              }
+            }
+          },
+          "checkResults": {
+            "not": {
+              "contains": {
+                "properties": {
+                  "result": {
+                    "enum": [
+                      "FAIL",
+                      "INCONCLUSIVE",
+                      "NOT_EXECUTED"
+                    ]
+                  }
+                },
+                "required": [
+                  "result"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "overallResult": {
+            "const": "FAIL"
+          }
+        },
+        "required": [
+          "overallResult"
+        ]
+      },
+      "then": {
+        "properties": {
+          "checkResults": {
+            "contains": {
+              "properties": {
+                "result": {
+                  "const": "FAIL"
+                }
+              },
+              "required": [
+                "result"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "overallResult": {
+            "const": "INCONCLUSIVE"
+          }
+        },
+        "required": [
+          "overallResult"
+        ]
+      },
+      "then": {
+        "properties": {
+          "checkResults": {
+            "allOf": [
+              {
+                "not": {
+                  "contains": {
+                    "properties": {
+                      "result": {
+                        "const": "FAIL"
+                      }
+                    },
+                    "required": [
+                      "result"
+                    ]
+                  }
+                }
+              },
+              {
+                "contains": {
+                  "properties": {
+                    "result": {
+                      "enum": [
+                        "INCONCLUSIVE",
+                        "NOT_EXECUTED"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "result"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "checkResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "executed",
+        "result",
+        "observations"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+        },
+        "executed": {
+          "type": "boolean"
+        },
+        "result": {
+          "enum": [
+            "PASS",
+            "FAIL",
+            "INCONCLUSIVE",
+            "NOT_EXECUTED"
+          ]
+        },
+        "observations": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "evidenceReferences": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "notExecutedReason": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "executed": {
+                "const": false
+              }
+            },
+            "required": [
+              "executed"
+            ]
+          },
+          "then": {
+            "properties": {
+              "result": {
+                "const": "NOT_EXECUTED"
+              },
+              "observations": {
+                "maxItems": 0
+              }
+            },
+            "required": [
+              "notExecutedReason"
+            ]
+          },
+          "else": {
+            "properties": {
+              "result": {
+                "enum": [
+                  "PASS",
+                  "FAIL",
+                  "INCONCLUSIVE"
+                ]
+              },
+              "observations": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

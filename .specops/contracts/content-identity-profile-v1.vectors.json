@@ -1,0 +1,232 @@
+{
+  "vectorSetVersion": "1.0.0",
+  "profileId": "specops-json-jcs-sha256-v1",
+  "profileReference": "content-identity-profile-v1.md",
+  "classification": "CONFORMANCE_BASIS_NOT_EVIDENCE",
+  "vectors": [
+    {
+      "id": "full-object-canonical",
+      "classes": [
+        "A",
+        "B"
+      ],
+      "mode": "FULL_JSON",
+      "purpose": "Baseline for whitespace and object-property-order invariance.",
+      "inputJsonText": "{\"a\":1,\"b\":2}",
+      "expectedOutcome": "IDENTITY",
+      "expectedCanonicalJson": "{\"a\":1,\"b\":2}",
+      "expectedSha256Hex": "43258cff783fe7036d8a43033f830adfc60ec037382473548ac742b888292777"
+    },
+    {
+      "id": "full-whitespace-expanded",
+      "classes": [
+        "A"
+      ],
+      "mode": "FULL_JSON",
+      "purpose": "Different insignificant whitespace must preserve the baseline identity.",
+      "inputJsonText": "{\n  \"a\" : 1,\n  \"b\" : 2\n}",
+      "expectedOutcome": "IDENTITY",
+      "expectedCanonicalJson": "{\"a\":1,\"b\":2}",
+      "expectedSha256Hex": "43258cff783fe7036d8a43033f830adfc60ec037382473548ac742b888292777"
+    },
+    {
+      "id": "full-property-order-reversed",
+      "classes": [
+        "B"
+      ],
+      "mode": "FULL_JSON",
+      "purpose": "Different source object-member ordering must preserve the baseline identity.",
+      "inputJsonText": "{\"b\":2,\"a\":1}",
+      "expectedOutcome": "IDENTITY",
+      "expectedCanonicalJson": "{\"a\":1,\"b\":2}",
+      "expectedSha256Hex": "43258cff783fe7036d8a43033f830adfc60ec037382473548ac742b888292777"
+    },
+    {
+      "id": "full-array-order-forward",
+      "classes": [
+        "C"
+      ],
+      "mode": "FULL_JSON",
+      "purpose": "Baseline array order.",
+      "inputJsonText": "{\"items\":[1,2,3]}",
+      "expectedOutcome": "IDENTITY",
+      "expectedCanonicalJson": "{\"items\":[1,2,3]}",
+      "expectedSha256Hex": "7aff5dcbe562761bfd9d8569cdd3226d3944acad6539db5d62ad3f67d9a45d0a"
+    },
+    {
+      "id": "full-array-order-reversed",
+      "classes": [
+        "C"
+      ],
+      "mode": "FULL_JSON",
+      "purpose": "Reordered array elements must change canonical content and identity.",
+      "inputJsonText": "{\"items\":[3,2,1]}",
+      "expectedOutcome": "IDENTITY",
+      "expectedCanonicalJson": "{\"items\":[3,2,1]}",
+      "expectedSha256Hex": "27d87096a02d69dbce3514d6528cf8384ded1e55bd4dac03e5daf2f40b72586d"
+    },
+    {
+      "id": "eval-root-identity-recorded",
+      "classes": [
+        "D",
+        "E",
+        "F"
+      ],
+      "mode": "EVAL_DEFINITION",
+      "purpose": "Baseline eval definition with its calculated identity recorded at the root.",
+      "inputJsonText": "{\"contractVersion\":\"1.0.0\",\"definitionId\":\"vector.eval\",\"definitionVersion\":\"1.0.0\",\"contentIdentity\":{\"algorithm\":\"specops-json-jcs-sha256-v1\",\"value\":\"407205b88870c92916e5e70f6533bd4c906644dbc9c5e32d40cd1693f86d2cec\"},\"description\":\"Vector eval\",\"targetScope\":[{\"type\":\"framework\",\"id\":\"vector\"}],\"governingReferences\":[],\"checks\":[{\"id\":\"check-1\",\"description\":\"Check one\",\"evaluationMethod\":\"static\",\"passCondition\":{\"type\":\"equals\",\"value\":true}}]}",
+      "expectedOutcome": "IDENTITY",
+      "expectedCanonicalJson": "{\"checks\":[{\"description\":\"Check one\",\"evaluationMethod\":\"static\",\"id\":\"check-1\",\"passCondition\":{\"type\":\"equals\",\"value\":true}}],\"contractVersion\":\"1.0.0\",\"definitionId\":\"vector.eval\",\"definitionVersion\":\"1.0.0\",\"description\":\"Vector eval\",\"governingReferences\":[],\"targetScope\":[{\"id\":\"vector\",\"type\":\"framework\"}]}",
+      "expectedSha256Hex": "407205b88870c92916e5e70f6533bd4c906644dbc9c5e32d40cd1693f86d2cec"
+    },
+    {
+      "id": "eval-root-identity-changed",
+      "classes": [
+        "D"
+      ],
+      "mode": "EVAL_DEFINITION",
+      "purpose": "Changing only the excluded root contentIdentity value must preserve the baseline identity.",
+      "inputJsonText": "{\"contractVersion\":\"1.0.0\",\"definitionId\":\"vector.eval\",\"definitionVersion\":\"1.0.0\",\"contentIdentity\":{\"algorithm\":\"specops-json-jcs-sha256-v1\",\"value\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\"},\"description\":\"Vector eval\",\"targetScope\":[{\"type\":\"framework\",\"id\":\"vector\"}],\"governingReferences\":[],\"checks\":[{\"id\":\"check-1\",\"description\":\"Check one\",\"evaluationMethod\":\"static\",\"passCondition\":{\"type\":\"equals\",\"value\":true}}]}",
+      "expectedOutcome": "IDENTITY",
+      "expectedCanonicalJson": "{\"checks\":[{\"description\":\"Check one\",\"evaluationMethod\":\"static\",\"id\":\"check-1\",\"passCondition\":{\"type\":\"equals\",\"value\":true}}],\"contractVersion\":\"1.0.0\",\"definitionId\":\"vector.eval\",\"definitionVersion\":\"1.0.0\",\"description\":\"Vector eval\",\"governingReferences\":[],\"targetScope\":[{\"id\":\"vector\",\"type\":\"framework\"}]}",
+      "expectedSha256Hex": "407205b88870c92916e5e70f6533bd4c906644dbc9c5e32d40cd1693f86d2cec"
+    },
+    {
+      "id": "eval-description-changed",
+      "classes": [
+        "E"
+      ],
+      "mode": "EVAL_DEFINITION",
+      "purpose": "Changing included description text must change identity.",
+      "inputJsonText": "{\"contractVersion\":\"1.0.0\",\"definitionId\":\"vector.eval\",\"definitionVersion\":\"1.0.0\",\"contentIdentity\":{\"algorithm\":\"specops-json-jcs-sha256-v1\",\"value\":\"eac32d1d95ab56d4c1a9bb1461e72d7e6d1dde887fe61a02b7b3ebf3022cbbd1\"},\"description\":\"Vector eval changed\",\"targetScope\":[{\"type\":\"framework\",\"id\":\"vector\"}],\"governingReferences\":[],\"checks\":[{\"id\":\"check-1\",\"description\":\"Check one\",\"evaluationMethod\":\"static\",\"passCondition\":{\"type\":\"equals\",\"value\":true}}]}",
+      "expectedOutcome": "IDENTITY",
+      "expectedCanonicalJson": "{\"checks\":[{\"description\":\"Check one\",\"evaluationMethod\":\"static\",\"id\":\"check-1\",\"passCondition\":{\"type\":\"equals\",\"value\":true}}],\"contractVersion\":\"1.0.0\",\"definitionId\":\"vector.eval\",\"definitionVersion\":\"1.0.0\",\"description\":\"Vector eval changed\",\"governingReferences\":[],\"targetScope\":[{\"id\":\"vector\",\"type\":\"framework\"}]}",
+      "expectedSha256Hex": "eac32d1d95ab56d4c1a9bb1461e72d7e6d1dde887fe61a02b7b3ebf3022cbbd1"
+    },
+    {
+      "id": "eval-pass-condition-changed",
+      "classes": [
+        "F"
+      ],
+      "mode": "EVAL_DEFINITION",
+      "purpose": "Changing an included passCondition value must change identity.",
+      "inputJsonText": "{\"contractVersion\":\"1.0.0\",\"definitionId\":\"vector.eval\",\"definitionVersion\":\"1.0.0\",\"contentIdentity\":{\"algorithm\":\"specops-json-jcs-sha256-v1\",\"value\":\"48b9bd5f95730865f82203f1e44d1e81b1de37de5c8405d909f1a05c4a217146\"},\"description\":\"Vector eval\",\"targetScope\":[{\"type\":\"framework\",\"id\":\"vector\"}],\"governingReferences\":[],\"checks\":[{\"id\":\"check-1\",\"description\":\"Check one\",\"evaluationMethod\":\"static\",\"passCondition\":{\"type\":\"equals\",\"value\":false}}]}",
+      "expectedOutcome": "IDENTITY",
+      "expectedCanonicalJson": "{\"checks\":[{\"description\":\"Check one\",\"evaluationMethod\":\"static\",\"id\":\"check-1\",\"passCondition\":{\"type\":\"equals\",\"value\":false}}],\"contractVersion\":\"1.0.0\",\"definitionId\":\"vector.eval\",\"definitionVersion\":\"1.0.0\",\"description\":\"Vector eval\",\"governingReferences\":[],\"targetScope\":[{\"id\":\"vector\",\"type\":\"framework\"}]}",
+      "expectedSha256Hex": "48b9bd5f95730865f82203f1e44d1e81b1de37de5c8405d909f1a05c4a217146"
+    },
+    {
+      "id": "eval-check-order-one-two",
+      "classes": [
+        "G"
+      ],
+      "mode": "EVAL_DEFINITION",
+      "purpose": "Baseline ordering for two eval checks.",
+      "inputJsonText": "{\"contractVersion\":\"1.0.0\",\"definitionId\":\"vector.eval\",\"definitionVersion\":\"1.0.0\",\"contentIdentity\":{\"algorithm\":\"specops-json-jcs-sha256-v1\",\"value\":\"d23d38e6372ba67df6a23589e0e9e2fdba0d823f3f46a2b1e7042f84f6ace739\"},\"description\":\"Vector eval\",\"targetScope\":[{\"type\":\"framework\",\"id\":\"vector\"}],\"governingReferences\":[],\"checks\":[{\"id\":\"check-1\",\"description\":\"Check one\",\"evaluationMethod\":\"static\",\"passCondition\":{\"type\":\"equals\",\"value\":true}},{\"id\":\"check-2\",\"description\":\"Check two\",\"evaluationMethod\":\"static\",\"passCondition\":{\"type\":\"equals\",\"value\":true}}]}",
+      "expectedOutcome": "IDENTITY",
+      "expectedCanonicalJson": "{\"checks\":[{\"description\":\"Check one\",\"evaluationMethod\":\"static\",\"id\":\"check-1\",\"passCondition\":{\"type\":\"equals\",\"value\":true}},{\"description\":\"Check two\",\"evaluationMethod\":\"static\",\"id\":\"check-2\",\"passCondition\":{\"type\":\"equals\",\"value\":true}}],\"contractVersion\":\"1.0.0\",\"definitionId\":\"vector.eval\",\"definitionVersion\":\"1.0.0\",\"description\":\"Vector eval\",\"governingReferences\":[],\"targetScope\":[{\"id\":\"vector\",\"type\":\"framework\"}]}",
+      "expectedSha256Hex": "d23d38e6372ba67df6a23589e0e9e2fdba0d823f3f46a2b1e7042f84f6ace739"
+    },
+    {
+      "id": "eval-check-order-two-one",
+      "classes": [
+        "G"
+      ],
+      "mode": "EVAL_DEFINITION",
+      "purpose": "Reordering eval checks must change identity.",
+      "inputJsonText": "{\"contractVersion\":\"1.0.0\",\"definitionId\":\"vector.eval\",\"definitionVersion\":\"1.0.0\",\"contentIdentity\":{\"algorithm\":\"specops-json-jcs-sha256-v1\",\"value\":\"efb70a6288d42eb77ebe0065ec69c2e75a8eda8146a10f367c20904c77526d00\"},\"description\":\"Vector eval\",\"targetScope\":[{\"type\":\"framework\",\"id\":\"vector\"}],\"governingReferences\":[],\"checks\":[{\"id\":\"check-2\",\"description\":\"Check two\",\"evaluationMethod\":\"static\",\"passCondition\":{\"type\":\"equals\",\"value\":true}},{\"id\":\"check-1\",\"description\":\"Check one\",\"evaluationMethod\":\"static\",\"passCondition\":{\"type\":\"equals\",\"value\":true}}]}",
+      "expectedOutcome": "IDENTITY",
+      "expectedCanonicalJson": "{\"checks\":[{\"description\":\"Check two\",\"evaluationMethod\":\"static\",\"id\":\"check-2\",\"passCondition\":{\"type\":\"equals\",\"value\":true}},{\"description\":\"Check one\",\"evaluationMethod\":\"static\",\"id\":\"check-1\",\"passCondition\":{\"type\":\"equals\",\"value\":true}}],\"contractVersion\":\"1.0.0\",\"definitionId\":\"vector.eval\",\"definitionVersion\":\"1.0.0\",\"description\":\"Vector eval\",\"governingReferences\":[],\"targetScope\":[{\"id\":\"vector\",\"type\":\"framework\"}]}",
+      "expectedSha256Hex": "efb70a6288d42eb77ebe0065ec69c2e75a8eda8146a10f367c20904c77526d00"
+    },
+    {
+      "id": "full-duplicate-member-rejected",
+      "classes": [
+        "H"
+      ],
+      "mode": "FULL_JSON",
+      "purpose": "Duplicate object member names must be detected before lossy parsing.",
+      "inputJsonText": "{\"a\":1,\"a\":2}",
+      "expectedOutcome": "REJECT",
+      "rejectionClass": "DUPLICATE_OBJECT_MEMBER_NAME",
+      "normativeReason": "RFC 8785 requires I-JSON input without duplicate object property names; this profile requires detection before lossy object-model conversion."
+    },
+    {
+      "id": "rfc8785-canonical-sample",
+      "classes": [
+        "I",
+        "J"
+      ],
+      "mode": "FULL_JSON",
+      "purpose": "RFC 8785 Sections 3.2.2 through 3.2.4 known answer for Unicode escaping, property ordering, number serialization, and UTF-8 output.",
+      "inputJsonText": "{\"numbers\":[333333333.33333329,1E30,4.50,2e-3,0.000000000000000000000000001],\"string\":\"\\u20ac$\\u000F\\u000aA'\\u0042\\u0022\\u005c\\\\\\\"\\/\",\"literals\":[null,true,false]}",
+      "expectedOutcome": "IDENTITY",
+      "expectedCanonicalJson": "{\"literals\":[null,true,false],\"numbers\":[333333333.3333333,1e+30,4.5,0.002,1e-27],\"string\":\"€$\\u000f\\nA'B\\\"\\\\\\\\\\\"/\"}",
+      "expectedSha256Hex": "2d5e01a318d0f0879ab568c4be289c8b1f64ef8921a53c6277d5e069978baacb",
+      "normativeBasis": "RFC 8785 Sections 3.2.2, 3.2.3, and 3.2.4."
+    },
+    {
+      "id": "rfc8785-non-ascii-property-order",
+      "classes": [
+        "I"
+      ],
+      "mode": "FULL_JSON",
+      "purpose": "RFC 8785 non-ASCII property-order known answer that detects locale-sensitive or non-UTF-16 ordering.",
+      "inputJsonText": "{\"\\u20ac\":\"Euro Sign\",\"\\r\":\"Carriage Return\",\"\\ufb33\":\"Hebrew Letter Dalet With Dagesh\",\"1\":\"One\",\"\\ud83d\\ude00\":\"Emoji: Grinning Face\",\"\\u0080\":\"Control\",\"\\u00f6\":\"Latin Small Letter O With Diaeresis\"}",
+      "expectedOutcome": "IDENTITY",
+      "expectedCanonicalJson": "{\"\\r\":\"Carriage Return\",\"1\":\"One\",\"\u0080\":\"Control\",\"ö\":\"Latin Small Letter O With Diaeresis\",\"€\":\"Euro Sign\",\"😀\":\"Emoji: Grinning Face\",\"\uFB33\":\"Hebrew Letter Dalet With Dagesh\"}",
+      "expectedSha256Hex": "5e321556d22018a9656991a9e94f77ec175fa193e52a2429d312f8419ec8b08c",
+      "normativeBasis": "RFC 8785 Section 3.2.3 property-sorting test data and expected order, together with Section 3.2.2 string serialization."
+    },
+    {
+      "id": "full-unicode-precomposed",
+      "classes": [
+        "I"
+      ],
+      "mode": "FULL_JSON",
+      "purpose": "Precomposed half of a pair that detects an implementation incorrectly applying NFC, NFD, or another Unicode normalization.",
+      "inputJsonText": "{\"value\":\"\\u00e9\"}",
+      "expectedOutcome": "IDENTITY",
+      "expectedCanonicalJson": "{\"value\":\"é\"}",
+      "expectedSha256Hex": "69e46f3f0688000ab7eeb9e40e6a516a254268cd644a24f4f69cf7ad063cf479",
+      "normativeBasis": "RFC 8785 Section 3.1 requires Unicode string data to be preserved as-is and explicitly does not apply Unicode normalization."
+    },
+    {
+      "id": "full-unicode-decomposed",
+      "classes": [
+        "I"
+      ],
+      "mode": "FULL_JSON",
+      "purpose": "Decomposed half of a pair that detects an implementation incorrectly applying NFC, NFD, or another Unicode normalization.",
+      "inputJsonText": "{\"value\":\"e\\u0301\"}",
+      "expectedOutcome": "IDENTITY",
+      "expectedCanonicalJson": "{\"value\":\"e\u0301\"}",
+      "expectedSha256Hex": "1b986c631da83257beca64c93ff3e5174908d558af7bb9dfb36b25a6198f7c38",
+      "normativeBasis": "RFC 8785 Section 3.1 requires Unicode string data to be preserved as-is and explicitly does not apply Unicode normalization."
+    },
+    {
+      "id": "full-leading-utf8-bom-rejected",
+      "classes": [
+        "I"
+      ],
+      "mode": "FULL_JSON",
+      "purpose": "Source JSON whose UTF-8 encoding begins EF BB BF must be rejected rather than silently stripping or ignoring the leading BOM.",
+      "inputJsonText": "\uFEFF{\"a\":1}",
+      "expectedOutcome": "REJECT",
+      "rejectionClass": "LEADING_UTF8_BOM",
+      "normativeReason": "SpecOps profile-specific deterministic input rule: a leading U+FEFF encoded as the UTF-8 BOM bytes EF BB BF is rejected and produces no identity."
+    },
+    {
+      "id": "full-lone-surrogate-rejected",
+      "classes": [
+        "I"
+      ],
+      "mode": "FULL_JSON",
+      "purpose": "Invalid Unicode data must fail closed rather than be normalized or replaced.",
+      "inputJsonText": "{\"value\":\"\\ud800\"}",
+      "expectedOutcome": "REJECT",
+      "rejectionClass": "INVALID_UNICODE_DATA",
+      "normativeReason": "RFC 8785 requires a compliant implementation to terminate on invalid Unicode data such as a lone surrogate."
+    }
+  ]
+}

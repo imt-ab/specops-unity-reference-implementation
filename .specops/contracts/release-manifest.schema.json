@@ -1,0 +1,220 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "release-manifest.schema.json",
+  "title": "SpecOps Release Evidence Manifest",
+  "description": "Derived metadata indexing evidence associated with a release identity and qualified subject revision. This manifest and its referenced evidence are not authority, cannot amend architecture or governance, do not prove evidence authenticity or execution, and do not approve or publish a release. The manifest does not contain its own content identity. External release tooling or process must verify referenced artifacts and may bind the manifest to a later containing revision, package, artifact, or publication without treating that later state as the qualified subject revision.",
+  "x-contract-version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "releaseIdentity",
+    "qualifiedSubject",
+    "state",
+    "evidenceMembers"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "1.0.0"
+    },
+    "releaseIdentity": {
+      "$ref": "#/$defs/releaseIdentity"
+    },
+    "qualifiedSubject": {
+      "$ref": "evidence-provenance.schema.json#/$defs/subject",
+      "description": "Identifies the subject and exact revision qualified by the referenced evidence. Its revision MUST NOT be inferred to identify a later repository, package, or container state containing this manifest or evidence, nor an eventual tag, release artifact, or publication. Binding those later states is an external release-process responsibility."
+    },
+    "state": {
+      "enum": [
+        "DRAFT",
+        "FINALIZED"
+      ],
+      "description": "Manifest evidence-set lifecycle, not release approval or publication state. FINALIZED declares the release identity, qualified subject, evidence membership, and recorded member identities frozen for this finalization event. Changing them requires a new finalization or qualification event rather than silent in-place mutation. JSON Schema cannot prevent later file edits; storage controls and future tooling must enforce and detect immutability."
+    },
+    "evidenceMembers": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/evidenceMember"
+      },
+      "description": "Evidence artifacts indexed by this manifest. DRAFT may be incomplete; FINALIZED must contain at least one member for each required role. The manifest itself MUST NOT be included as an evidence member. uniqueItems compares complete member objects and does not establish artifact identity uniqueness or prevent a reference from resolving back to the manifest; future tooling must verify those semantic invariants, artifact existence, contract conformance, subject applicability, and recorded content identities."
+    },
+    "finalizedAtUtc": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "Z$",
+      "description": "UTC instant when evidence-set membership was finalized. Finalization freezes the declared set semantically but is not Human Authority release approval, publication, or proof of physical immutability."
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "DRAFT"
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
+      "then": {
+        "not": {
+          "required": [
+            "finalizedAtUtc"
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "state": {
+            "const": "FINALIZED"
+          }
+        },
+        "required": [
+          "state"
+        ]
+      },
+      "then": {
+        "required": [
+          "finalizedAtUtc"
+        ],
+        "properties": {
+          "evidenceMembers": {
+            "allOf": [
+              {
+                "contains": {
+                  "properties": {
+                    "role": {
+                      "const": "EVAL_RESULT"
+                    }
+                  },
+                  "required": [
+                    "role"
+                  ]
+                }
+              },
+              {
+                "contains": {
+                  "properties": {
+                    "role": {
+                      "const": "VALIDATION_RESULT"
+                    }
+                  },
+                  "required": [
+                    "role"
+                  ]
+                }
+              },
+              {
+                "contains": {
+                  "properties": {
+                    "role": {
+                      "const": "AUDIT_RESULT"
+                    }
+                  },
+                  "required": [
+                    "role"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "releaseIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scheme",
+        "identifier"
+      ],
+      "properties": {
+        "scheme": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Generic scheme defining how to interpret the release identifier. Core does not require a VCS tag or hosting-provider release concept."
+        },
+        "identifier": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "evidenceMember": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "artifact",
+        "contract",
+        "contentIdentity"
+      ],
+      "properties": {
+        "role": {
+          "enum": [
+            "EVAL_RESULT",
+            "VALIDATION_RESULT",
+            "AUDIT_RESULT"
+          ],
+          "description": "Logical evidence category independent of repository-specific filenames or packaging."
+        },
+        "artifact": {
+          "$ref": "#/$defs/artifactReference"
+        },
+        "contract": {
+          "$ref": "evidence-provenance.schema.json#/$defs/contractReference",
+          "description": "Claimed contract or schema identity governing the referenced evidence artifact. Listing it does not prove conformance or make the contract governance authority; future tooling must validate the artifact against the identified contract."
+        },
+        "contentIdentity": {
+          "$ref": "#/$defs/contentIdentity"
+        }
+      }
+    },
+    "artifactReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "reference"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Stable identity claimed for the evidence artifact."
+        },
+        "reference": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Generic resolvable reference to the evidence artifact. Core does not prescribe a repository path, filename, URI scheme, storage system, or VCS."
+        }
+      }
+    },
+    "contentIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "algorithm",
+        "value"
+      ],
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Identifier of the generic algorithm associated with the recorded artifact content identity. Permitted algorithms and calculation rules are not defined by this schema."
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "description": "Represents an algorithm and value claimed for the referenced evidence artifact. This schema does not define the exact bytes or data included, canonicalization, or calculation rules and does not prove the identity. Future producer or validator tooling, or an applicable calculation profile, must calculate and verify it against the referenced artifact. Replacing or changing an artifact invalidates the recorded identity when its verified content no longer matches."
+    }
+  }
+}

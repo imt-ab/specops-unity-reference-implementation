@@ -185,7 +185,14 @@ try {
         Import-Module -Name $modulePath -Force -ErrorAction Stop
         $repositoryRoot = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, '..', '..'))
         $adapter = New-SpecOpsGitRepositoryAdapter -RepositoryPath $repositoryRoot
-        $result = Invoke-SpecOpsEvaluation -RepositoryAdapter $adapter -DefinitionId $definitionId
+        $evalArguments = @{
+            RepositoryAdapter = $adapter
+            DefinitionId = $definitionId
+        }
+        if ([string]::Equals($definitionId, 'unity-editmode-validation', [System.StringComparison]::Ordinal)) {
+            $evalArguments.UnityExecutionAdapter = Get-SpecOpsUnityProductionExecutionAdapter
+        }
+        $result = Invoke-SpecOpsEvaluation @evalArguments
         [Console]::Out.WriteLine((ConvertTo-SpecOpsCliJson -Value $result))
         if ([string]::Equals([string]$result.overallResult, 'PASS', [System.StringComparison]::Ordinal)) { exit 0 }
         exit 3

@@ -2,8 +2,10 @@ Set-StrictMode -Version Latest
 
 $script:CorePath = [System.IO.Path]::Combine($PSScriptRoot, 'SpecOps.Core.psm1')
 $script:RepositoryPath = [System.IO.Path]::Combine($PSScriptRoot, 'SpecOps.Repository.psm1')
+$script:UnityPath = [System.IO.Path]::Combine($PSScriptRoot, 'SpecOps.Unity.psm1')
 Import-Module -Name $script:CorePath -Force -ErrorAction Stop
 Import-Module -Name $script:RepositoryPath -Force -ErrorAction Stop
+Import-Module -Name $script:UnityPath -Force -ErrorAction Stop
 
 $script:ProfileId = 'specops-json-jcs-sha256-v1'
 $script:DefinitionContractVersion = '1.0.0'
@@ -18,7 +20,8 @@ $script:ProducerPaths = @(
     'tools/specops/Invoke-SpecOps.ps1',
     'tools/specops/SpecOps.Core.psm1',
     'tools/specops/SpecOps.Repository.psm1',
-    'tools/specops/SpecOps.Eval.psm1'
+    'tools/specops/SpecOps.Eval.psm1',
+    'tools/specops/SpecOps.Unity.psm1'
 )
 $script:UnityCheckIds = @(
     'unity-version-match',
@@ -865,10 +868,191 @@ function Invoke-SpecOpsArchitectureCheck {
     }
 }
 
+function Get-SpecOpsUnityRequiredTestFullNames {
+    param([Parameter(Mandatory)] $Definition)
+
+    $checks = @($Definition.Value.checks | Where-Object { [string]::Equals([string] $_.id, 'editmode-required-tests-discovered', [StringComparison]::Ordinal) })
+    if ($checks.Count -ne 1) {
+        throw (New-SpecOpsEvalException 'The Unity definition does not contain exactly one required-test inventory.' 'INTERNAL_UNITY_DEFINITION_BINDING_FAILURE' 4)
+    }
+    return [string[]] @($checks[0].passCondition.value.requiredItems | ForEach-Object { [string] $_ })
+}
+
+function Get-SpecOpsUnityProductionExecutionAdapter {
+    [CmdletBinding()]
+    param()
+
+    return {
+        param($Context, $Definition)
+
+        $versionCheck = @($Definition.Value.checks | Where-Object { [string]::Equals([string] $_.id, 'unity-version-match', [StringComparison]::Ordinal) })
+        if ($versionCheck.Count -ne 1) {
+            throw (New-SpecOpsEvalException 'The Unity definition does not contain exactly one version requirement.' 'INTERNAL_UNITY_DEFINITION_BINDING_FAILURE' 4)
+        }
+        $versionPath = [string] $versionCheck[0].passCondition.value.expected.reference
+        $requirement = Read-SpecOpsUnityProjectVersionRequirement -Bytes (Get-SpecOpsRepositoryBlobBytes -Snapshot $Context.Snapshot -Path $versionPath)
+        $selection = Select-SpecOpsUnityExecutable -Requirement $requirement
+        $requiredTests = Get-SpecOpsUnityRequiredTestFullNames -Definition $Definition
+        $workspace = New-SpecOpsUnityWorkspace
+        $observationStarted = $false
+        try {
+            $materialization = New-SpecOpsUnitySubjectMaterialization -Snapshot $Context.Snapshot -Workspace $workspace -ReadBlobBytes {
+                param($snapshot, $path)
+                Get-SpecOpsRepositoryBlobBytes -Snapshot $snapshot -Path $path
+            }
+            $registryCapabilities = @(Get-SpecOpsUnityRegistryPackageCacheCapabilities -ProjectRoot $materialization.ProjectRoot)
+            $packageCapabilities = @(Initialize-SpecOpsUnityOfflinePackageCapability -ProjectRoot $materialization.ProjectRoot)
+            $argumentVector = New-SpecOpsUnityArgumentVector -ProjectRoot $materialization.ProjectRoot -OutputRoot $workspace.OutputRoot
+            $packageAcquisitionGuard = Get-SpecOpsUnityPackageAcquisitionGuard
+            $process = Invoke-SpecOpsControlledProcess -FilePath $selection.Candidate.Path -ArgumentList $argumentVector.Arguments -EnvironmentVariables $packageAcquisitionGuard
+            $observationStarted = $true
+            $observation = Invoke-SpecOpsUnityObservationLifecycle -Workspace $workspace -Materialization $materialization -ResultsPath $argumentVector.ResultsPath -LogPath $argumentVector.LogPath -RequiredTestFullNames $requiredTests
+        }
+        catch {
+            if (-not $observationStarted) {
+                try { $null = Remove-SpecOpsUnityWorkspace -Workspace $workspace }
+                catch { throw (New-SpecOpsEvalException 'Unity setup failed and its owned temporary workspace could not be removed.' 'UNITY_CLEANUP_FAILED' 4) }
+            }
+            throw
+        }
+
+        return [pscustomobject]@{
+            Runtime = [pscustomobject]@{
+                EditorVersion = [string] $selection.Candidate.EditorVersion
+                EditorRevision = [string] $selection.Candidate.EditorRevision
+            }
+            ExpectedRuntime = $requirement
+            Compilation = $observation.Compilation
+            NUnit3 = $observation.Results.NUnit3
+            Process = $process
+            ChangedEntries = @($observation.ChangedEntries)
+            GeneratedPaths = @($observation.GeneratedPaths)
+            PackagesLock = $observation.PackagesLock
+            ExternalTargets = @($observation.ExternalTargets)
+            Trace = $observation.Trace
+            PackageCapabilities = $packageCapabilities
+            RegistryPackageCapabilities = $registryCapabilities
+            Cleanup = $observation.Cleanup
+        }
+    }
+}
+
+function Assert-SpecOpsUnityExecutionObservation {
+    param([Parameter(Mandatory)] $Execution)
+
+    foreach ($property in @('Runtime', 'ExpectedRuntime', 'Compilation', 'NUnit3', 'Process', 'ChangedEntries', 'GeneratedPaths', 'PackagesLock', 'Cleanup')) {
+        if ($null -eq $Execution.PSObject.Properties[$property]) {
+            throw (New-SpecOpsEvalException "Unity execution observation is missing: $property" 'UNITY_EXECUTION_OBSERVATION_INVALID' 4)
+        }
+    }
+    foreach ($property in @('EditorVersion', 'EditorRevision')) {
+        if ($null -eq $Execution.Runtime.PSObject.Properties[$property] -or $null -eq $Execution.ExpectedRuntime.PSObject.Properties[$property]) {
+            throw (New-SpecOpsEvalException "Unity version observation is missing: $property" 'UNITY_EXECUTION_OBSERVATION_INVALID' 4)
+        }
+    }
+    foreach ($property in @('Completed', 'Errors')) {
+        if ($null -eq $Execution.Compilation.PSObject.Properties[$property]) {
+            throw (New-SpecOpsEvalException "Unity compilation observation is missing: $property" 'UNITY_EXECUTION_OBSERVATION_INVALID' 4)
+        }
+    }
+    $compilationFailed = [bool] $Execution.Compilation.Completed -and [int] $Execution.Compilation.Errors -gt 0
+    if ($null -eq $Execution.NUnit3) {
+        if (-not $compilationFailed) {
+            throw (New-SpecOpsEvalException 'Unity NUnit3 observation is missing without an established compilation failure.' 'UNITY_EXECUTION_OBSERVATION_INVALID' 4)
+        }
+    }
+    else {
+        foreach ($property in @('AssemblyName', 'FullyQualifiedTestNames', 'Counts')) {
+            if ($null -eq $Execution.NUnit3.PSObject.Properties[$property]) {
+                throw (New-SpecOpsEvalException "Unity NUnit3 observation is missing: $property" 'UNITY_EXECUTION_OBSERVATION_INVALID' 4)
+            }
+        }
+        foreach ($property in @('Failed', 'Inconclusive', 'NotExecuted')) {
+            if ($null -eq $Execution.NUnit3.Counts.PSObject.Properties[$property]) {
+                throw (New-SpecOpsEvalException "Unity NUnit3 count is missing: $property" 'UNITY_EXECUTION_OBSERVATION_INVALID' 4)
+            }
+        }
+    }
+    if ($null -eq $Execution.Process.PSObject.Properties['ExitCode'] -or
+        $null -eq $Execution.Cleanup.PSObject.Properties['Attempted'] -or
+        $null -eq $Execution.Cleanup.PSObject.Properties['Succeeded']) {
+        throw (New-SpecOpsEvalException 'Unity process or cleanup observation is incomplete.' 'UNITY_EXECUTION_OBSERVATION_INVALID' 4)
+    }
+}
+
+function Invoke-SpecOpsUnityDefinitionCheck {
+    param(
+        [Parameter(Mandatory)] $Check,
+        [Parameter(Mandatory)] $Execution
+    )
+
+    $id = [string] $Check.id
+    switch ($id) {
+        'unity-version-match' {
+            $pass = [string]::Equals([string] $Execution.Runtime.EditorVersion, [string] $Execution.ExpectedRuntime.EditorVersion, [StringComparison]::Ordinal) -and
+                [string]::Equals([string] $Execution.Runtime.EditorRevision, [string] $Execution.ExpectedRuntime.EditorRevision, [StringComparison]::Ordinal)
+            return New-SpecOpsPassOrFail $id $pass @("actual=$($Execution.Runtime.EditorVersion) ($($Execution.Runtime.EditorRevision));expected=$($Execution.ExpectedRuntime.EditorVersion) ($($Execution.ExpectedRuntime.EditorRevision));comparison=ordinal")
+        }
+        'unity-compilation-success' {
+            $completed = [bool] $Execution.Compilation.Completed
+            $errors = [int] $Execution.Compilation.Errors
+            return New-SpecOpsPassOrFail $id ($completed -and $errors -eq 0) @("completed=$($completed.ToString().ToLowerInvariant());errors=$errors;warnings-do-not-fail=true")
+        }
+        'editmode-suite-executed' {
+            if ($null -eq $Execution.NUnit3) { return New-SpecOpsNotExecutedCheckResult $id 'UNITY_COMPILATION_FAILED' }
+            $expected = [string] $Check.passCondition.value.expected
+            $actual = [string] $Execution.NUnit3.AssemblyName
+            return New-SpecOpsPassOrFail $id ([string]::Equals($actual, $expected, [StringComparison]::Ordinal)) @("executedAssembly=$actual;expected=$expected;completeAssemblySelection=true")
+        }
+        'editmode-required-tests-discovered' {
+            if ($null -eq $Execution.NUnit3) { return New-SpecOpsNotExecutedCheckResult $id 'UNITY_COMPILATION_FAILED' }
+            $expected = [string[]] @($Check.passCondition.value.requiredItems | ForEach-Object { [string] $_ })
+            $actual = [string[]] @($Execution.NUnit3.FullyQualifiedTestNames | ForEach-Object { [string] $_ })
+            $coverage = Compare-SpecOpsIdCoverage -ExpectedIds $expected -ActualIds $actual
+            $diagnostics = if ($coverage.IsExact) {
+                @("required=$($expected.Count);discovered=$($actual.Count);identity=ordinal-exact")
+            }
+            else {
+                @(
+                    "required=$($expected.Count);discovered=$($actual.Count);identity=ordinal-exact",
+                    "missing=$([string]::Join(',', $coverage.MissingIds))",
+                    "unexpected=$([string]::Join(',', $coverage.ExtraIds))",
+                    "duplicates=$([string]::Join(',', $coverage.DuplicateActualIds))"
+                )
+            }
+            return New-SpecOpsPassOrFail $id $coverage.IsExact $diagnostics
+        }
+        'editmode-zero-failures' {
+            if ($null -eq $Execution.NUnit3) { return New-SpecOpsNotExecutedCheckResult $id 'UNITY_COMPILATION_FAILED' }
+            $failed = [int] $Execution.NUnit3.Counts.Failed
+            $inconclusive = [int] $Execution.NUnit3.Counts.Inconclusive
+            $notExecuted = [int] $Execution.NUnit3.Counts.NotExecuted
+            return New-SpecOpsPassOrFail $id ($failed -eq 0 -and $inconclusive -eq 0 -and $notExecuted -eq 0) @("failed=$failed;inconclusive=$inconclusive;notExecuted=$notExecuted")
+        }
+        'unity-exit-success' {
+            $exitCode = $Execution.Process.ExitCode
+            return New-SpecOpsPassOrFail $id ($null -ne $exitCode -and [int] $exitCode -eq 0) @("exitCode=$(if ($null -eq $exitCode) { 'null' } else { [string] $exitCode });expected=0")
+        }
+        'unity-tracked-state-preserved' {
+            $changed = @($Execution.ChangedEntries)
+            $details = [System.Collections.Generic.List[string]]::new()
+            $details.Add("changedEntries=$($changed.Count);comparison=exact-byte;pathIdentity=repository-relative-ordinal")
+            foreach ($entry in $changed) { $details.Add("$([string] $entry.Path):$([string] $entry.Change)") }
+            $details.Add("generatedPaths=$(@($Execution.GeneratedPaths).Count);generatedPathsExcluded=true")
+            $details.Add("packagesLock=$([string] $Execution.PackagesLock.Status);specialRule=false")
+            return New-SpecOpsPassOrFail $id ($changed.Count -eq 0) @($details)
+        }
+    }
+    throw (New-SpecOpsEvalException "No Unity check owner for: $id" 'INTERNAL_CHECK_OWNER_MISSING' 4)
+}
+
 function Invoke-SpecOpsDefinitionCheck {
-    param($Context,$Check)
+    param($Context,$Check,$UnityExecution)
     $id=[string]$Check.id
-    if($script:UnityCheckIds -ccontains $id){return New-SpecOpsNotExecutedCheckResult $id 'UNITY_ADAPTER_NOT_INSTALLED'}
+    if($script:UnityCheckIds -ccontains $id){
+        if($null-eq$UnityExecution){return New-SpecOpsNotExecutedCheckResult $id 'UNITY_ADAPTER_NOT_INSTALLED'}
+        return Invoke-SpecOpsUnityDefinitionCheck -Check $Check -Execution $UnityExecution
+    }
     if(-not($script:E8C3CheckIds -ccontains $id)){throw(New-SpecOpsEvalException "No allowlisted owner for check: $id" 'INTERNAL_CHECK_OWNER_MISSING' 4)}
     if($id.StartsWith('contracts-',[StringComparison]::Ordinal)){return Invoke-SpecOpsContractsCheck $Context $Check}
     if($id -in @('authority-routes-resolve','feature-authority-triplets','feature-state-schema-valid','feature-id-directory-match','acceptance-id-exact-match','state-reference-resolution','state-lifecycle-consistency')){return Invoke-SpecOpsDerivedStateCheck $Context $Check}
@@ -1009,7 +1193,8 @@ function Invoke-SpecOpsEvaluation {
     param(
         [Parameter(Mandatory)] $RepositoryAdapter,
         [Parameter(Mandatory)] [string] $DefinitionId,
-        $SchemaCapability
+        $SchemaCapability,
+        [scriptblock] $UnityExecutionAdapter
     )
     $snapshot=Get-SpecOpsRepositorySnapshot $RepositoryAdapter
     $binding=Test-SpecOpsProducerImplementationBinding $RepositoryAdapter $snapshot $script:ProducerPaths
@@ -1019,11 +1204,25 @@ function Invoke-SpecOpsEvaluation {
     $context=[pscustomobject]@{Adapter=$RepositoryAdapter;Snapshot=$snapshot;Paths=@(Get-SpecOpsRepositoryPaths $snapshot);SchemaCapability=$SchemaCapability}
     $repositoryIdentity=Get-SpecOpsRepositoryIdentity $context
     $definition=Get-SpecOpsInstalledDefinition $context $DefinitionId
+    $unityExecution=$null
+    if([string]::Equals($DefinitionId,'unity-editmode-validation',[StringComparison]::Ordinal)-and$null-ne$UnityExecutionAdapter){
+        try{$unityExecution=&$UnityExecutionAdapter $context $definition}
+        catch{
+            $class=if($_.Exception.Data.Contains('SpecOpsRejectionClass')){[string]$_.Exception.Data['SpecOpsRejectionClass']}else{'UNITY_ADAPTER_FAILURE'}
+            throw(New-SpecOpsEvalException "Unity execution/observation failed: $($_.Exception.Message)" $class 4)
+        }
+        Assert-SpecOpsUnityExecutionObservation $unityExecution
+    }
     $results=[System.Collections.Generic.List[object]]::new()
-    foreach($check in @($definition.Value.checks)){$results.Add((Invoke-SpecOpsDefinitionCheck $context $check))}
+    foreach($check in @($definition.Value.checks)){$results.Add((Invoke-SpecOpsDefinitionCheck $context $check $unityExecution))}
+    if($null-ne$unityExecution-and(-not[bool]$unityExecution.Cleanup.Attempted-or-not[bool]$unityExecution.Cleanup.Succeeded)){
+        $detail=if($null-ne$unityExecution.Cleanup.PSObject.Properties['Diagnostic']){[string]$unityExecution.Cleanup.Diagnostic}else{'No cleanup diagnostic was supplied.'}
+        throw(New-SpecOpsEvalException "Unity observations were captured, but owned workspace cleanup failed: $detail" 'UNITY_CLEANUP_FAILED' 4)
+    }
     $overall=Get-SpecOpsOverallResult @($results)
     $limitations=[System.Collections.Generic.List[string]]::new();$unknowns=[System.Collections.Generic.List[string]]::new()
     if(@($results|Where-Object{$_.Contains('notExecutedReason') -and [string]::Equals([string]$_.notExecutedReason,'UNITY_ADAPTER_NOT_INSTALLED',[StringComparison]::Ordinal)}).Count-gt 0){$limitations.Add('Unity execution is outside E8C3; the E8C4 Unity adapter is not installed.');$unknowns.Add('UNITY_ADAPTER_NOT_INSTALLED')}
+    if($null-ne$unityExecution-and$null-ne$unityExecution.Compilation.PSObject.Properties['WarningObservability']-and-not[string]::IsNullOrEmpty([string]$unityExecution.Compilation.WarningObservability)){$limitations.Add('Compilation warnings are diagnostic only and are not deterministically normalized by the production adapter.')}
     if(@($results|Where-Object{$_.Contains('notExecutedReason') -and [string]::Equals([string]$_.notExecutedReason,'SCHEMA_ADAPTER_CAPABILITY_UNAVAILABLE',[StringComparison]::Ordinal)}).Count-gt 0){$limitations.Add('A check-specific schema capability was unavailable.');$unknowns.Add('SCHEMA_ADAPTER_CAPABILITY_UNAVAILABLE')}
     $timestamp=[DateTimeOffset]::UtcNow.ToString("yyyy-MM-dd'T'HH:mm:ss.fffffff'Z'",[Globalization.CultureInfo]::InvariantCulture)
     if(-not(Test-SpecOpsStrictUtcTimestamp $timestamp)){throw(New-SpecOpsEvalException 'Generated timestamp failed strict UTC validation.' 'INTERNAL_TIMESTAMP_FAILURE' 4)}
@@ -1064,6 +1263,7 @@ function Invoke-SpecOpsEvaluation {
 }
 
 Export-ModuleMember -Function @(
+    'Get-SpecOpsUnityProductionExecutionAdapter',
     'Get-SpecOpsOverallResult',
     'Get-SpecOpsSchemaAdapterCapability',
     'Invoke-SpecOpsEvaluation',

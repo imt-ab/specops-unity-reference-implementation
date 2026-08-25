@@ -4,9 +4,11 @@ $ErrorActionPreference = 'Stop'
 $script:Tests = 0
 $script:Failures = [System.Collections.Generic.List[string]]::new()
 $modulePath = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, '..', 'SpecOps.Unity.psm1'))
+$repositoryRoot = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, '..', '..', '..'))
 Import-Module -Name $modulePath -Force -ErrorAction Stop
 $module = Get-Module -Name SpecOps.Unity
 $utf8 = [System.Text.UTF8Encoding]::new($false)
+$successCompilationLog = "AssetDatabase: script compilation time: 1.250000s`n"
 
 function Test-Case {
     param([string] $Name, [scriptblock] $Body)
@@ -50,8 +52,8 @@ function New-TestEntry {
     return [pscustomobject]@{ Path = $Path; ObjectType = $Type; Mode = $Mode }
 }
 function Invoke-ProcessCore {
-    param([string] $File, [string[]] $Arguments, [int] $Timeout = 5000, [int] $TerminationWait = 30000)
-    return & $module { param($f, $a, $t, $w) Invoke-SpecOpsControlledProcessCore -FilePath $f -ArgumentList $a -TimeoutMilliseconds $t -TerminationWaitMilliseconds $w } $File $Arguments $Timeout $TerminationWait
+    param([string] $File, [string[]] $Arguments, [int] $Timeout = 5000, [int] $TerminationWait = 30000, [System.Collections.IDictionary] $EnvironmentVariables = @{})
+    return & $module { param($f, $a, $t, $w, $environment) Invoke-SpecOpsControlledProcessCore -FilePath $f -ArgumentList $a -TimeoutMilliseconds $t -TerminationWaitMilliseconds $w -EnvironmentVariables $environment } $File $Arguments $Timeout $TerminationWait $EnvironmentVariables
 }
 function Escape-XmlAttribute { param([string] $Value) return [System.Security.SecurityElement]::Escape($Value) }
 function New-NUnit3Xml {
@@ -90,13 +92,96 @@ function Remove-TestDirectory {
     $resolved = [System.IO.Path]::GetFullPath($Path)
     $temp = [System.IO.Path]::GetFullPath([System.IO.Path]::GetTempPath())
     if (-not $resolved.StartsWith($temp, [System.StringComparison]::OrdinalIgnoreCase)) { throw "Unsafe test cleanup path: $resolved" }
-    if ([System.IO.Directory]::Exists($resolved)) { [System.IO.Directory]::Delete($resolved, $true) }
+    if ([System.IO.Directory]::Exists($resolved)) { Remove-Item -LiteralPath ("\\?\" + $resolved) -Recurse -Force }
 }
 function Write-TestFileBytes {
     param([string] $Path, [byte[]] $Bytes)
     $parent = [System.IO.Path]::GetDirectoryName($Path)
     if (-not [System.IO.Directory]::Exists($parent)) { $null = [System.IO.Directory]::CreateDirectory($parent) }
     [System.IO.File]::WriteAllBytes($Path, $Bytes)
+}
+function Invoke-TestGit {
+    param([string] $Root, [string[]] $Arguments)
+    $output = & git -C $Root @Arguments 2>&1
+    if ($LASTEXITCODE -ne 0) { throw "Fixture Git failed: $output" }
+    return @($output)
+}
+function New-OfflineCapabilityFixture {
+    param([switch] $CorruptSource, [switch] $WrongFingerprint, [switch] $FakeTree)
+    $root = [System.IO.Path]::Combine($fixtureRoot, "o-$([guid]::NewGuid().ToString('N').Substring(0, 8))")
+    $project = [System.IO.Path]::Combine($root, 'project')
+    $capabilityRoot = [System.IO.Path]::Combine($root, 'capabilities')
+    $repository = [System.IO.Path]::Combine($root, 'repository')
+    $name = 'jp.hadashikick.vcontainer'; $version = '1.18.0'; $subpath = 'VContainer/Assets/VContainer'
+    $reference = 'https://github.com/hadashiA/VContainer.git?path=VContainer/Assets/VContainer#1.18.0'
+    $files = [ordered]@{ 'package.json' = $utf8.GetBytes('{"name":"jp.hadashikick.vcontainer","version":"1.18.0"}'); 'Runtime/VContainer.cs' = $utf8.GetBytes('namespace VContainer {}') }
+    $null = [System.IO.Directory]::CreateDirectory($repository)
+    $null = Invoke-TestGit $repository @('init', '--quiet')
+    $null = Invoke-TestGit $repository @('config', 'user.email', 'specops-tests@example.invalid'); $null = Invoke-TestGit $repository @('config', 'user.name', 'SpecOps Tests'); $null = Invoke-TestGit $repository @('config', 'core.autocrlf', 'false')
+    foreach ($path in $files.Keys) { Write-TestFileBytes ([System.IO.Path]::Combine($repository, $subpath.Replace('/', [System.IO.Path]::DirectorySeparatorChar), $path.Replace('/', [System.IO.Path]::DirectorySeparatorChar))) ([byte[]] $files[$path]) }
+    $null = Invoke-TestGit $repository @('add', '--all'); $null = Invoke-TestGit $repository @('commit', '--quiet', '-m', 'offline package fixture', '--date=2000-01-01T00:00:00Z')
+    $commit = [string] @(Invoke-TestGit $repository @('rev-parse', 'HEAD'))[0]
+    $tree = [string] @(Invoke-TestGit $repository @('rev-parse', "HEAD:$subpath"))[0]
+    $fingerprint = [System.Convert]::ToHexString([System.Security.Cryptography.SHA1]::HashData($utf8.GetBytes($commit + $subpath))).ToLowerInvariant()
+    Write-TestFileBytes ([System.IO.Path]::Combine($project, 'Packages', 'manifest.json')) $utf8.GetBytes((@{ dependencies = @{ $name = $reference } } | ConvertTo-Json -Depth 10))
+    Write-TestFileBytes ([System.IO.Path]::Combine($project, 'Packages', 'packages-lock.json')) $utf8.GetBytes((@{ dependencies = @{ $name = @{ version = $reference; depth = 0; source = 'git'; hash = $commit } } } | ConvertTo-Json -Depth 10))
+    $capability = [System.IO.Path]::Combine($capabilityRoot, $name, $commit)
+    $source = [System.IO.Path]::Combine($capability, 'source')
+    $null = [System.IO.Directory]::CreateDirectory($capability)
+    $null = Invoke-TestGit $root @('clone', '--quiet', '--bare', $repository, ([System.IO.Path]::Combine($capability, 'repository.git')))
+    foreach ($path in $files.Keys) { Write-TestFileBytes ([System.IO.Path]::Combine($source, $path.Replace('/', [System.IO.Path]::DirectorySeparatorChar))) ([byte[]] $files[$path]) }
+    $treeRecords = @(Invoke-TestGit $repository @('ls-tree', '-r', "HEAD:$subpath"))
+    $entries = [System.Collections.Generic.List[object]]::new()
+    foreach ($record in $treeRecords) {
+        $match = [regex]::Match([string] $record, '^(?<mode>[0-9]{6}) (?<type>[^ ]+) (?<object>[0-9a-f]{40})\t(?<path>.+)$')
+        if (-not $match.Success) { throw "Invalid fixture tree record: $record" }
+        $path = $match.Groups['path'].Value; $bytes = [byte[]] $files[$path]
+        $entries.Add([ordered]@{ path = $path; gitMode = $match.Groups['mode'].Value; gitObjectType = $match.Groups['type'].Value; gitObjectId = $match.Groups['object'].Value; byteLength = $bytes.LongLength; sha256 = [System.Convert]::ToHexString([System.Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant() })
+    }
+    $manifest = [ordered]@{ capabilityKind = 'unity-git-package-offline-capability'; capabilityFormatVersion = '1.0.0'; packageName = $name; packageVersion = $version; repositoryUrl = 'https://github.com/hadashiA/VContainer.git'; requestedRef = '1.18.0'; objectFormat = 'sha1'; lockedCommit = $commit; packageSubpath = $subpath; packageTreeObjectId = $(if ($FakeTree) { '2' * 40 } else { $tree }); upmFingerprint = $(if ($WrongFingerprint) { '3' * 40 } else { $fingerprint }); entries = @($entries) }
+    Write-TestFileBytes ([System.IO.Path]::Combine($capability, 'capability-manifest.json')) $utf8.GetBytes(($manifest | ConvertTo-Json -Depth 20))
+    if ($CorruptSource) { Write-TestFileBytes ([System.IO.Path]::Combine($source, 'Runtime', 'VContainer.cs')) $utf8.GetBytes('corrupt') }
+    return [pscustomobject]@{ ProjectRoot = $project; CapabilityRoot = $capabilityRoot; PackageName = $name; Version = $version; Commit = $commit; Subpath = $subpath; Tree = $tree; Fingerprint = $fingerprint; SourceBytes = $files }
+}
+function New-TestRegistryPackageArchive {
+    param([string] $Name, [string] $Version)
+    $archive = [System.IO.MemoryStream]::new()
+    $gzip = [System.IO.Compression.GZipStream]::new($archive, [System.IO.Compression.CompressionLevel]::Optimal, $true)
+    $writer = [System.Formats.Tar.TarWriter]::new($gzip, [System.Formats.Tar.TarEntryFormat]::Pax, $true)
+    try {
+        foreach ($file in ([ordered]@{ 'package/package.json' = $utf8.GetBytes((@{ name = $Name; version = $Version } | ConvertTo-Json -Compress)); 'package/Runtime/content.bin' = [byte[]] @(0, 1, 2, 255) }).GetEnumerator()) {
+            $entry = [System.Formats.Tar.PaxTarEntry]::new([System.Formats.Tar.TarEntryType]::RegularFile, [string] $file.Key)
+            $data = [System.IO.MemoryStream]::new([byte[]] $file.Value, $false)
+            try { $entry.DataStream = $data; $writer.WriteEntry($entry) }
+            finally { $data.Dispose() }
+        }
+    }
+    finally { $writer.Dispose(); $gzip.Dispose() }
+    try { return $archive.ToArray() }
+    finally { $archive.Dispose() }
+}
+function New-RegistryCacheFixture {
+    param([switch] $MissingEntry, [switch] $WrongVersion, [switch] $MissingContent, [switch] $TamperContent, [switch] $WrongIdentity)
+    $root = [System.IO.Path]::Combine($fixtureRoot, "r-$([guid]::NewGuid().ToString('N').Substring(0, 8))")
+    $project = [System.IO.Path]::Combine($root, 'project'); $cache = [System.IO.Path]::Combine($root, 'cache')
+    $name = 'com.unity.fixture'; $version = '1.2.3'; $cachedVersion = if ($WrongVersion) { '9.9.9' } else { $version }
+    $lock = @{ dependencies = @{ $name = @{ version = $version; depth = 0; source = 'registry'; url = 'https://packages.unity.com' }; 'com.unity.modules.ui' = @{ version = '1.0.0'; depth = 0; source = 'builtin' } } }
+    Write-TestFileBytes ([System.IO.Path]::Combine($project, 'Packages', 'packages-lock.json')) $utf8.GetBytes(($lock | ConvertTo-Json -Depth 20))
+    $indexRoot = [System.IO.Path]::Combine($cache, 'upm', 'db', 'index-v5'); $contentRoot = [System.IO.Path]::Combine($cache, 'upm', 'db', 'content-v2')
+    $null = [System.IO.Directory]::CreateDirectory($indexRoot); $null = [System.IO.Directory]::CreateDirectory($contentRoot)
+    if (-not $MissingEntry) {
+        [byte[]] $archive = New-TestRegistryPackageArchive -Name $(if ($WrongIdentity) { 'com.unity.wrong' } else { $name }) -Version $cachedVersion
+        [byte[]] $digest = [System.Security.Cryptography.SHA1]::HashData($archive); $digestHex = [System.Convert]::ToHexString($digest).ToLowerInvariant()
+        $key = "package-tarball|$name|$cachedVersion|$digestHex"
+        $record = [ordered]@{ key = $key; integrity = "sha1-$([System.Convert]::ToBase64String($digest))"; time = 1; size = $archive.LongLength }
+        $json = $record | ConvertTo-Json -Compress; $recordHash = [System.Convert]::ToHexString([System.Security.Cryptography.SHA1]::HashData($utf8.GetBytes($json))).ToLowerInvariant()
+        $indexHash = [System.Convert]::ToHexString([System.Security.Cryptography.SHA256]::HashData($utf8.GetBytes($key))).ToLowerInvariant()
+        $indexPath = [System.IO.Path]::Combine($indexRoot, $indexHash.Substring(0, 2), $indexHash.Substring(2, 2), $indexHash.Substring(4))
+        Write-TestFileBytes $indexPath $utf8.GetBytes("`n$recordHash`t$json`n")
+        $contentPath = [System.IO.Path]::Combine($contentRoot, 'sha1', $digestHex.Substring(0, 2), $digestHex.Substring(2, 2), $digestHex.Substring(4))
+        if (-not $MissingContent) { Write-TestFileBytes $contentPath $(if ($TamperContent) { [byte[]] @($archive + 7) } else { $archive }) }
+    }
+    return [pscustomobject]@{ ProjectRoot = $project; CacheRoot = $cache; Name = $name; Version = $version }
 }
 function New-ObservationFixture {
     param([hashtable] $Baseline = @{ 'Assets/a.bin' = [byte[]] @(1, 2, 3); 'Packages/packages-lock.json' = [byte[]] @(4, 5, 6) })
@@ -110,7 +195,7 @@ function New-ObservationFixture {
     $resultsPath = [System.IO.Path]::Combine($workspace.OutputRoot, 'results.xml')
     $logPath = [System.IO.Path]::Combine($workspace.OutputRoot, 'unity.log')
     Write-TestFileBytes $resultsPath $utf8.GetBytes((New-NUnit3Xml))
-    Write-TestFileBytes $logPath $utf8.GetBytes('unity-log')
+    Write-TestFileBytes $logPath $utf8.GetBytes($successCompilationLog)
     return [pscustomobject]@{ Workspace = $workspace; Materialization = $materialization; ResultsPath = $resultsPath; LogPath = $logPath }
 }
 function Invoke-ObservationCore {
@@ -120,18 +205,20 @@ function Invoke-ObservationCore {
         [object[]] $ExternalTargets = @(),
         [scriptblock] $FileReader,
         [scriptblock] $Cleanup,
+        [scriptblock] $FileExists,
         [int] $Timeout = 1000,
         [int] $StableInterval = 1
     )
     if ($null -eq $FileReader) { $FileReader = { param($path) [System.IO.File]::ReadAllBytes($path) } }
     if ($null -eq $Cleanup) { $Cleanup = { param($workspace) [pscustomobject]@{ Removed = $true; Root = $workspace.Root } } }
+    if ($null -eq $FileExists) { $FileExists = { param($path) [System.IO.File]::Exists($path) } }
     return & $module {
-        param($f, $required, $trace, $external, $timeout, $interval, $read, $cleanup)
-        Invoke-SpecOpsUnityObservationLifecycleCore -Workspace $f.Workspace -Materialization $f.Materialization -ResultsPath $f.ResultsPath -LogPath $f.LogPath -TracePath $trace -RequiredTestFullNames $required -ExternalTargets $external -QuiescenceTimeoutMilliseconds $timeout -StableIntervalMilliseconds $interval -ReadFileBytes $read -CleanupWorkspace $cleanup
-    } $Fixture $requiredTests $TracePath $ExternalTargets $Timeout $StableInterval $FileReader $Cleanup
+        param($f, $required, $trace, $external, $timeout, $interval, $read, $cleanup, $exists)
+        Invoke-SpecOpsUnityObservationLifecycleCore -Workspace $f.Workspace -Materialization $f.Materialization -ResultsPath $f.ResultsPath -LogPath $f.LogPath -TracePath $trace -RequiredTestFullNames $required -ExternalTargets $external -QuiescenceTimeoutMilliseconds $timeout -StableIntervalMilliseconds $interval -ReadFileBytes $read -CleanupWorkspace $cleanup -FileExists $exists
+    } $Fixture $requiredTests $TracePath $ExternalTargets $Timeout $StableInterval $FileReader $Cleanup $FileExists
 }
 
-$fixtureRoot = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), "specops-unity-tests-$([guid]::NewGuid().ToString('N'))")
+$fixtureRoot = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), "sot-$([guid]::NewGuid().ToString('N').Substring(0, 8))")
 $null = [System.IO.Directory]::CreateDirectory($fixtureRoot)
 $ownedWorkspaces = [System.Collections.Generic.List[object]]::new()
 $evalPath = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, '..', '..', '..', '.specops', 'evals', 'unity-editmode-validation.eval.json'))
@@ -316,6 +403,67 @@ try {
         Assert-Bytes ([byte[]] @(7, 8, 9)) ([System.IO.File]::ReadAllBytes([System.IO.Path]::Combine($materialized.ProjectRoot, 'Assets', 'NULish.txt'))) 'Ordinary filename bytes changed.'
     }
 
+    Test-Case 'Compilation success is derived from standard Unity log completion evidence' {
+        $result = Read-SpecOpsUnityCompilationObservation -Bytes $utf8.GetBytes("warning CS0219: diagnostic only`n$successCompilationLog")
+        Assert-True $result.Completed 'Compilation completion evidence was not recognized.'
+        Assert-Equal 0 $result.Errors 'Warning was treated as a compilation error.'
+        Assert-True ($null -eq $result.Warnings) 'Unresolved warning count was fabricated.'
+        Assert-Equal 'unity.log' $result.Source 'Compilation fact source changed.'
+    }
+    Test-Case 'Compilation failure is derived from standard Unity log error evidence' {
+        $log = "Assets\Project\Bad.cs(12,7): error CS1002: ; expected`nScripts have compiler errors.`n$successCompilationLog"
+        $result = Read-SpecOpsUnityCompilationObservation -Bytes $utf8.GetBytes($log)
+        Assert-True $result.Completed 'Failed compilation completion was not established.'
+        Assert-Equal 1 $result.Errors 'Compiler error evidence was not retained.'
+    }
+    Test-Case 'Compilation without positive completion evidence remains incomplete' {
+        $result = Read-SpecOpsUnityCompilationObservation -Bytes $utf8.GetBytes('Test run completed.')
+        Assert-False $result.Completed 'Compilation completion was fabricated.'
+        Assert-Equal 0 $result.Errors 'Compiler errors were fabricated.'
+    }
+    Test-Case 'Exact offline git-package capability is validated and seeded without acquisition' {
+        $fixture = New-OfflineCapabilityFixture
+        $result = @(Initialize-SpecOpsUnityOfflinePackageCapability -ProjectRoot $fixture.ProjectRoot -CapabilityRoot $fixture.CapabilityRoot)
+        Assert-Equal 1 $result.Count 'Capability observation count mismatch.'
+        Assert-Equal $fixture.PackageName $result[0].PackageName 'Package identity changed.'
+        Assert-Equal $fixture.Commit $result[0].LockedCommit 'Locked commit changed.'
+        $independentFingerprint = [System.Convert]::ToHexString([System.Security.Cryptography.SHA1]::HashData($utf8.GetBytes($fixture.Commit + $fixture.Subpath))).ToLowerInvariant()
+        Assert-Equal $independentFingerprint $result[0].UpmFingerprint 'UPM fingerprint was not independently derived from subject authority.'
+        Assert-False $result[0].NetworkAcquisitionAllowed 'Network acquisition was enabled.'
+        $seedRoot = [System.IO.Path]::Combine($fixture.ProjectRoot, 'Library', 'PackageCache', "$($fixture.PackageName)@$($fixture.Fingerprint.Substring(0, 12))")
+        $seed = [System.IO.Path]::Combine($seedRoot, 'Runtime', 'VContainer.cs')
+        Assert-True ([System.IO.File]::Exists($seed)) 'Validated package was not seeded at Unity point of use.'
+        Assert-Bytes ([byte[]] $fixture.SourceBytes['Runtime/VContainer.cs']) ([System.IO.File]::ReadAllBytes($seed)) 'Non-package.json seed bytes changed.'
+        $sourceMetadata = $utf8.GetString([byte[]] $fixture.SourceBytes['package.json']) | ConvertFrom-Json -AsHashtable
+        $seedPackagePath = [System.IO.Path]::Combine($seedRoot, 'package.json'); $seedMetadata = Get-Content -Raw -LiteralPath $seedPackagePath | ConvertFrom-Json -AsHashtable
+        Assert-Equal $fixture.Fingerprint $seedMetadata['_fingerprint'] 'Generated package fingerprint mismatch.'
+        $null = $seedMetadata.Remove('_fingerprint')
+        Assert-Equal ($sourceMetadata | ConvertTo-Json -Compress) ($seedMetadata | ConvertTo-Json -Compress) 'Generated package metadata changed beyond fingerprint augmentation.'
+    }
+    Test-Case 'Wrong capability-manifest UPM fingerprint rejects' { $fixture = New-OfflineCapabilityFixture -WrongFingerprint; Assert-Rejected { Initialize-SpecOpsUnityOfflinePackageCapability -ProjectRoot $fixture.ProjectRoot -CapabilityRoot $fixture.CapabilityRoot } 'UNITY_PACKAGE_CAPABILITY_INVALID' }
+    Test-Case 'Fabricated package subtree object rejects against real commit chain' { $fixture = New-OfflineCapabilityFixture -FakeTree; Assert-Rejected { Initialize-SpecOpsUnityOfflinePackageCapability -ProjectRoot $fixture.ProjectRoot -CapabilityRoot $fixture.CapabilityRoot } 'UNITY_PACKAGE_CAPABILITY_REVISION_INVALID' }
+    Test-Case 'Missing offline git-package capability fails closed' {
+        $fixture = New-OfflineCapabilityFixture
+        Assert-Rejected { Initialize-SpecOpsUnityOfflinePackageCapability -ProjectRoot $fixture.ProjectRoot -CapabilityRoot ([System.IO.Path]::Combine($fixtureRoot, 'missing-capabilities')) } 'UNITY_PACKAGE_CAPABILITY_MISSING'
+        Assert-False ([System.IO.Directory]::Exists([System.IO.Path]::Combine($fixture.ProjectRoot, 'Library'))) 'Invalid execution acquired or seeded package state.'
+    }
+    Test-Case 'Invalid offline git-package bytes fail point-of-use validation' {
+        $fixture = New-OfflineCapabilityFixture -CorruptSource
+        Assert-Rejected { Initialize-SpecOpsUnityOfflinePackageCapability -ProjectRoot $fixture.ProjectRoot -CapabilityRoot $fixture.CapabilityRoot } 'UNITY_PACKAGE_CAPABILITY_INVALID'
+        Assert-False ([System.IO.Directory]::Exists([System.IO.Path]::Combine($fixture.ProjectRoot, 'Library'))) 'Invalid capability reached package seeding.'
+    }
+    Test-Case 'Exact valid registry package standard-cache capability passes' {
+        $fixture = New-RegistryCacheFixture
+        $result = @(Get-SpecOpsUnityRegistryPackageCacheCapabilities -ProjectRoot $fixture.ProjectRoot -CacheRoot $fixture.CacheRoot)
+        Assert-Equal 1 $result.Count 'Registry capability count mismatch.'; Assert-Equal $fixture.Name $result[0].PackageName 'Registry package name changed.'; Assert-Equal $fixture.Version $result[0].PackageVersion 'Registry package version changed.'
+        Assert-True ([string] $result[0].Integrity -cmatch '^sha1-') 'Registry integrity observation missing.'
+    }
+    Test-Case 'Missing required registry cache entry rejects' { $fixture = New-RegistryCacheFixture -MissingEntry; Assert-Rejected { Get-SpecOpsUnityRegistryPackageCacheCapabilities -ProjectRoot $fixture.ProjectRoot -CacheRoot $fixture.CacheRoot } 'UNITY_REGISTRY_PACKAGE_CACHE_MISSING' }
+    Test-Case 'Wrong registry cache version rejects' { $fixture = New-RegistryCacheFixture -WrongVersion; Assert-Rejected { Get-SpecOpsUnityRegistryPackageCacheCapabilities -ProjectRoot $fixture.ProjectRoot -CacheRoot $fixture.CacheRoot } 'UNITY_REGISTRY_PACKAGE_CACHE_MISSING' }
+    Test-Case 'Missing registry cache content rejects' { $fixture = New-RegistryCacheFixture -MissingContent; Assert-Rejected { Get-SpecOpsUnityRegistryPackageCacheCapabilities -ProjectRoot $fixture.ProjectRoot -CacheRoot $fixture.CacheRoot } 'UNITY_REGISTRY_PACKAGE_CACHE_MISSING' }
+    Test-Case 'Tampered registry archive integrity rejects' { $fixture = New-RegistryCacheFixture -TamperContent; Assert-Rejected { Get-SpecOpsUnityRegistryPackageCacheCapabilities -ProjectRoot $fixture.ProjectRoot -CacheRoot $fixture.CacheRoot } 'UNITY_REGISTRY_PACKAGE_CACHE_INVALID' }
+    Test-Case 'Wrong embedded registry package identity rejects' { $fixture = New-RegistryCacheFixture -WrongIdentity; Assert-Rejected { Get-SpecOpsUnityRegistryPackageCacheCapabilities -ProjectRoot $fixture.ProjectRoot -CacheRoot $fixture.CacheRoot } 'UNITY_REGISTRY_PACKAGE_CACHE_INVALID' }
+
     Test-Case 'Observation capture completes before cleanup' {
         $fixture = New-ObservationFixture
         $state = [pscustomobject]@{ ResultReads = 0; LogReads = 0; CleanupCalls = 0 }
@@ -325,6 +473,38 @@ try {
         Assert-Equal 1 $state.CleanupCalls 'Cleanup call count mismatch.'
         Assert-True $result.Cleanup.Succeeded 'Cleanup did not follow complete capture.'
         Assert-Equal 14 $result.Results.NUnit3.Counts.Total 'Normalized result was not retained.'
+        Assert-True $result.Compilation.Completed 'Compilation completion was not retained from unity.log.'
+        Assert-Equal 0 $result.Compilation.Errors 'Compilation error count mismatch.'
+    }
+    Test-Case 'Contracted results appearing after initial absence are retained and parsed' {
+        $fixture = New-ObservationFixture; [byte[]] $expectedResults = [System.IO.File]::ReadAllBytes($fixture.ResultsPath); [System.IO.File]::Delete($fixture.ResultsPath)
+        $state = [pscustomobject]@{ ResultExistenceChecks = 0 }
+        $exists = {
+            param($path)
+            if ($path -ceq $fixture.ResultsPath) {
+                $state.ResultExistenceChecks++
+                if ($state.ResultExistenceChecks -eq 1) { return $false }
+                if (-not [System.IO.File]::Exists($path)) { Write-TestFileBytes $path $expectedResults }
+            }
+            return [System.IO.File]::Exists($path)
+        }.GetNewClosure()
+        $result = Invoke-ObservationCore $fixture -FileExists $exists
+        Assert-True ($state.ResultExistenceChecks -ge 3) 'Results did not traverse absent then stable observations.'
+        Assert-True $result.Results.Exists 'Late contracted results remained absent.'
+        Assert-Bytes $expectedResults $result.Results.Bytes 'Late contracted results bytes were discarded.'
+        Assert-Equal 14 $result.Results.NUnit3.Counts.Total 'Late contracted results were not parsed.'
+    }
+    Test-Case 'Established compilation failure survives absent results and reaches cleanup' {
+        $fixture = New-ObservationFixture; [System.IO.File]::Delete($fixture.ResultsPath)
+        Write-TestFileBytes $fixture.LogPath $utf8.GetBytes("## Script Compilation Error for: Csc`nScripts have compiler errors.`n$successCompilationLog")
+        $state = [pscustomobject]@{ CleanupCalls = 0 }
+        $cleanup = { param($workspace) $state.CleanupCalls++ }.GetNewClosure()
+        $result = Invoke-ObservationCore $fixture -Cleanup $cleanup
+        Assert-True $result.Compilation.Completed 'Compilation completion was lost.'
+        Assert-Equal 1 $result.Compilation.Errors 'Compilation failure was not retained.'
+        Assert-False $result.Results.Exists 'Absent results were fabricated.'
+        Assert-True ($null -eq $result.Results.NUnit3) 'NUnit facts were fabricated after compilation failure.'
+        Assert-Equal 1 $state.CleanupCalls 'Observed compilation failure did not reach cleanup.'
     }
     Test-Case 'Missing contracted results rejects without cleanup and preserves workspace' {
         $fixture = New-ObservationFixture; [System.IO.File]::Delete($fixture.ResultsPath); $state = [pscustomobject]@{ CleanupCalls = 0 }
@@ -349,11 +529,11 @@ try {
     Test-Case 'Temporarily unavailable and unstable output becomes stable before cleanup' {
         $fixture = New-ObservationFixture; $state = [pscustomobject]@{ LogReads = 0; CleanupCalls = 0 }
         $responses = [System.Collections.Generic.Queue[object]]::new()
-        $responses.Enqueue([System.IO.IOException]::new('held')); $responses.Enqueue($utf8.GetBytes('partial')); $responses.Enqueue($utf8.GetBytes('complete')); $responses.Enqueue($utf8.GetBytes('complete'))
-        $read = { param($path) if ($path -ceq $fixture.LogPath) { $state.LogReads++; $response = if ($responses.Count -gt 0) { $responses.Dequeue() } else { $utf8.GetBytes('complete') }; if ($response -is [System.Exception]) { throw $response }; return [byte[]] $response }; [System.IO.File]::ReadAllBytes($path) }.GetNewClosure()
+        $responses.Enqueue([System.IO.IOException]::new('held')); $responses.Enqueue($utf8.GetBytes('partial')); $responses.Enqueue($utf8.GetBytes($successCompilationLog)); $responses.Enqueue($utf8.GetBytes($successCompilationLog))
+        $read = { param($path) if ($path -ceq $fixture.LogPath) { $state.LogReads++; $response = if ($responses.Count -gt 0) { $responses.Dequeue() } else { $utf8.GetBytes($successCompilationLog) }; if ($response -is [System.Exception]) { throw $response }; return [byte[]] $response }; [System.IO.File]::ReadAllBytes($path) }.GetNewClosure()
         $cleanup = { param($workspace) $state.CleanupCalls++; if ($responses.Count -ne 0) { throw 'Cleanup preceded stable log.' } }.GetNewClosure()
         $result = Invoke-ObservationCore $fixture -FileReader $read -Cleanup $cleanup -Timeout 2000
-        Assert-Bytes $utf8.GetBytes('complete') $result.Log.Bytes 'Stable log bytes mismatch.'
+        Assert-Bytes $utf8.GetBytes($successCompilationLog) $result.Log.Bytes 'Stable log bytes mismatch.'
         Assert-Equal 1 $state.CleanupCalls 'Cleanup did not run exactly once.'
         Assert-True $result.Cleanup.Succeeded 'Cleanup failed after eventual quiescence.'
     }
@@ -489,7 +669,7 @@ try {
         $cleanup = { param($workspace) throw 'simulated cleanup rejection' }
         $result = Invoke-ObservationCore $fixture -Cleanup $cleanup
         Assert-True $result.Cleanup.Attempted 'Cleanup attempt was not reported.'; Assert-False $result.Cleanup.Succeeded 'Cleanup failure reported success.'; Assert-Equal 'UNITY_ADAPTER_FAILURE' $result.Cleanup.RejectionClass 'Cleanup rejection class mismatch.'
-        Assert-Equal 14 $result.Results.NUnit3.Counts.Total 'Captured parser facts were lost.'; Assert-Bytes $utf8.GetBytes('unity-log') $result.Log.Bytes 'Captured log was lost.'; Assert-True ([System.IO.Directory]::Exists($fixture.Workspace.Root)) 'Simulated cleanup unexpectedly removed workspace.'
+        Assert-Equal 14 $result.Results.NUnit3.Counts.Total 'Captured parser facts were lost.'; Assert-Bytes $utf8.GetBytes($successCompilationLog) $result.Log.Bytes 'Captured log was lost.'; Assert-True ([System.IO.Directory]::Exists($fixture.Workspace.Root)) 'Simulated cleanup unexpectedly removed workspace.'
     }
     Test-Case 'Public observation lifecycle fixes quiescence and exposes no override' {
         $command = Get-Command Invoke-SpecOpsUnityObservationLifecycle
@@ -544,8 +724,16 @@ try {
         $observation = Invoke-ProcessCore $pwshPath @('-NoProfile', '-Command', 'exit 0')
         foreach ($name in @('Started', 'TimedOut', 'TerminationConfirmed', 'ExitCode', 'Stdout', 'Stderr', 'DurationMilliseconds', 'StartFailure')) { Assert-True ($null -ne $observation.PSObject.Properties[$name]) "Missing process observation field: $name" }
     }
+    Test-Case 'Process-local package guard mechanically denies Git transport fallback' {
+        $guard = Get-SpecOpsUnityPackageAcquisitionGuard
+        $repositoryUri = ([System.Uri]::new($repositoryRoot)).AbsoluteUri
+        $observation = Invoke-ProcessCore 'git' @('ls-remote', $repositoryUri) 5000 30000 $guard
+        Assert-True $observation.Started 'Guard verification Git process did not start.'
+        Assert-True ($observation.ExitCode -ne 0) 'Process-local guard allowed a Git transport.'
+        Assert-True ($observation.Stderr.Contains('transport', [System.StringComparison]::OrdinalIgnoreCase) -and $observation.Stderr.Contains('not allowed', [System.StringComparison]::OrdinalIgnoreCase)) 'Git transport denial was not observed.'
+    }
 
-    Test-Case 'Unity module contains no Git semantics' { $source = [System.IO.File]::ReadAllText($modulePath); Assert-False ([regex]::IsMatch($source, '(?i)\bgit\b|rev-parse|ls-tree|cat-file|checkout|worktree')) 'Git semantics found in Unity module.' }
+    Test-Case 'Unity module contains package-object verification but no subject repository state semantics' { $source = [System.IO.File]::ReadAllText($modulePath); Assert-True ($source.Contains('Invoke-SpecOpsUnityCapabilityGit', [System.StringComparison]::Ordinal)) 'Package Git-object verifier absent.'; Assert-False ([regex]::IsMatch($source, "(?i)SpecOpsRepository|--show-current|'(?:HEAD|status|branch|checkout|worktree)'")) 'Subject repository state semantics found in Unity module.' }
     Test-Case 'Unity module contains no Eval business logic' { $source = [System.IO.File]::ReadAllText($modulePath); Assert-False ([regex]::IsMatch($source, '(?i)definitionContentIdentity|overallResult|checkResults|eval-result|provenance|\.specops/evidence')) 'Eval/evidence business logic found in Unity module.' }
     Test-Case 'Process-tree fixture uses direct ProcessStartInfo' { $source = [System.IO.File]::ReadAllText($PSCommandPath); Assert-False $source.Contains(('Start-' + 'Process'), [System.StringComparison]::OrdinalIgnoreCase) 'Test suite contains forbidden descendant process creation.'; Assert-True $source.Contains('[Diagnostics.ProcessStartInfo]::new()', [System.StringComparison]::Ordinal) 'Direct child ProcessStartInfo fixture is absent.' }
     Test-Case 'Unity test suite never invokes Unity' { $source = [System.IO.File]::ReadAllText($PSCommandPath); Assert-False ([regex]::IsMatch($source, '(?i)Invoke-SpecOpsControlledProcess(?:Core)?[^\r\n]*Unity\.exe')) 'Test suite contains a Unity process invocation.' }

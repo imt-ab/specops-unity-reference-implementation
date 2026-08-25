@@ -689,15 +689,19 @@ function Read-SpecOpsUnityStableFileBytes {
         [Parameter(Mandatory)] [bool] $RequireNonEmpty,
         [Parameter(Mandatory)] [int] $TimeoutMilliseconds,
         [Parameter(Mandatory)] [int] $StableIntervalMilliseconds,
-        [Parameter(Mandatory)] [scriptblock] $ReadFileBytes
+        [Parameter(Mandatory)] [scriptblock] $ReadFileBytes,
+        [scriptblock] $FileExists = { param($candidatePath) [System.IO.File]::Exists($candidatePath) },
+        [bool] $AllowAbsentAfterTimeout = $false
     )
 
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
     [byte[]] $previous = $null
     $hasPrevious = $false
+    $observedExists = $false
     while ($true) {
         try {
-            if ([System.IO.File]::Exists($Path)) {
+            if (& $FileExists $Path) {
+                $observedExists = $true
                 [byte[]] $current = @(& $ReadFileBytes $Path)
                 if ((-not $RequireNonEmpty -or $current.LongLength -gt 0) -and
                     $hasPrevious -and (Test-SpecOpsUnityExactBytes -Left $previous -Right $current)) {
@@ -724,11 +728,44 @@ function Read-SpecOpsUnityStableFileBytes {
         }
 
         if ($stopwatch.ElapsedMilliseconds -ge $TimeoutMilliseconds) {
+            if ($AllowAbsentAfterTimeout -and -not $observedExists) { return $null }
             throw (New-SpecOpsUnityException "Required observation output did not become readable and stable: $LogicalName" 'UNITY_OBSERVATION_OUTPUT_NOT_QUIESCENT')
         }
         $remaining = $TimeoutMilliseconds - [int] $stopwatch.ElapsedMilliseconds
         $delay = [System.Math]::Max(1, [System.Math]::Min($StableIntervalMilliseconds, $remaining))
         Start-Sleep -Milliseconds $delay
+    }
+}
+
+function Read-SpecOpsUnityCompilationObservation {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)] [AllowEmptyCollection()] [byte[]] $Bytes)
+
+    try { $text = $script:Utf8Strict.GetString($Bytes) }
+    catch { throw (New-SpecOpsUnityException 'Unity log is not valid UTF-8.' 'UNITY_LOG_ENCODING_INVALID' $_.Exception) }
+
+    $completed = [System.Text.RegularExpressions.Regex]::IsMatch(
+        $text,
+        '(?m)^AssetDatabase: script compilation time: [0-9]+(?:\.[0-9]+)?s\r?$'
+    )
+    $errorEvidence = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+    foreach ($match in [System.Text.RegularExpressions.Regex]::Matches(
+        $text,
+        '(?m)^[^\r\n]+\([0-9]+,[0-9]+\): error [A-Za-z]+[0-9]+: [^\r\n]+\r?$'
+    )) { $null = $errorEvidence.Add($match.Value.TrimEnd("`r")) }
+    $hasFailureMarker = [System.Text.RegularExpressions.Regex]::IsMatch(
+        $text,
+        '(?m)^(?:Scripts have compiler errors\.|## Script Compilation Error for:.*)\r?$'
+    )
+    $errors = $errorEvidence.Count
+    if ($hasFailureMarker -and $errors -eq 0) { $errors = 1 }
+
+    return [pscustomobject]@{
+        Completed = $completed
+        Errors = $errors
+        Warnings = $null
+        WarningObservability = 'COMPILATION_WARNING_OBSERVABILITY_UNRESOLVED'
+        Source = 'unity.log'
     }
 }
 
@@ -786,6 +823,380 @@ function Get-SpecOpsUnityPostRunFileInventory {
         throw (New-SpecOpsUnityException 'Unable to enumerate the post-run subject safely.' 'UNITY_SUBJECT_INVENTORY_READ_FAILED' $_.Exception)
     }
     return $inventory
+}
+
+function Invoke-SpecOpsUnityCapabilityGit {
+    param(
+        [Parameter(Mandatory)] [string] $GitDirectory,
+        [Parameter(Mandatory)] [AllowEmptyCollection()] [string[]] $Arguments
+    )
+
+    $environment = Get-SpecOpsUnityPackageAcquisitionGuard
+    $environment['LC_ALL'] = 'C'
+    $environment['LANG'] = 'C'
+    $environment['GIT_NO_REPLACE_OBJECTS'] = '1'
+    $environment['GIT_OBJECT_DIRECTORY'] = [System.IO.Path]::Combine($GitDirectory, 'objects')
+    $environment['GIT_ALTERNATE_OBJECT_DIRECTORIES'] = ''
+    $result = Invoke-SpecOpsControlledProcessCore -FilePath 'git' -ArgumentList ([string[]] @('--no-replace-objects', '--git-dir', $GitDirectory) + $Arguments) -TimeoutMilliseconds 30000 -TerminationWaitMilliseconds $script:TerminationWaitMilliseconds -EnvironmentVariables $environment
+    if (-not $result.Started -or $result.TimedOut -or -not $result.TerminationConfirmed -or $null -eq $result.ExitCode -or [int] $result.ExitCode -ne 0) {
+        throw (New-SpecOpsUnityException 'The offline package capability Git object chain could not be verified.' 'UNITY_PACKAGE_CAPABILITY_REVISION_INVALID')
+    }
+    return [string] $result.Stdout
+}
+
+function Get-SpecOpsUnityCapabilityTreeEntries {
+    param(
+        [Parameter(Mandatory)] [string] $GitDirectory,
+        [Parameter(Mandatory)] [string] $TreeObjectId
+    )
+
+    $output = Invoke-SpecOpsUnityCapabilityGit -GitDirectory $GitDirectory -Arguments @('ls-tree', '-rz', '--full-tree', $TreeObjectId)
+    $entries = [System.Collections.Generic.Dictionary[string, object]]::new([System.StringComparer]::Ordinal)
+    foreach ($record in $output.Split([char] 0, [System.StringSplitOptions]::RemoveEmptyEntries)) {
+        $match = [regex]::Match($record, '^(?<mode>[0-9]{6}) (?<type>[^ ]+) (?<object>[0-9a-f]{40})\t(?<path>.+)$')
+        if (-not $match.Success) {
+            throw (New-SpecOpsUnityException 'The offline package capability tree contains an invalid entry.' 'UNITY_PACKAGE_CAPABILITY_REVISION_INVALID')
+        }
+        $path = Assert-SpecOpsUnitySubjectPath -Path $match.Groups['path'].Value
+        if ($entries.ContainsKey($path)) {
+            throw (New-SpecOpsUnityException 'The offline package capability tree contains duplicate paths.' 'UNITY_PACKAGE_CAPABILITY_REVISION_INVALID')
+        }
+        $entries.Add($path, [pscustomobject]@{ Path = $path; Mode = $match.Groups['mode'].Value; Type = $match.Groups['type'].Value; ObjectId = $match.Groups['object'].Value })
+    }
+    return $entries
+}
+
+function Read-SpecOpsUnityRegistryPackageArchiveIdentity {
+    param(
+        [Parameter(Mandatory)] [string] $ArchivePath,
+        [Parameter(Mandatory)] [string] $PackageName,
+        [Parameter(Mandatory)] [string] $PackageVersion
+    )
+
+    $fileStream = $null
+    $gzipStream = $null
+    $tarReader = $null
+    try {
+        $fileStream = [System.IO.File]::OpenRead($ArchivePath)
+        $gzipStream = [System.IO.Compression.GZipStream]::new($fileStream, [System.IO.Compression.CompressionMode]::Decompress, $false)
+        $tarReader = [System.Formats.Tar.TarReader]::new($gzipStream, $false)
+        $packageJsonCount = 0
+        while ($null -ne ($tarEntry = $tarReader.GetNextEntry())) {
+            if (-not [string]::Equals([string] $tarEntry.Name, 'package/package.json', [StringComparison]::Ordinal)) { continue }
+            $packageJsonCount++
+            if ($packageJsonCount -ne 1 -or $null -eq $tarEntry.DataStream) {
+                throw (New-SpecOpsUnityException "The cached package archive has an invalid package.json inventory: $PackageName" 'UNITY_REGISTRY_PACKAGE_CACHE_INVALID')
+            }
+            $packageJsonBytes = [System.IO.MemoryStream]::new()
+            try {
+                [byte[]] $buffer = [byte[]]::new(8192)
+                while (($read = $tarEntry.DataStream.Read($buffer, 0, $buffer.Length)) -gt 0) {
+                    if ($packageJsonBytes.Length + $read -gt 1048576) {
+                        throw (New-SpecOpsUnityException "The cached package metadata is unreasonably large: $PackageName" 'UNITY_REGISTRY_PACKAGE_CACHE_INVALID')
+                    }
+                    $packageJsonBytes.Write($buffer, 0, $read)
+                }
+                $packageMetadata = $script:Utf8Strict.GetString($packageJsonBytes.ToArray()) | ConvertFrom-Json -Depth 100
+            }
+            finally { $packageJsonBytes.Dispose() }
+        }
+    }
+    catch {
+        if ($_.Exception.Data.Contains('SpecOpsRejectionClass')) { throw }
+        throw (New-SpecOpsUnityException "The cached package archive cannot be read: $PackageName" 'UNITY_REGISTRY_PACKAGE_CACHE_INVALID' $_.Exception)
+    }
+    finally {
+        if ($null -ne $tarReader) { $tarReader.Dispose() }
+        if ($null -ne $gzipStream) { $gzipStream.Dispose() }
+        if ($null -ne $fileStream) { $fileStream.Dispose() }
+    }
+    if ($packageJsonCount -ne 1 -or
+        -not [string]::Equals([string] $packageMetadata.name, $PackageName, [StringComparison]::Ordinal) -or
+        -not [string]::Equals([string] $packageMetadata.version, $PackageVersion, [StringComparison]::Ordinal)) {
+        throw (New-SpecOpsUnityException "The cached package archive identity is invalid: $PackageName@$PackageVersion" 'UNITY_REGISTRY_PACKAGE_CACHE_INVALID')
+    }
+    return [pscustomobject]@{ Name = [string] $packageMetadata.name; Version = [string] $packageMetadata.version }
+}
+
+function Get-SpecOpsUnityRegistryPackageCacheCapabilities {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)] [string] $ProjectRoot,
+        [string] $CacheRoot
+    )
+
+    $project = [System.IO.Path]::GetFullPath($ProjectRoot)
+    if ([string]::IsNullOrEmpty($CacheRoot)) {
+        $localAppData = [Environment]::GetFolderPath([Environment+SpecialFolder]::LocalApplicationData)
+        if ([string]::IsNullOrEmpty($localAppData)) {
+            throw (New-SpecOpsUnityException 'The machine-local Unity package cache root cannot be resolved.' 'UNITY_REGISTRY_PACKAGE_CACHE_MISSING')
+        }
+        $CacheRoot = [System.IO.Path]::Combine($localAppData, 'Unity', 'cache')
+    }
+    $cache = [System.IO.Path]::GetFullPath($CacheRoot)
+    $indexRoot = [System.IO.Path]::Combine($cache, 'upm', 'db', 'index-v5')
+    $contentRoot = [System.IO.Path]::Combine($cache, 'upm', 'db', 'content-v2')
+
+    try {
+        $lockBytes = [System.IO.File]::ReadAllBytes([System.IO.Path]::Combine($project, 'Packages', 'packages-lock.json'))
+        $lock = $script:Utf8Strict.GetString($lockBytes) | ConvertFrom-Json -Depth 100
+    }
+    catch {
+        throw (New-SpecOpsUnityException 'The materialized package lock cannot be read for registry preflight.' 'UNITY_PACKAGE_AUTHORITY_INVALID' $_.Exception)
+    }
+
+    $required = [System.Collections.Generic.Dictionary[string, object]]::new([System.StringComparer]::Ordinal)
+    foreach ($property in $lock.dependencies.PSObject.Properties) {
+        if (-not [string]::Equals([string] $property.Value.source, 'registry', [StringComparison]::Ordinal)) { continue }
+        $name = [string] $property.Name
+        $version = [string] $property.Value.version
+        $url = [string] $property.Value.url
+        if ([string]::IsNullOrWhiteSpace($name) -or [string]::IsNullOrWhiteSpace($version) -or
+            -not [string]::Equals($url, 'https://packages.unity.com', [StringComparison]::Ordinal) -or $required.ContainsKey($name)) {
+            throw (New-SpecOpsUnityException "The locked registry-package authority is invalid: $name" 'UNITY_PACKAGE_AUTHORITY_INVALID')
+        }
+        $required.Add($name, [pscustomobject]@{ Name = $name; Version = $version; Registry = 'packages.unity.com' })
+    }
+    if ($required.Count -eq 0) { return @() }
+    if (-not [System.IO.Directory]::Exists($indexRoot) -or -not [System.IO.Directory]::Exists($contentRoot)) {
+        throw (New-SpecOpsUnityException 'The standard Unity UPM cache database is missing.' 'UNITY_REGISTRY_PACKAGE_CACHE_MISSING')
+    }
+
+    $candidates = [System.Collections.Generic.Dictionary[string, object]]::new([System.StringComparer]::Ordinal)
+    foreach ($name in $required.Keys) { $candidates.Add($name, [System.Collections.Generic.List[object]]::new()) }
+    $indexInventory = Get-SpecOpsUnityPostRunFileInventory -ProjectRoot $indexRoot
+    foreach ($relativeIndexPath in (Get-SpecOpsUnityOrdinalSortedStrings @($indexInventory.Keys))) {
+        try { $indexText = $script:Utf8Strict.GetString([System.IO.File]::ReadAllBytes($indexInventory[$relativeIndexPath])) }
+        catch { throw (New-SpecOpsUnityException 'The standard Unity UPM cache index is unreadable.' 'UNITY_REGISTRY_PACKAGE_CACHE_INVALID' $_.Exception) }
+        foreach ($rawLine in $indexText.Split("`n")) {
+            $line = $rawLine.TrimEnd("`r")
+            if ([string]::IsNullOrEmpty($line) -or -not $line.Contains('"key":"package-tarball|', [StringComparison]::Ordinal)) { continue }
+            $tab = $line.IndexOf("`t", [StringComparison]::Ordinal)
+            if ($tab -ne 40 -or $line.IndexOf("`t", $tab + 1) -ge 0) { continue }
+            $recordHash = $line.Substring(0, $tab)
+            $json = $line.Substring($tab + 1)
+            try { $record = $json | ConvertFrom-Json -Depth 20 }
+            catch { continue }
+            $keyParts = ([string] $record.key).Split('|')
+            if ($keyParts.Count -ne 4 -or -not [string]::Equals($keyParts[0], 'package-tarball', [StringComparison]::Ordinal) -or -not $required.ContainsKey($keyParts[1])) { continue }
+            $requirement = $required[$keyParts[1]]
+            if (-not [string]::Equals($keyParts[2], [string] $requirement.Version, [StringComparison]::Ordinal)) { continue }
+
+            $calculatedRecordHash = [System.Convert]::ToHexString([System.Security.Cryptography.SHA1]::HashData([System.Text.Encoding]::UTF8.GetBytes($json))).ToLowerInvariant()
+            $calculatedIndexHash = [System.Convert]::ToHexString([System.Security.Cryptography.SHA256]::HashData([System.Text.Encoding]::UTF8.GetBytes([string] $record.key))).ToLowerInvariant()
+            $expectedIndexPath = "$($calculatedIndexHash.Substring(0, 2))/$($calculatedIndexHash.Substring(2, 2))/$($calculatedIndexHash.Substring(4))"
+            $integrityMatch = [regex]::Match([string] $record.integrity, '^sha1-(?<digest>[A-Za-z0-9+/]{27}=)$')
+            if (-not [string]::Equals($recordHash, $calculatedRecordHash, [StringComparison]::Ordinal) -or
+                -not [string]::Equals($relativeIndexPath, $expectedIndexPath, [StringComparison]::Ordinal) -or -not $integrityMatch.Success) {
+                throw (New-SpecOpsUnityException "The registry cache index metadata is invalid: $($requirement.Name)@$($requirement.Version)" 'UNITY_REGISTRY_PACKAGE_CACHE_INVALID')
+            }
+            [byte[]] $digest = [System.Convert]::FromBase64String($integrityMatch.Groups['digest'].Value)
+            $digestHex = [System.Convert]::ToHexString($digest).ToLowerInvariant()
+            if (-not [string]::Equals($keyParts[3], $digestHex, [StringComparison]::Ordinal)) {
+                throw (New-SpecOpsUnityException "The registry cache key and integrity disagree: $($requirement.Name)@$($requirement.Version)" 'UNITY_REGISTRY_PACKAGE_CACHE_INVALID')
+            }
+            $candidates[$requirement.Name].Add([pscustomobject]@{ Requirement = $requirement; Record = $record; Digest = $digest; DigestHex = $digestHex })
+        }
+    }
+
+    $observations = [System.Collections.Generic.List[object]]::new()
+    foreach ($name in (Get-SpecOpsUnityOrdinalSortedStrings @($required.Keys))) {
+        $matches = $candidates[$name]
+        if ($matches.Count -eq 0) {
+            throw (New-SpecOpsUnityException "The required registry package is absent from the standard Unity UPM cache: $name@$($required[$name].Version)" 'UNITY_REGISTRY_PACKAGE_CACHE_MISSING')
+        }
+        if ($matches.Count -ne 1) {
+            throw (New-SpecOpsUnityException "The required registry package has ambiguous standard cache entries: $name@$($required[$name].Version)" 'UNITY_REGISTRY_PACKAGE_CACHE_INVALID')
+        }
+        $candidate = $matches[0]
+        $contentPath = [System.IO.Path]::Combine($contentRoot, 'sha1', $candidate.DigestHex.Substring(0, 2), $candidate.DigestHex.Substring(2, 2), $candidate.DigestHex.Substring(4))
+        if (-not [System.IO.File]::Exists($contentPath)) {
+            throw (New-SpecOpsUnityException "The required registry package content is absent: $name@$($candidate.Requirement.Version)" 'UNITY_REGISTRY_PACKAGE_CACHE_MISSING')
+        }
+        $archiveLength = [System.IO.FileInfo]::new($contentPath).Length
+        $archiveStream = [System.IO.File]::OpenRead($contentPath)
+        try { [byte[]] $archiveDigest = [System.Security.Cryptography.SHA1]::HashData($archiveStream) }
+        finally { $archiveStream.Dispose() }
+        $recordedSize = 0L
+        if (-not [int64]::TryParse([string] $candidate.Record.size, [System.Globalization.NumberStyles]::None, [System.Globalization.CultureInfo]::InvariantCulture, [ref] $recordedSize) -or
+            $recordedSize -ne $archiveLength -or
+            -not (Test-SpecOpsUnityExactBytes -Left $candidate.Digest -Right $archiveDigest)) {
+            throw (New-SpecOpsUnityException "The required registry package content integrity is invalid: $name@$($candidate.Requirement.Version)" 'UNITY_REGISTRY_PACKAGE_CACHE_INVALID')
+        }
+        $identity = Read-SpecOpsUnityRegistryPackageArchiveIdentity -ArchivePath $contentPath -PackageName $name -PackageVersion ([string] $candidate.Requirement.Version)
+        $observations.Add([pscustomobject]@{ PackageName = $identity.Name; PackageVersion = $identity.Version; Registry = [string] $candidate.Requirement.Registry; Integrity = [string] $candidate.Record.integrity; ByteLength = $recordedSize })
+    }
+    return @($observations)
+}
+
+function Initialize-SpecOpsUnityOfflinePackageCapability {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)] [string] $ProjectRoot,
+        [string] $CapabilityRoot
+    )
+
+    $project = [System.IO.Path]::GetFullPath($ProjectRoot)
+    if ([string]::IsNullOrEmpty($CapabilityRoot)) {
+        $localAppData = [Environment]::GetFolderPath([Environment+SpecialFolder]::LocalApplicationData)
+        if ([string]::IsNullOrEmpty($localAppData)) {
+            throw (New-SpecOpsUnityException 'The machine-local Unity package capability root cannot be resolved.' 'UNITY_PACKAGE_CAPABILITY_MISSING')
+        }
+        $CapabilityRoot = [System.IO.Path]::Combine($localAppData, 'SpecOps', 'capabilities', 'unity-git-packages')
+    }
+    $capabilityBase = [System.IO.Path]::GetFullPath($CapabilityRoot)
+
+    try {
+        $manifestText = $script:Utf8Strict.GetString([System.IO.File]::ReadAllBytes([System.IO.Path]::Combine($project, 'Packages', 'manifest.json')))
+        $lockText = $script:Utf8Strict.GetString([System.IO.File]::ReadAllBytes([System.IO.Path]::Combine($project, 'Packages', 'packages-lock.json')))
+        $projectManifest = $manifestText | ConvertFrom-Json -Depth 100
+        $projectLock = $lockText | ConvertFrom-Json -Depth 100
+    }
+    catch {
+        throw (New-SpecOpsUnityException 'The materialized Unity package authority cannot be read.' 'UNITY_PACKAGE_AUTHORITY_INVALID' $_.Exception)
+    }
+
+    $gitDependencies = @($projectManifest.dependencies.PSObject.Properties | Where-Object { [string] $_.Value -match '\.git(?:\?|#|$)' })
+    $observations = [System.Collections.Generic.List[object]]::new()
+    foreach ($dependency in $gitDependencies) {
+        $packageName = [string] $dependency.Name
+        $requestedVersion = [string] $dependency.Value
+        $lockProperty = $projectLock.dependencies.PSObject.Properties[$packageName]
+        if ($null -eq $lockProperty -or -not [string]::Equals([string] $lockProperty.Value.source, 'git', [StringComparison]::Ordinal) -or
+            -not [string]::Equals([string] $lockProperty.Value.version, $requestedVersion, [StringComparison]::Ordinal)) {
+            throw (New-SpecOpsUnityException "The locked git-package authority is inconsistent: $packageName" 'UNITY_PACKAGE_AUTHORITY_INVALID')
+        }
+        $lockedCommit = [string] $lockProperty.Value.hash
+        if ($lockedCommit -cnotmatch '^[0-9a-f]{40}$') {
+            throw (New-SpecOpsUnityException "The locked git-package commit is invalid: $packageName" 'UNITY_PACKAGE_AUTHORITY_INVALID')
+        }
+        $match = [regex]::Match($requestedVersion, '^(?<repository>https://[^?#]+\.git)\?path=(?<subpath>[^#]+)#(?<ref>[^#]+)$')
+        if (-not $match.Success) {
+            throw (New-SpecOpsUnityException "The git-package reference is not supported by the offline capability contract: $packageName" 'UNITY_PACKAGE_AUTHORITY_INVALID')
+        }
+
+        $capabilityDirectory = [System.IO.Path]::Combine($capabilityBase, $packageName, $lockedCommit)
+        $capabilityManifestPath = [System.IO.Path]::Combine($capabilityDirectory, 'capability-manifest.json')
+        $sourceRoot = [System.IO.Path]::Combine($capabilityDirectory, 'source')
+        $gitDirectory = [System.IO.Path]::Combine($capabilityDirectory, 'repository.git')
+        try {
+            $capability = $script:Utf8Strict.GetString([System.IO.File]::ReadAllBytes($capabilityManifestPath)) | ConvertFrom-Json -Depth 100
+        }
+        catch {
+            throw (New-SpecOpsUnityException "The required offline package capability is missing or unreadable: $packageName" 'UNITY_PACKAGE_CAPABILITY_MISSING' $_.Exception)
+        }
+        $fingerprintInput = $lockedCommit + $match.Groups['subpath'].Value
+        $expectedFingerprint = [System.Convert]::ToHexString([System.Security.Cryptography.SHA1]::HashData([System.Text.Encoding]::UTF8.GetBytes($fingerprintInput))).ToLowerInvariant()
+        $identityMatches =
+            [string]::Equals([string] $capability.capabilityKind, 'unity-git-package-offline-capability', [StringComparison]::Ordinal) -and
+            [string]::Equals([string] $capability.capabilityFormatVersion, '1.0.0', [StringComparison]::Ordinal) -and
+            [string]::Equals([string] $capability.packageName, $packageName, [StringComparison]::Ordinal) -and
+            [string]::Equals([string] $capability.repositoryUrl, $match.Groups['repository'].Value, [StringComparison]::Ordinal) -and
+            [string]::Equals([string] $capability.requestedRef, $match.Groups['ref'].Value, [StringComparison]::Ordinal) -and
+            [string]::Equals([string] $capability.packageSubpath, $match.Groups['subpath'].Value, [StringComparison]::Ordinal) -and
+            [string]::Equals([string] $capability.lockedCommit, $lockedCommit, [StringComparison]::Ordinal) -and
+            [string]::Equals([string] $capability.objectFormat, 'sha1', [StringComparison]::Ordinal) -and
+            ([string] $capability.packageTreeObjectId -cmatch '^[0-9a-f]{40}$') -and
+            [string]::Equals([string] $capability.upmFingerprint, $expectedFingerprint, [StringComparison]::Ordinal)
+        if (-not $identityMatches -or $null -eq $capability.entries -or @($capability.entries).Count -eq 0) {
+            throw (New-SpecOpsUnityException "The offline package capability identity is invalid: $packageName" 'UNITY_PACKAGE_CAPABILITY_INVALID')
+        }
+
+        if ([System.IO.File]::Exists([System.IO.Path]::Combine($gitDirectory, 'objects', 'info', 'alternates'))) {
+            throw (New-SpecOpsUnityException "The offline package capability uses an external object store: $packageName" 'UNITY_PACKAGE_CAPABILITY_REVISION_INVALID')
+        }
+        $null = Invoke-SpecOpsUnityCapabilityGit -GitDirectory $gitDirectory -Arguments @('fsck', '--strict', '--full', '--no-reflogs', '--no-dangling', $lockedCommit)
+        $null = Invoke-SpecOpsUnityCapabilityGit -GitDirectory $gitDirectory -Arguments @('cat-file', '-e', "$lockedCommit^{commit}")
+        $resolvedTree = (Invoke-SpecOpsUnityCapabilityGit -GitDirectory $gitDirectory -Arguments @('rev-parse', "$lockedCommit`:$($match.Groups['subpath'].Value)")).Trim()
+        if ($resolvedTree -cnotmatch '^[0-9a-f]{40}$' -or
+            -not [string]::Equals($resolvedTree, [string] $capability.packageTreeObjectId, [StringComparison]::Ordinal) -or
+            -not [string]::Equals((Invoke-SpecOpsUnityCapabilityGit -GitDirectory $gitDirectory -Arguments @('cat-file', '-t', $resolvedTree)).Trim(), 'tree', [StringComparison]::Ordinal)) {
+            throw (New-SpecOpsUnityException "The locked package subtree does not match the capability: $packageName" 'UNITY_PACKAGE_CAPABILITY_REVISION_INVALID')
+        }
+        $revisionEntries = Get-SpecOpsUnityCapabilityTreeEntries -GitDirectory $gitDirectory -TreeObjectId $resolvedTree
+
+        $actualSource = Get-SpecOpsUnityPostRunFileInventory -ProjectRoot $sourceRoot
+        $expectedPaths = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+        $validated = [System.Collections.Generic.List[object]]::new()
+        foreach ($entry in @($capability.entries)) {
+            $path = Assert-SpecOpsUnitySubjectPath -Path ([string] $entry.path)
+            if (-not $expectedPaths.Add($path) -or -not $actualSource.ContainsKey($path) -or -not $revisionEntries.ContainsKey($path) -or
+                [string] $entry.sha256 -cnotmatch '^[0-9a-f]{64}$') {
+                throw (New-SpecOpsUnityException "The offline package capability inventory is invalid: $packageName" 'UNITY_PACKAGE_CAPABILITY_INVALID')
+            }
+            [byte[]] $bytes = [System.IO.File]::ReadAllBytes($actualSource[$path])
+            $sha256 = [System.Convert]::ToHexString([System.Security.Cryptography.SHA256]::HashData($bytes)).ToLowerInvariant()
+            [byte[]] $gitHeader = [System.Text.Encoding]::ASCII.GetBytes("blob $($bytes.LongLength)`0")
+            [byte[]] $gitObjectBytes = [byte[]]::new($gitHeader.Length + $bytes.Length)
+            [System.Buffer]::BlockCopy($gitHeader, 0, $gitObjectBytes, 0, $gitHeader.Length)
+            [System.Buffer]::BlockCopy($bytes, 0, $gitObjectBytes, $gitHeader.Length, $bytes.Length)
+            $gitObjectId = [System.Convert]::ToHexString([System.Security.Cryptography.SHA1]::HashData($gitObjectBytes)).ToLowerInvariant()
+            $revisionEntry = $revisionEntries[$path]
+            if ($bytes.LongLength -ne [int64] $entry.byteLength -or
+                -not [string]::Equals($sha256, [string] $entry.sha256, [StringComparison]::Ordinal) -or
+                -not [string]::Equals([string] $entry.gitObjectType, 'blob', [StringComparison]::Ordinal) -or
+                -not [string]::Equals($gitObjectId, [string] $entry.gitObjectId, [StringComparison]::Ordinal) -or
+                -not [string]::Equals([string] $entry.gitMode, [string] $revisionEntry.Mode, [StringComparison]::Ordinal) -or
+                -not [string]::Equals([string] $entry.gitObjectType, [string] $revisionEntry.Type, [StringComparison]::Ordinal) -or
+                -not [string]::Equals([string] $entry.gitObjectId, [string] $revisionEntry.ObjectId, [StringComparison]::Ordinal)) {
+                throw (New-SpecOpsUnityException "The offline package capability bytes are invalid: $packageName/$path" 'UNITY_PACKAGE_CAPABILITY_INVALID')
+            }
+            $validated.Add([pscustomobject]@{ Path = $path; Bytes = $bytes })
+        }
+        if ($actualSource.Count -ne $expectedPaths.Count -or $revisionEntries.Count -ne $expectedPaths.Count) {
+            throw (New-SpecOpsUnityException "The offline package capability has unexpected files: $packageName" 'UNITY_PACKAGE_CAPABILITY_INVALID')
+        }
+
+        $packageJsonEntry = @($validated | Where-Object { [string]::Equals($_.Path, 'package.json', [StringComparison]::Ordinal) })
+        if ($packageJsonEntry.Count -ne 1) {
+            throw (New-SpecOpsUnityException "The offline package capability has no unique package.json: $packageName" 'UNITY_PACKAGE_CAPABILITY_INVALID')
+        }
+        try { $packageJson = $script:Utf8Strict.GetString([byte[]] $packageJsonEntry[0].Bytes) | ConvertFrom-Json -AsHashtable -Depth 100 }
+        catch { throw (New-SpecOpsUnityException "The offline package metadata is invalid: $packageName" 'UNITY_PACKAGE_CAPABILITY_INVALID' $_.Exception) }
+        if (-not [string]::Equals([string] $packageJson.name, $packageName, [StringComparison]::Ordinal) -or
+            -not [string]::Equals([string] $packageJson.version, [string] $capability.packageVersion, [StringComparison]::Ordinal)) {
+            throw (New-SpecOpsUnityException "The offline package metadata identity is invalid: $packageName" 'UNITY_PACKAGE_CAPABILITY_INVALID')
+        }
+
+        $sourcePackageMetadata = $packageJson | ConvertTo-Json -Depth 100 -Compress
+        $packageJson['_fingerprint'] = $expectedFingerprint
+        [byte[]] $generatedPackageJsonBytes = $script:Utf8Strict.GetBytes(($packageJson | ConvertTo-Json -Depth 100) + "`n")
+        $seedRoot = [System.IO.Path]::Combine($project, 'Library', 'PackageCache', "$packageName@$($expectedFingerprint.Substring(0, 12))")
+        foreach ($entry in $validated) {
+            $destination = [System.IO.Path]::Combine($seedRoot, ([string] $entry.Path).Replace('/', [System.IO.Path]::DirectorySeparatorChar))
+            $parent = [System.IO.Path]::GetDirectoryName($destination)
+            if (-not [System.IO.Directory]::Exists($parent)) { $null = [System.IO.Directory]::CreateDirectory($parent) }
+            [byte[]] $seedBytes = if ([string]::Equals([string] $entry.Path, 'package.json', [StringComparison]::Ordinal)) { $generatedPackageJsonBytes } else { [byte[]] $entry.Bytes }
+            [System.IO.File]::WriteAllBytes($destination, $seedBytes)
+            [byte[]] $writtenBytes = [System.IO.File]::ReadAllBytes($destination)
+            if (-not (Test-SpecOpsUnityExactBytes -Left $seedBytes -Right $writtenBytes)) {
+                throw (New-SpecOpsUnityException "The offline package seed failed point-of-use validation: $packageName/$($entry.Path)" 'UNITY_PACKAGE_CAPABILITY_INVALID')
+            }
+            if ([string]::Equals([string] $entry.Path, 'package.json', [StringComparison]::Ordinal)) {
+                try { $seedMetadata = $script:Utf8Strict.GetString($writtenBytes) | ConvertFrom-Json -AsHashtable -Depth 100 }
+                catch { throw (New-SpecOpsUnityException "The generated package metadata is invalid: $packageName" 'UNITY_PACKAGE_CAPABILITY_INVALID' $_.Exception) }
+                if (-not [string]::Equals([string] $seedMetadata['_fingerprint'], $expectedFingerprint, [StringComparison]::Ordinal)) {
+                    throw (New-SpecOpsUnityException "The generated package fingerprint is invalid: $packageName" 'UNITY_PACKAGE_CAPABILITY_INVALID')
+                }
+                $null = $seedMetadata.Remove('_fingerprint')
+                if (-not [string]::Equals(($seedMetadata | ConvertTo-Json -Depth 100 -Compress), $sourcePackageMetadata, [StringComparison]::Ordinal)) {
+                    throw (New-SpecOpsUnityException "The generated package metadata changed beyond its fingerprint: $packageName" 'UNITY_PACKAGE_CAPABILITY_INVALID')
+                }
+            }
+            elseif (-not (Test-SpecOpsUnityExactBytes -Left ([byte[]] $entry.Bytes) -Right $writtenBytes)) {
+                throw (New-SpecOpsUnityException "The offline package seed changed verified source bytes: $packageName/$($entry.Path)" 'UNITY_PACKAGE_CAPABILITY_INVALID')
+            }
+        }
+        $observations.Add([pscustomobject]@{
+            PackageName = $packageName
+            PackageVersion = [string] $capability.packageVersion
+            LockedCommit = $lockedCommit
+            UpmFingerprint = $expectedFingerprint
+            EntryCount = $validated.Count
+            NetworkAcquisitionAllowed = $false
+        })
+    }
+    return @($observations)
 }
 
 function Get-SpecOpsUnitySubjectObservation {
@@ -917,15 +1328,23 @@ function Invoke-SpecOpsUnityObservationLifecycleCore {
         [Parameter(Mandatory)] [int] $QuiescenceTimeoutMilliseconds,
         [Parameter(Mandatory)] [int] $StableIntervalMilliseconds,
         [Parameter(Mandatory)] [scriptblock] $ReadFileBytes,
-        [Parameter(Mandatory)] [scriptblock] $CleanupWorkspace
+        [Parameter(Mandatory)] [scriptblock] $CleanupWorkspace,
+        [scriptblock] $FileExists = { param($candidatePath) [System.IO.File]::Exists($candidatePath) }
     )
 
     $null = Assert-SpecOpsUnityOwnedWorkspace -Workspace $Workspace
     $canonicalResults = Assert-SpecOpsUnityObservationOutputPath -Workspace $Workspace -Path $ResultsPath -LogicalName 'results.xml'
     $canonicalLog = Assert-SpecOpsUnityObservationOutputPath -Workspace $Workspace -Path $LogPath -LogicalName 'unity.log'
-    [byte[]] $resultBytes = Read-SpecOpsUnityStableFileBytes -Path $canonicalResults -LogicalName 'results.xml' -RequireNonEmpty $true -TimeoutMilliseconds $QuiescenceTimeoutMilliseconds -StableIntervalMilliseconds $StableIntervalMilliseconds -ReadFileBytes $ReadFileBytes
-    $nunit = Read-SpecOpsUnityNUnit3Result -Bytes $resultBytes -RequiredTestFullNames $RequiredTestFullNames
-    [byte[]] $logBytes = Read-SpecOpsUnityStableFileBytes -Path $canonicalLog -LogicalName 'unity.log' -RequireNonEmpty $true -TimeoutMilliseconds $QuiescenceTimeoutMilliseconds -StableIntervalMilliseconds $StableIntervalMilliseconds -ReadFileBytes $ReadFileBytes
+    [byte[]] $logBytes = Read-SpecOpsUnityStableFileBytes -Path $canonicalLog -LogicalName 'unity.log' -RequireNonEmpty $true -TimeoutMilliseconds $QuiescenceTimeoutMilliseconds -StableIntervalMilliseconds $StableIntervalMilliseconds -ReadFileBytes $ReadFileBytes -FileExists $FileExists
+    $compilation = Read-SpecOpsUnityCompilationObservation -Bytes $logBytes
+    [byte[]] $resultBytes = $null
+    $nunit = $null
+    $allowAbsentResults = $compilation.Completed -and $compilation.Errors -gt 0
+    $resultBytes = Read-SpecOpsUnityStableFileBytes -Path $canonicalResults -LogicalName 'results.xml' -RequireNonEmpty $true -TimeoutMilliseconds $QuiescenceTimeoutMilliseconds -StableIntervalMilliseconds $StableIntervalMilliseconds -ReadFileBytes $ReadFileBytes -FileExists $FileExists -AllowAbsentAfterTimeout $allowAbsentResults
+    $resultsExist = $null -ne $resultBytes
+    if ($resultsExist) {
+        $nunit = Read-SpecOpsUnityNUnit3Result -Bytes $resultBytes -RequiredTestFullNames $RequiredTestFullNames
+    }
 
     $trace = if ([string]::IsNullOrEmpty($TracePath) -or -not [System.IO.File]::Exists($TracePath)) {
         [pscustomobject]@{ Exists = $false; Path = if ([string]::IsNullOrEmpty($TracePath)) { $null } else { [System.IO.Path]::GetFullPath($TracePath) }; Bytes = $null }
@@ -939,8 +1358,9 @@ function Invoke-SpecOpsUnityObservationLifecycleCore {
     $external = Get-SpecOpsUnityExternalObservations -Targets $ExternalTargets -TimeoutMilliseconds $QuiescenceTimeoutMilliseconds -StableIntervalMilliseconds $StableIntervalMilliseconds -ReadFileBytes $ReadFileBytes
 
     $result = [pscustomobject]@{
-        Results = [pscustomobject]@{ Path = $canonicalResults; Bytes = $resultBytes; NUnit3 = $nunit }
+        Results = [pscustomobject]@{ Exists = $resultsExist; Path = $canonicalResults; Bytes = $resultBytes; NUnit3 = $nunit }
         Log = [pscustomobject]@{ Path = $canonicalLog; Bytes = $logBytes }
+        Compilation = $compilation
         Trace = $trace
         ChangedEntries = $subject.ChangedEntries
         GeneratedPaths = $subject.GeneratedPaths
@@ -1012,7 +1432,8 @@ function Invoke-SpecOpsControlledProcessCore {
         [Parameter(Mandatory)] [string] $FilePath,
         [Parameter(Mandatory)] [AllowEmptyCollection()] [string[]] $ArgumentList,
         [Parameter(Mandatory)] [int] $TimeoutMilliseconds,
-        [Parameter(Mandatory)] [int] $TerminationWaitMilliseconds
+        [Parameter(Mandatory)] [int] $TerminationWaitMilliseconds,
+        [System.Collections.IDictionary] $EnvironmentVariables = @{}
     )
 
     $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
@@ -1031,6 +1452,12 @@ function Invoke-SpecOpsControlledProcessCore {
         $startInfo.CreateNoWindow = $true
         $startInfo.RedirectStandardOutput = $true
         $startInfo.RedirectStandardError = $true
+        foreach ($name in $EnvironmentVariables.Keys) {
+            if ([string]::IsNullOrEmpty([string] $name) -or $null -eq $EnvironmentVariables[$name]) {
+                throw (New-SpecOpsUnityException 'A controlled-process environment override is invalid.' 'UNITY_PROCESS_ENVIRONMENT_INVALID')
+            }
+            $startInfo.Environment[[string] $name] = [string] $EnvironmentVariables[$name]
+        }
         foreach ($argument in $ArgumentList) { $null = $startInfo.ArgumentList.Add($argument) }
         $process.StartInfo = $startInfo
         try {
@@ -1082,22 +1509,41 @@ function Invoke-SpecOpsControlledProcess {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)] [string] $FilePath,
-        [Parameter(Mandatory)] [AllowEmptyCollection()] [string[]] $ArgumentList
+        [Parameter(Mandatory)] [AllowEmptyCollection()] [string[]] $ArgumentList,
+        [System.Collections.IDictionary] $EnvironmentVariables = @{}
     )
 
-    return Invoke-SpecOpsControlledProcessCore -FilePath $FilePath -ArgumentList $ArgumentList -TimeoutMilliseconds $script:CanonicalTimeoutMilliseconds -TerminationWaitMilliseconds $script:TerminationWaitMilliseconds
+    return Invoke-SpecOpsControlledProcessCore -FilePath $FilePath -ArgumentList $ArgumentList -TimeoutMilliseconds $script:CanonicalTimeoutMilliseconds -TerminationWaitMilliseconds $script:TerminationWaitMilliseconds -EnvironmentVariables $EnvironmentVariables
+}
+
+function Get-SpecOpsUnityPackageAcquisitionGuard {
+    [CmdletBinding()]
+    param()
+
+    return [ordered]@{
+        GIT_ALLOW_PROTOCOL = ''
+        GIT_CONFIG_COUNT = '1'
+        GIT_CONFIG_KEY_0 = 'protocol.allow'
+        GIT_CONFIG_VALUE_0 = 'never'
+        GIT_TERMINAL_PROMPT = '0'
+        GCM_INTERACTIVE = 'Never'
+    }
 }
 
 Export-ModuleMember -Function @(
     'ConvertFrom-SpecOpsUnityProductVersion',
     'Get-SpecOpsUnityErrorMetadata',
     'Get-SpecOpsUnityExecutableMetadata',
+    'Get-SpecOpsUnityPackageAcquisitionGuard',
+    'Get-SpecOpsUnityRegistryPackageCacheCapabilities',
     'Invoke-SpecOpsControlledProcess',
     'Invoke-SpecOpsUnityObservationLifecycle',
+    'Initialize-SpecOpsUnityOfflinePackageCapability',
     'New-SpecOpsUnityArgumentVector',
     'New-SpecOpsUnitySubjectMaterialization',
     'New-SpecOpsUnityWorkspace',
     'Read-SpecOpsUnityNUnit3Result',
+    'Read-SpecOpsUnityCompilationObservation',
     'Read-SpecOpsUnityProjectVersionRequirement',
     'Remove-SpecOpsUnityWorkspace',
     'Select-SpecOpsUnityExecutable'

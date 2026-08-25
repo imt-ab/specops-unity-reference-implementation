@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS
-Runs the bounded SpecOps Core identity operations.
+Runs the bounded SpecOps identity, profile-verification, and eval operations.
 
 .DESCRIPTION
-Supported commands are identity and verify-profile. Exit codes are:
+Supported commands are identity, verify-profile, and eval. Exit codes are:
 0 success; 2 caller/input/profile rejection; 3 conformance failure;
 4 unexpected internal/tool failure.
 
@@ -68,8 +68,9 @@ try {
     $command = [string] $rawArguments[0]
     $isIdentity = [string]::Equals($command, 'identity', [System.StringComparison]::Ordinal)
     $isVerifyProfile = [string]::Equals($command, 'verify-profile', [System.StringComparison]::Ordinal)
-    if (-not $isIdentity -and -not $isVerifyProfile) {
-        Stop-SpecOpsCliInput -ErrorClass 'UNSUPPORTED_COMMAND' -Message 'Supported commands are identity and verify-profile.'
+    $isEval = [string]::Equals($command, 'eval', [System.StringComparison]::Ordinal)
+    if (-not $isIdentity -and -not $isVerifyProfile -and -not $isEval) {
+        Stop-SpecOpsCliInput -ErrorClass 'UNSUPPORTED_COMMAND' -Message 'Supported commands are identity, verify-profile, and eval.'
     }
 
     if ($isVerifyProfile -and $rawArguments.Count -gt 1) {
@@ -133,6 +134,37 @@ try {
         }
     }
 
+    if ($isEval) {
+        $definitionId = $null
+        $definitionIdSeen = $false
+        $argumentIndex = 1
+        while ($argumentIndex -lt $rawArguments.Count) {
+            $option = [string] $rawArguments[$argumentIndex]
+            if (-not $option.StartsWith('-', [System.StringComparison]::Ordinal)) {
+                Stop-SpecOpsCliInput -ErrorClass 'UNEXPECTED_POSITIONAL_ARGUMENT' -Message 'eval accepts only the -DefinitionId option.'
+            }
+            if (-not [string]::Equals($option, '-DefinitionId', [System.StringComparison]::Ordinal)) {
+                Stop-SpecOpsCliInput -ErrorClass 'UNKNOWN_OPTION' -Message "Unknown eval option: $option"
+            }
+            if ($definitionIdSeen) {
+                Stop-SpecOpsCliInput -ErrorClass 'DUPLICATE_OPTION' -Message 'Option supplied more than once: -DefinitionId'
+            }
+            if (($argumentIndex + 1) -ge $rawArguments.Count) {
+                Stop-SpecOpsCliInput -ErrorClass 'MISSING_OPTION_VALUE' -Message 'Option requires a following value: -DefinitionId'
+            }
+            $optionValue = [string] $rawArguments[$argumentIndex + 1]
+            if ([string]::IsNullOrEmpty($optionValue) -or $optionValue.StartsWith('-', [System.StringComparison]::Ordinal)) {
+                Stop-SpecOpsCliInput -ErrorClass 'MISSING_OPTION_VALUE' -Message 'Option requires a following value: -DefinitionId'
+            }
+            $definitionIdSeen = $true
+            $definitionId = $optionValue
+            $argumentIndex += 2
+        }
+        if (-not $definitionIdSeen) {
+            Stop-SpecOpsCliInput -ErrorClass 'MISSING_DEFINITION_ID' -Message 'eval requires -DefinitionId.'
+        }
+    }
+
     $modulePath = [System.IO.Path]::Combine($PSScriptRoot, 'SpecOps.Core.psm1')
     Import-Module -Name $modulePath -Force -ErrorAction Stop
 
@@ -143,6 +175,20 @@ try {
         $body.Add('value', $identity.value)
         [Console]::Out.WriteLine((ConvertTo-SpecOpsCliJson -Value $body))
         exit 0
+    }
+
+    if ($isEval) {
+        $repositoryModulePath = [System.IO.Path]::Combine($PSScriptRoot, 'SpecOps.Repository.psm1')
+        $evalModulePath = [System.IO.Path]::Combine($PSScriptRoot, 'SpecOps.Eval.psm1')
+        Import-Module -Name $evalModulePath -Force -ErrorAction Stop
+        Import-Module -Name $repositoryModulePath -Force -ErrorAction Stop
+        Import-Module -Name $modulePath -Force -ErrorAction Stop
+        $repositoryRoot = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, '..', '..'))
+        $adapter = New-SpecOpsGitRepositoryAdapter -RepositoryPath $repositoryRoot
+        $result = Invoke-SpecOpsEvaluation -RepositoryAdapter $adapter -DefinitionId $definitionId
+        [Console]::Out.WriteLine((ConvertTo-SpecOpsCliJson -Value $result))
+        if ([string]::Equals([string]$result.overallResult, 'PASS', [System.StringComparison]::Ordinal)) { exit 0 }
+        exit 3
     }
 
     $repositoryRoot = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, '..', '..'))

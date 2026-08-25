@@ -1,0 +1,213 @@
+Set-StrictMode -Version Latest
+$ErrorActionPreference='Stop'
+$script:Tests=0
+$script:Failures=[System.Collections.Generic.List[string]]::new()
+$repoRoot=[IO.Path]::GetFullPath([IO.Path]::Combine($PSScriptRoot,'..','..','..'))
+$evalModule=[IO.Path]::Combine($repoRoot,'tools','specops','SpecOps.Eval.psm1')
+$repositoryModule=[IO.Path]::Combine($repoRoot,'tools','specops','SpecOps.Repository.psm1')
+Import-Module $evalModule -Force
+Import-Module $repositoryModule -Force
+
+function Test-Case{param([string]$Name,[scriptblock]$Body)$script:Tests++;try{&$Body;[Console]::Out.WriteLine("PASS $Name")}catch{$script:Failures.Add("${Name}: $($_.Exception.Message)");[Console]::Out.WriteLine("FAIL $Name -- $($_.Exception.Message)")}}
+function Assert-True{param([bool]$Value,[string]$Message)if(-not$Value){throw $Message}}
+function Assert-Equal{param($Expected,$Actual,[string]$Message)if(-not[string]::Equals([string]$Expected,[string]$Actual,[StringComparison]::Ordinal)){throw "$Message Expected=[$Expected] Actual=[$Actual]"}}
+function Assert-Set{param([string[]]$Expected,[string[]]$Actual,[string]$Message)$a=@($Expected|Sort-Object -CaseSensitive);$b=@($Actual|Sort-Object -CaseSensitive);if($a.Count-ne$b.Count){throw "$Message count"};for($i=0;$i-lt$a.Count;$i++){Assert-Equal $a[$i] $b[$i] $Message}}
+function Assert-Rejection{param([scriptblock]$Body,[string]$Class,[int]$ExitCode)try{&$Body;throw'Expected rejection did not occur.'}catch{if($_.Exception.Message-eq'Expected rejection did not occur.'){throw};Assert-Equal $Class ([string]$_.Exception.Data['SpecOpsRejectionClass']) 'Rejection class.';Assert-Equal $ExitCode ([int]$_.Exception.Data['SpecOpsExitCode']) 'Rejection exit.'}}
+function Invoke-Git{param([string]$Root,[string[]]$Arguments)$output=&git -C $Root @Arguments 2>&1;if($LASTEXITCODE-ne0){throw"git $($Arguments -join ' ') failed: $output"};return @($output)}
+function Write-Utf8{param([string]$Path,[string]$Text)$parent=[IO.Path]::GetDirectoryName($Path);if(-not[IO.Directory]::Exists($parent)){$null=[IO.Directory]::CreateDirectory($parent)};[IO.File]::WriteAllText($Path,$Text,[Text.UTF8Encoding]::new($false))}
+function Commit-Repo{param([string]$Root,[string]$Message)$null=Invoke-Git $Root @('add','--all');$null=Invoke-Git $Root @('commit','--quiet','-m',$Message)}
+function New-CanonicalFixture{
+ param([string]$Path)
+ $null=Invoke-Git $repoRoot @('clone','--quiet','--no-local',$repoRoot,$Path)
+ foreach($relative in @('tools/specops/Invoke-SpecOps.ps1','tools/specops/SpecOps.Repository.psm1','tools/specops/SpecOps.Eval.psm1')){Copy-Item (Join-Path $repoRoot $relative) (Join-Path $Path $relative) -Force}
+ $null=Invoke-Git $Path @('config','user.email','specops-tests@example.invalid');$null=Invoke-Git $Path @('config','user.name','SpecOps Tests');$null=Invoke-Git $Path @('remote','remove','origin');Commit-Repo $Path 'canonical E8C3 fixture'
+}
+function New-VariantFixture{param([string]$Source,[string]$Path)$null=Invoke-Git $Source @('clone','--quiet','--no-local',$Source,$Path);$null=Invoke-Git $Path @('config','user.email','specops-tests@example.invalid');$null=Invoke-Git $Path @('config','user.name','SpecOps Tests');$null=Invoke-Git $Path @('remote','remove','origin')}
+function Invoke-Cli{param([string]$Root,[string[]]$Arguments)$psi=[Diagnostics.ProcessStartInfo]::new();$psi.FileName='pwsh';$psi.UseShellExecute=$false;$psi.CreateNoWindow=$true;$psi.RedirectStandardOutput=$true;$psi.RedirectStandardError=$true;$psi.ArgumentList.Add('-NoProfile');$psi.ArgumentList.Add('-File');$psi.ArgumentList.Add((Join-Path $Root 'tools/specops/Invoke-SpecOps.ps1'));foreach($a in $Arguments){$psi.ArgumentList.Add($a)};$p=[Diagnostics.Process]::new();$p.StartInfo=$psi;$null=$p.Start();$stdout=$p.StandardOutput.ReadToEnd();$stderr=$p.StandardError.ReadToEnd();$p.WaitForExit();$r=[pscustomobject]@{ExitCode=$p.ExitCode;Stdout=$stdout.Trim();Stderr=$stderr};$p.Dispose();return $r}
+function Invoke-FixtureEval{param([string]$Root,[string]$DefinitionId)$adapter=New-SpecOpsGitRepositoryAdapter $Root;return Invoke-SpecOpsEvaluation $adapter $DefinitionId}
+function Set-JsonFile{param([string]$Path,[scriptblock]$Mutation)$value=Get-Content -Raw $Path|ConvertFrom-Json -AsHashtable -Depth 100;&$Mutation $value;$json=$value|ConvertTo-Json -Depth 100;Write-Utf8 $Path ($json+"`n")}
+
+Test-Case 'strict JSON accepts ordinary object'{$r=Read-SpecOpsStrictJsonBytes ([Text.UTF8Encoding]::new($false,$true).GetBytes('{"a":1}'));Assert-Equal 1 $r.Value.a 'JSON value.'}
+Test-Case 'strict JSON rejects comments'{Assert-Rejection {Read-SpecOpsStrictJsonBytes ([Text.UTF8Encoding]::new($false).GetBytes('{/*x*/"a":1}'))} 'INVALID_JSON' 2}
+Test-Case 'strict JSON rejects trailing commas'{Assert-Rejection {Read-SpecOpsStrictJsonBytes ([Text.UTF8Encoding]::new($false).GetBytes('{"a":1,}'))} 'INVALID_JSON' 2}
+Test-Case 'strict JSON rejects duplicate members'{Assert-Rejection {Read-SpecOpsStrictJsonBytes ([Text.UTF8Encoding]::new($false).GetBytes('{"a":1,"\u0061":2}'))} 'DUPLICATE_JSON_MEMBER' 2}
+Test-Case 'strict JSON rejects malformed UTF-8'{Assert-Rejection {Read-SpecOpsStrictJsonBytes ([byte[]](0x7b,0x22,0x78,0x22,0x3a,0x22,0xc3,0x28,0x22,0x7d))} 'INVALID_JSON' 2}
+Test-Case 'strict JSON rejects BOM'{Assert-Rejection {Read-SpecOpsStrictJsonBytes ([byte[]](0xef,0xbb,0xbf,0x7b,0x7d))} 'LEADING_UTF8_BOM' 2}
+Test-Case 'aggregate PASS'{Assert-Equal PASS (Get-SpecOpsOverallResult @([ordered]@{result='PASS'},[ordered]@{result='PASS'})) 'Aggregate.'}
+Test-Case 'aggregate FAIL precedence'{Assert-Equal FAIL (Get-SpecOpsOverallResult @([ordered]@{result='INCONCLUSIVE'},[ordered]@{result='FAIL'})) 'Aggregate.'}
+Test-Case 'aggregate INCONCLUSIVE'{Assert-Equal INCONCLUSIVE (Get-SpecOpsOverallResult @([ordered]@{result='PASS'},[ordered]@{result='INCONCLUSIVE'})) 'Aggregate.'}
+Test-Case 'aggregate NOT_EXECUTED is inconclusive'{Assert-Equal INCONCLUSIVE (Get-SpecOpsOverallResult @([ordered]@{result='NOT_EXECUTED'})) 'Aggregate.'}
+Test-Case 'strict UTC accepts generated form'{Assert-True (Test-SpecOpsStrictUtcTimestamp '2026-08-24T12:34:56.1234567Z') 'UTC rejected.'}
+Test-Case 'strict UTC rejects offset'{Assert-True (-not(Test-SpecOpsStrictUtcTimestamp '2026-08-24T12:34:56+00:00')) 'Offset accepted.'}
+Test-Case 'strict UTC rejects missing Z'{Assert-True (-not(Test-SpecOpsStrictUtcTimestamp '2026-08-24T12:34:56')) 'Missing Z accepted.'}
+
+$lexicalCases=@(
+ @('comment ignored',"// UnityEngine`nclass X {}",$false),
+ @('ordinary string ignored','class X { string s = "UnityEngine.MonoBehaviour"; }',$false),
+ @('verbatim string ignored','class X { string s = @"UnityEngine"; }',$false),
+ @('character literal ignored',"class X { char c = 'U'; }",$false),
+ @('escaped quote handled','class X { string s = "x\" UnityEngine"; }',$false),
+ @('interpolated text ignored','class X { string s = $"UnityEngine text"; }',$false),
+ @('interpolated expression detected','class X { string s = $"{UnityEngine.Time.time}"; }',$true),
+ @('interpolation format text ignored','class X { string s = $"{1:UnityEngine}"; }',$false),
+ @('interpolated verbatim expression detected','class X { string s = $@"{UnityEngine.Time.time}"; }',$true),
+ @('raw string ignored','class X { string s = """UnityEngine.MonoBehaviour"""; }',$false),
+ @('interpolated raw expression detected','class X { string s = $"""{UnityEngine.Time.time}"""; }',$true),
+ @('multi-dollar interpolated raw expression detected','class X { string s = $$"""{{UnityEngine.Time.time}}"""; }',$true),
+ @('using detected','using UnityEngine; class X {}',$true),
+ @('global using detected','global using UnityEngine; class X {}',$true),
+ @('using static detected','using static UnityEngine.Mathf; class X {}',$true),
+ @('alias detected','using U = UnityEngine; class X {}',$true),
+ @('alias global namespace detected','using U = global::UnityEngine; class X {}',$true),
+ @('alias global type detected','using U = global::UnityEngine.Vector3; class X {}',$true),
+ @('verbatim namespace identifier detected','using @UnityEngine; class X {}',$true),
+ @('global qualifier detected','class X { global::UnityEngine.Vector3 x; }',$true),
+ @('Unicode escaped identifier detected','class X { \u0055nityEngine.Vector3 x; }',$true),
+ @('MonoBehaviour base detected','class X : MonoBehaviour {}',$true),
+ @('qualified MonoBehaviour base detected','class X : UnityEngine.MonoBehaviour {}',$true),
+ @('similar identifier allowed','class X { int UnityEngineered; MonoBehaviour x; }',$false),
+ @('preprocessor branches inspected',"#if NEVER`nusing UnityEngine;`n#endif`nclass X {}",$true)
+)
+foreach($case in $lexicalCases){$name=$case[0];$source=$case[1];$expected=[bool]$case[2];Test-Case "lexical $name"{$scan=Test-SpecOpsCSharpLexicalBoundary $source;Assert-True $scan.Supported $scan.Error;Assert-Equal $expected ($scan.Violations.Count-gt0) 'Violation detection.'}}
+Test-Case 'malformed lexical input is unsupported'{$scan=Test-SpecOpsCSharpLexicalBoundary 'class X { string s = "unterminated';Assert-True (-not$scan.Supported) 'Malformed input guessed PASS.'}
+Test-Case 'invalid CSharp escape is unsupported'{$scan=Test-SpecOpsCSharpLexicalBoundary 'class X { string s = "\q"; }';Assert-True (-not$scan.Supported) 'Invalid escape guessed PASS.'}
+Test-Case 'multi-character literal is unsupported'{$scan=Test-SpecOpsCSharpLexicalBoundary "class X { char c = 'ab'; }";Assert-True (-not$scan.Supported) 'Invalid char literal guessed PASS.'}
+Test-Case 'multi-dollar raw exact interpolation delimiter is valid'{$scan=Test-SpecOpsCSharpLexicalBoundary 'class X { string s = $$"""{{value}}"""; }';Assert-True $scan.Supported $scan.Error}
+Test-Case 'multi-dollar raw literal plus interpolation delimiter is valid'{$scan=Test-SpecOpsCSharpLexicalBoundary 'class X { string s = $$"""{{{value}}}"""; }';Assert-True $scan.Supported $scan.Error}
+Test-Case 'multi-dollar raw two-N brace run is unsupported'{$scan=Test-SpecOpsCSharpLexicalBoundary 'class X { string s = $$"""{{{{1}}}}"""; }';Assert-True (-not$scan.Supported) 'Malformed 2*N brace run guessed PASS.'}
+Test-Case 'multi-dollar raw unmatched closing delimiter is unsupported'{$scan=Test-SpecOpsCSharpLexicalBoundary 'class X { string s = $$"""value}}"""; }';Assert-True (-not$scan.Supported) 'Unmatched closing delimiter guessed PASS.'}
+Test-Case 'schema adapter Draft 2020-12 capability'{$cap=Get-SpecOpsSchemaAdapterCapability;Assert-True $cap.Available $cap.Detail;Assert-True $cap.Draft202012 'Draft capability absent.';Assert-True $cap.ExternalReferences 'External refs capability absent.';Assert-True $cap.SchemaDocuments 'Schema-document capability absent.'}
+Test-Case 'valid Draft 2020-12 schema document passes metaschema'{$cap=Get-SpecOpsSchemaAdapterCapability;$r=& (Get-Module SpecOps.Eval) {param($Json,$Capability)Test-SpecOpsDraft202012SchemaDocument $Json $Capability} '{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object"}' $cap;Assert-True $r.Executable 'Metaschema validation not executable.';Assert-True $r.Valid 'Valid schema rejected.'}
+Test-Case 'parseable metaschema-invalid Draft 2020-12 schema fails'{$cap=Get-SpecOpsSchemaAdapterCapability;$r=& (Get-Module SpecOps.Eval) {param($Json,$Capability)Test-SpecOpsDraft202012SchemaDocument $Json $Capability} '{"$schema":"https://json-schema.org/draft/2020-12/schema","type":7}' $cap;Assert-True $r.Executable 'Metaschema validation not executable.';Assert-True (-not$r.Valid) 'Metaschema-invalid schema accepted.'}
+Test-Case 'absolute schema ID cannot rebase a relative ref'{$doc=Read-SpecOpsStrictJsonBytes ([Text.UTF8Encoding]::new($false,$true).GetBytes('{"$id":"https://example.invalid/root","$ref":"child.schema.json"}'));Assert-Rejection {& (Get-Module SpecOps.Eval) {param($Element)Assert-SpecOpsLocalOnlySchemaUris $Element '.specops/contracts/root.schema.json'} $doc.Element} 'NETWORK_SCHEMA_REFERENCE_PROHIBITED' 2}
+Test-Case 'absolute dynamicRef is rejected before schema evaluation'{$doc=Read-SpecOpsStrictJsonBytes ([Text.UTF8Encoding]::new($false,$true).GetBytes('{"$dynamicRef":"https://example.invalid/remote"}'));Assert-Rejection {& (Get-Module SpecOps.Eval) {param($Element)Assert-SpecOpsLocalOnlySchemaUris $Element '.specops/contracts/root.schema.json'} $doc.Element} 'NETWORK_SCHEMA_REFERENCE_PROHIBITED' 2}
+
+$tempBase=[IO.Path]::GetFullPath([IO.Path]::Combine([IO.Path]::GetTempPath(),"specops-eval-tests-$([Guid]::NewGuid().ToString('N'))"))
+try{
+ $null=[IO.Directory]::CreateDirectory($tempBase);$clean=Join-Path $tempBase 'clean';New-CanonicalFixture $clean
+ Write-Utf8 (Join-Path $clean 'Library/ignored-local-cache.bin') 'ignored local cache'
+ $definitionIds=@('specops-core-contract-integrity','specops-derived-state-consistency','unity-clean-architecture-static','unity-editmode-validation')
+ $results=[System.Collections.Generic.Dictionary[string,object]]::new([StringComparer]::Ordinal)
+ foreach($id in $definitionIds){$results[$id]=Invoke-FixtureEval $clean $id}
+ Test-Case 'installed definitions load only by exact ID'{foreach($id in $definitionIds){Assert-Equal $id $results[$id].provenance.executedDefinition.id 'Definition binding.'}}
+ Test-Case 'nineteen E8C3 checks execute'{ $executed=@($results.Values|ForEach-Object{@($_.checkResults)}|Where-Object{$_.executed});Assert-Equal 19 $executed.Count 'Executed check count.' }
+ Test-Case 'all E8C3 check IDs are owned'{ $expected=@('contracts-json-parse','contracts-id-unique','contracts-version-consistent','contracts-draft-declared','contracts-references-resolve','contracts-schema-valid','authority-routes-resolve','feature-authority-triplets','feature-state-schema-valid','feature-id-directory-match','acceptance-id-exact-match','state-reference-resolution','state-lifecycle-consistency','runtime-asmdef-set','runtime-assembly-names','engine-independence-flags','runtime-project-reference-graph','domain-application-source-boundary','generated-artifacts-untracked');$actual=@($results.Values|ForEach-Object{@($_.checkResults)}|Where-Object{$_.executed}|ForEach-Object{$_.id});Assert-Set $expected $actual 'E8C3 owner set.' }
+ Test-Case 'non-Unity definitions PASS'{foreach($id in $definitionIds[0..2]){Assert-Equal PASS $results[$id].overallResult "$id result."}}
+ Test-Case 'ignored local cache does not affect subject checks'{Assert-Equal PASS $results['unity-clean-architecture-static'].overallResult 'Ignored cache affected tracked subject.'}
+ Test-Case 'seven Unity checks are NOT_EXECUTED'{$unity=$results['unity-editmode-validation'];Assert-Equal 7 @($unity.checkResults).Count 'Unity coverage.';foreach($c in $unity.checkResults){Assert-Equal False $c.executed 'Unity executed.';Assert-Equal NOT_EXECUTED $c.result 'Unity result.';Assert-Equal UNITY_ADAPTER_NOT_INSTALLED $c.notExecutedReason 'Unity reason.';Assert-Equal 0 @($c.observations).Count 'Unity observations.'}}
+ Test-Case 'Unity aggregate INCONCLUSIVE'{Assert-Equal INCONCLUSIVE $results['unity-editmode-validation'].overallResult 'Unity aggregate.'}
+ Test-Case 'result order follows definition order'{foreach($id in $definitionIds){$def=Get-Content -Raw (Join-Path $clean ".specops/evals/$id.eval.json")|ConvertFrom-Json -Depth 100;for($i=0;$i-lt$def.checks.Count;$i++){Assert-Equal $def.checks[$i].id $results[$id].checkResults[$i].id 'Result order.'}}}
+ Test-Case 'definition identity is exact'{foreach($id in $definitionIds){$def=Get-Content -Raw (Join-Path $clean ".specops/evals/$id.eval.json")|ConvertFrom-Json -Depth 100;Assert-Equal $def.contentIdentity.value $results[$id].definitionContentIdentity.value 'Definition identity.'}}
+ Test-Case 'producer ID derives from committed repository identity'{foreach($r in $results.Values){Assert-Equal 'specops-unity-reference-implementation/eval-producer' $r.provenance.producer.id 'Producer ID.'}}
+ Test-Case 'producer version binds revision scheme and X'{foreach($r in $results.Values){Assert-Equal "$($r.provenance.subject.revision.scheme):$($r.provenance.subject.revision.identifier)" $r.provenance.producer.version 'Producer version.'}}
+ Test-Case 'execution IDs are lowercase UUIDv4'{foreach($r in $results.Values){Assert-True ([string]$r.provenance.executionId -cmatch '^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$') 'Execution ID.'}}
+ Test-Case 'executedAtUtc independently strict'{foreach($r in $results.Values){Assert-True (Test-SpecOpsStrictUtcTimestamp $r.provenance.executedAtUtc) 'Timestamp.'}}
+ Test-Case 'result schema validation succeeds'{foreach($r in $results.Values){$json=$r|ConvertTo-Json -Depth 100 -Compress;Assert-True (Test-Json -Json $json -SchemaFile (Join-Path $clean '.specops/contracts/eval-result.schema.json') -ErrorAction Stop) 'Result schema.'}}
+ Test-Case 'schema validation reads schema closure from snapshot X'{
+  $adapter=New-SpecOpsGitRepositoryAdapter $clean;$snapshot=Get-SpecOpsRepositorySnapshot $adapter;$cap=Get-SpecOpsSchemaAdapterCapability;$context=[pscustomobject]@{Adapter=$adapter;Snapshot=$snapshot;Paths=@(Get-SpecOpsRepositoryPaths $snapshot);SchemaCapability=$cap}
+  $definitionBytes=Get-SpecOpsRepositoryBlobBytes $snapshot '.specops/evals/specops-core-contract-integrity.eval.json';$definitionJson=[Text.UTF8Encoding]::new($false,$true).GetString($definitionBytes)
+  $worktreeSchema=Join-Path $clean '.specops/contracts/eval-definition.schema.json';$original=[IO.File]::ReadAllBytes($worktreeSchema)
+  try{Write-Utf8 $worktreeSchema '{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"null"}';$validation=& (Get-Module SpecOps.Eval) {param($Context,$Json,$Capability)Test-SpecOpsJsonAgainstSubjectSchema $Context $Json '.specops/contracts/eval-definition.schema.json' $Capability} $context $definitionJson $cap;Assert-True $validation.Executable 'Snapshot schema validation not executable.';Assert-True $validation.Valid 'Working-tree schema bytes affected snapshot-X validation.'}
+  finally{[IO.File]::WriteAllBytes($worktreeSchema,$original)}
+ }
+ Test-Case 'local external-reference capability is independently gated'{$adapter=New-SpecOpsGitRepositoryAdapter $clean;$snapshot=Get-SpecOpsRepositorySnapshot $adapter;$limited=[pscustomobject]@{Available=$true;Draft202012=$true;ExternalReferences=$false;SchemaDocuments=$true;Detail='test'};$context=[pscustomobject]@{Adapter=$adapter;Snapshot=$snapshot;Paths=@(Get-SpecOpsRepositoryPaths $snapshot);SchemaCapability=$limited};$definitionJson=[Text.UTF8Encoding]::new($false,$true).GetString((Get-SpecOpsRepositoryBlobBytes $snapshot '.specops/evals/specops-core-contract-integrity.eval.json'));$validation=& (Get-Module SpecOps.Eval) {param($Context,$Json,$Capability)Test-SpecOpsJsonAgainstSubjectSchema $Context $Json '.specops/contracts/eval-definition.schema.json' $Capability} $context $definitionJson $limited;Assert-True (-not$validation.Executable) 'External-reference capability gate was bypassed.'}
+ Test-Case 'current local reference forms all resolve'{$refs=[System.Collections.Generic.List[string]]::new();Get-ChildItem (Join-Path $clean '.specops/contracts') -Filter '*.schema.json'|ForEach-Object{foreach($match in [regex]::Matches([IO.File]::ReadAllText($_.FullName),'"\$ref"\s*:\s*"([^"]+)"')){$refs.Add($match.Groups[1].Value)}};Assert-True (@($refs|Where-Object{$_.StartsWith('#',[StringComparison]::Ordinal)}).Count-gt0) 'No same-document refs.';Assert-True (@($refs|Where-Object{$_ -match '^[^#]+\.json$'}).Count-gt0) 'No relative-file refs.';Assert-True (@($refs|Where-Object{$_ -match '^[^#]+\.json#'}).Count-gt0) 'No relative-file fragment refs.';Assert-Equal PASS $results['specops-core-contract-integrity'].overallResult 'Reference forms did not resolve.'}
+ Test-Case 'schema adapter unavailable emits no result'{ $unavailable=[pscustomobject]@{Available=$false;Draft202012=$false;ExternalReferences=$false;SchemaDocuments=$false;Detail='test'};Assert-Rejection {Invoke-SpecOpsEvaluation (New-SpecOpsGitRepositoryAdapter $clean) 'specops-core-contract-integrity' $unavailable} 'RESULT_SCHEMA_CAPABILITY_UNAVAILABLE' 3 }
+ Test-Case 'check schema-document capability unavailable is truthful'{$limited=[pscustomobject]@{Available=$true;Draft202012=$true;ExternalReferences=$true;SchemaDocuments=$false;Detail='test'};$r=Invoke-SpecOpsEvaluation (New-SpecOpsGitRepositoryAdapter $clean) 'specops-core-contract-integrity' $limited;$c=@($r.checkResults|Where-Object{$_.id-eq'contracts-schema-valid'})[0];Assert-Equal NOT_EXECUTED $c.result 'Schema check result.';Assert-Equal INCONCLUSIVE $r.overallResult 'Schema-limited aggregate.'}
+ Test-Case 'arbitrary definition path is impossible'{$cli=Invoke-Cli $clean @('eval','-Path','.specops/evals/specops-core-contract-integrity.eval.json');Assert-Equal 2 $cli.ExitCode 'CLI path injection exit.';Assert-Equal UNKNOWN_OPTION (($cli.Stdout|ConvertFrom-Json).error.class) 'CLI path injection class.'}
+ Test-Case 'invalid definition ID exits 2'{$cli=Invoke-Cli $clean @('eval','-DefinitionId','missing-definition');Assert-Equal 2 $cli.ExitCode 'Invalid ID exit.'}
+ Test-Case 'PASS CLI exits 0'{$cli=Invoke-Cli $clean @('eval','-DefinitionId','specops-derived-state-consistency');Assert-Equal 0 $cli.ExitCode 'PASS exit.';Assert-Equal PASS (($cli.Stdout|ConvertFrom-Json).overallResult) 'PASS stdout.';Assert-Equal '' $cli.Stderr 'PASS stderr.'}
+ Test-Case 'Unity INCONCLUSIVE CLI exits 3'{$cli=Invoke-Cli $clean @('eval','-DefinitionId','unity-editmode-validation');Assert-Equal 3 $cli.ExitCode 'Unity exit.';Assert-Equal INCONCLUSIVE (($cli.Stdout|ConvertFrom-Json).overallResult) 'Unity stdout.'}
+ Test-Case 'dirty subject CLI exits 2'{Write-Utf8 (Join-Path $clean 'nonignored-e8c3.txt') 'dirty';$cli=Invoke-Cli $clean @('eval','-DefinitionId','specops-core-contract-integrity');Assert-Equal 2 $cli.ExitCode 'Dirty exit.';Assert-Equal SUBJECT_NOT_CLEAN (($cli.Stdout|ConvertFrom-Json).error.class) 'Dirty class.';[IO.File]::Delete((Join-Path $clean 'nonignored-e8c3.txt'))}
+
+ $coreVariant=Join-Path $tempBase 'core-variant';New-VariantFixture $clean $coreVariant
+ Set-JsonFile (Join-Path $coreVariant '.specops/contracts/audit-result.schema.json') {param($d)$d['$id']='eval-result.schema.json';$d['x-contract-version']='9.9.9';$d['$schema']='https://json-schema.org/draft/2019-09/schema';$d['$defs']['badNetwork']=[ordered]@{'$ref'='https://example.invalid/schema.json'};$d['$defs']['badTraversal']=[ordered]@{'$ref'='../../outside.schema.json'}};Commit-Repo $coreVariant 'core defects'
+ $coreResult=Invoke-FixtureEval $coreVariant 'specops-core-contract-integrity'
+ Test-Case 'contract ID uniqueness defect detected'{Assert-Equal FAIL (@($coreResult.checkResults|Where-Object id -eq 'contracts-id-unique')[0].result) 'ID check.'}
+ Test-Case 'contract version defect detected'{Assert-Equal FAIL (@($coreResult.checkResults|Where-Object id -eq 'contracts-version-consistent')[0].result) 'Version check.'}
+ Test-Case 'contract Draft URI defect detected'{Assert-Equal FAIL (@($coreResult.checkResults|Where-Object id -eq 'contracts-draft-declared')[0].result) 'Draft check.'}
+ Test-Case 'network contract reference rejected'{Assert-Equal FAIL (@($coreResult.checkResults|Where-Object id -eq 'contracts-references-resolve')[0].result) 'Reference check.'}
+ Test-Case 'traversal contract reference rejected'{$observations=@($coreResult.checkResults|Where-Object id -eq 'contracts-references-resolve')[0].observations -join "`n";Assert-True ($observations.Contains('../../outside.schema.json',[StringComparison]::Ordinal)) 'Traversal ref was not reported.'}
+
+ $derivedVariant=Join-Path $tempBase 'derived-variant';New-VariantFixture $clean $derivedVariant
+ [IO.File]::Delete((Join-Path $derivedVariant 'Assets/Project/Docs/Specifications/reference-architecture-example/CONSTRAINTS.md'))
+ Set-JsonFile (Join-Path $derivedVariant '.specops/specops.json') {param($d)$d.paths.authority.framework='missing/authority.md'}
+ Set-JsonFile (Join-Path $derivedVariant 'Assets/Project/Docs/Specifications/reference-architecture-example/SPECOPS_STATE.json') {param($d)$d.featureId='wrong-directory';$d.review.reference='missing/review.md';$d.adrReferences=@('missing/adr.md')}
+ $acceptance=Join-Path $derivedVariant 'Assets/Project/Docs/Specifications/reference-architecture-example/ACCEPTANCE.md';$acceptanceText=[IO.File]::ReadAllText($acceptance).Replace('### AC-001 —','### AC-999 —');Write-Utf8 $acceptance $acceptanceText;Commit-Repo $derivedVariant 'derived defects'
+ $derivedResult=Invoke-FixtureEval $derivedVariant 'specops-derived-state-consistency'
+ Test-Case 'authority route defect detected'{Assert-Equal FAIL (@($derivedResult.checkResults|Where-Object id -eq 'authority-routes-resolve')[0].result) 'Route check.'}
+ Test-Case 'feature triplet defect detected'{Assert-Equal FAIL (@($derivedResult.checkResults|Where-Object id -eq 'feature-authority-triplets')[0].result) 'Triplet check.'}
+ Test-Case 'feature directory ID defect detected'{Assert-Equal FAIL (@($derivedResult.checkResults|Where-Object id -eq 'feature-id-directory-match')[0].result) 'Feature ID check.'}
+ Test-Case 'acceptance exact-set defect detected'{Assert-Equal FAIL (@($derivedResult.checkResults|Where-Object id -eq 'acceptance-id-exact-match')[0].result) 'Acceptance check.'}
+ Test-Case 'state reference defect detected'{Assert-Equal FAIL (@($derivedResult.checkResults|Where-Object id -eq 'state-reference-resolution')[0].result) 'State reference check.'}
+ Test-Case 'adrReferences all-array-items traversal enforced'{$observations=@($derivedResult.checkResults|Where-Object id -eq 'state-reference-resolution')[0].observations -join "`n";Assert-True ($observations.Contains('missing/adr.md',[StringComparison]::Ordinal)) 'ADR array item was not evaluated.'}
+
+ $architectureVariant=Join-Path $tempBase 'architecture-variant';New-VariantFixture $clean $architectureVariant
+ $utilityMeta=[IO.File]::ReadAllText((Join-Path $architectureVariant 'Assets/Project/Code/Runtime/Utility/InfiniteMonkey.Utility.asmdef.meta'));if($utilityMeta -cnotmatch '(?m)^guid: ([0-9a-f]+)$'){throw'Utility GUID fixture missing.'};$utilityGuid=$Matches[1]
+ Set-JsonFile (Join-Path $architectureVariant 'Assets/Project/Code/Runtime/Domain/InfiniteMonkey.Domain.asmdef') {param($d)$d.noEngineReferences=$false;$d.references=@("GUID:$utilityGuid")}
+ Write-Utf8 (Join-Path $architectureVariant 'Assets/Project/Code/Runtime/Domain/BoundaryViolation.cs') 'using UnityEngine; public class BoundaryViolation : MonoBehaviour {}'
+ Write-Utf8 (Join-Path $architectureVariant 'Library/generated.csproj') '<Project />'
+ $null=Invoke-Git $architectureVariant @('add','--force','Library/generated.csproj');Commit-Repo $architectureVariant 'architecture defects'
+ $architectureResult=Invoke-FixtureEval $architectureVariant 'unity-clean-architecture-static'
+ Test-Case 'noEngineReferences defect detected'{Assert-Equal FAIL (@($architectureResult.checkResults|Where-Object id -eq 'engine-independence-flags')[0].result) 'Engine check.'}
+ Test-Case 'Utility graph Domain exception detected'{Assert-Equal FAIL (@($architectureResult.checkResults|Where-Object id -eq 'runtime-project-reference-graph')[0].result) 'Graph check.'}
+ Test-Case 'GUID asmdef reference resolves to semantic assembly'{$observations=@($architectureResult.checkResults|Where-Object id -eq 'runtime-project-reference-graph')[0].observations -join "`n";Assert-True ($observations.Contains('InfiniteMonkey.Domain->InfiniteMonkey.Utility',[StringComparison]::Ordinal)) 'GUID was not resolved to Utility.'}
+ Test-Case 'CSharp boundary defect detected'{Assert-Equal FAIL (@($architectureResult.checkResults|Where-Object id -eq 'domain-application-source-boundary')[0].result) 'Source check.'}
+ Test-Case 'tracked generated artifact detected'{Assert-Equal FAIL (@($architectureResult.checkResults|Where-Object id -eq 'generated-artifacts-untracked')[0].result) 'Generated check.'}
+ Test-Case 'truthful FAIL CLI exits 3'{$cli=Invoke-Cli $architectureVariant @('eval','-DefinitionId','unity-clean-architecture-static');Assert-Equal 3 $cli.ExitCode 'FAIL exit.';Assert-Equal FAIL (($cli.Stdout|ConvertFrom-Json).overallResult) 'FAIL stdout.'}
+
+ $unresolvedProjectVariant=Join-Path $tempBase 'unresolved-project-variant';New-VariantFixture $clean $unresolvedProjectVariant
+ Write-Utf8 (Join-Path $unresolvedProjectVariant 'Assets/Project/Code/Tests/Broken.Project.asmdef') '{not-json'
+ Write-Utf8 (Join-Path $unresolvedProjectVariant 'Assets/Project/Code/Tests/Broken.Project.asmdef.meta') "fileFormatVersion: 2`nguid: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`n"
+ Set-JsonFile (Join-Path $unresolvedProjectVariant 'Assets/Project/Code/Runtime/Domain/InfiniteMonkey.Domain.asmdef') {param($d)$d.references=@('GUID:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')};Commit-Repo $unresolvedProjectVariant 'unresolved Assets project reference'
+ $unresolvedProjectResult=Invoke-FixtureEval $unresolvedProjectVariant 'unity-clean-architecture-static'
+ Test-Case 'known Assets project reference resolution failure is FAIL'{Assert-Equal FAIL (@($unresolvedProjectResult.checkResults|Where-Object id -eq 'runtime-project-reference-graph')[0].result) 'Unresolved project graph result.'}
+ Test-Case 'unresolvedProjectReference reject semantic is guarded'{$definition=Get-Content -Raw (Join-Path $clean '.specops/evals/unity-clean-architecture-static.eval.json')|ConvertFrom-Json -AsHashtable -Depth 100;$check=@($definition.checks|Where-Object id -eq 'runtime-project-reference-graph')[0];$check.passCondition.value.semanticResolution.unresolvedProjectReference='ignore';Assert-Rejection {& (Get-Module SpecOps.Eval) {param($Check)Assert-SpecOpsSupportedPassCondition $Check} $check} 'DEFINITION_PASS_CONDITION_UNSUPPORTED' 2}
+
+ $duplicateNameVariant=Join-Path $tempBase 'duplicate-name-variant';New-VariantFixture $clean $duplicateNameVariant
+ $duplicateUtilityMeta=[IO.File]::ReadAllText((Join-Path $duplicateNameVariant 'Assets/Project/Code/Runtime/Utility/InfiniteMonkey.Utility.asmdef.meta'));if($duplicateUtilityMeta -cnotmatch '(?m)^guid: ([0-9a-f]+)$'){throw'Utility GUID fixture missing.'};$duplicateUtilityGuid=$Matches[1]
+ Write-Utf8 (Join-Path $duplicateNameVariant 'Assets/Project/Code/Tests/Duplicate.Utility.asmdef') '{"name":"InfiniteMonkey.Utility","references":[]}'
+ Write-Utf8 (Join-Path $duplicateNameVariant 'Assets/Project/Code/Tests/Duplicate.Utility.asmdef.meta') "fileFormatVersion: 2`nguid: cccccccccccccccccccccccccccccccc`n"
+ Set-JsonFile (Join-Path $duplicateNameVariant 'Assets/Project/Code/Runtime/Application/InfiniteMonkey.Application.asmdef') {param($d)$d.references=@("GUID:$duplicateUtilityGuid")};Commit-Repo $duplicateNameVariant 'duplicate semantic project assembly name'
+ $duplicateNameResult=Invoke-FixtureEval $duplicateNameVariant 'unity-clean-architecture-static'
+ Test-Case 'GUID target with duplicate semantic assembly name is FAIL'{$check=@($duplicateNameResult.checkResults|Where-Object id -eq 'runtime-project-reference-graph')[0];Assert-Equal FAIL $check.result 'Duplicate semantic name result.';Assert-True ((@($check.observations)-join"`n").Contains('ambiguous-project-assembly-name',[StringComparison]::Ordinal)) 'Semantic-name ambiguity was not reported.'}
+
+ $ambiguousMetaVariant=Join-Path $tempBase 'ambiguous-meta-variant';New-VariantFixture $clean $ambiguousMetaVariant
+ Write-Utf8 (Join-Path $ambiguousMetaVariant 'Assets/Project/Code/Tests/Ambiguous.Meta.asmdef') '{"name":"Fixture.Project","references":[]}'
+ Write-Utf8 (Join-Path $ambiguousMetaVariant 'Assets/Project/Code/Tests/Ambiguous.Meta.asmdef.meta') "fileFormatVersion: 2`nguid: dddddddddddddddddddddddddddddddd`nguid: eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee`n"
+ Set-JsonFile (Join-Path $ambiguousMetaVariant 'Assets/Project/Code/Runtime/Application/InfiniteMonkey.Application.asmdef') {param($d)$d.references=@('GUID:dddddddddddddddddddddddddddddddd')};Commit-Repo $ambiguousMetaVariant 'ambiguous project meta mapping'
+ $ambiguousMetaResult=Invoke-FixtureEval $ambiguousMetaVariant 'unity-clean-architecture-static'
+ Test-Case 'associated ambiguous meta GUID cannot become external'{$check=@($ambiguousMetaResult.checkResults|Where-Object id -eq 'runtime-project-reference-graph')[0];Assert-Equal FAIL $check.result 'Ambiguous meta result.';Assert-True ((@($check.observations)-join"`n").Contains('unresolved-project-reference',[StringComparison]::Ordinal)) 'Ambiguous meta GUID silently became external.'}
+
+ $externalReferenceVariant=Join-Path $tempBase 'external-reference-variant';New-VariantFixture $clean $externalReferenceVariant
+ Set-JsonFile (Join-Path $externalReferenceVariant 'Assets/Project/Code/Runtime/Domain/InfiniteMonkey.Domain.asmdef') {param($d)$d.references=@('GUID:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb')};Commit-Repo $externalReferenceVariant 'external non-project reference'
+ $externalReferenceResult=Invoke-FixtureEval $externalReferenceVariant 'unity-clean-architecture-static'
+ Test-Case 'unknown external GUID reference is excluded from project graph'{Assert-Equal PASS (@($externalReferenceResult.checkResults|Where-Object id -eq 'runtime-project-reference-graph')[0].result) 'External reference was treated as unresolved project reference.'}
+
+ $identityVariant=Join-Path $tempBase 'identity-variant';New-VariantFixture $clean $identityVariant
+ Set-JsonFile (Join-Path $identityVariant '.specops/evals/specops-core-contract-integrity.eval.json') {param($d)$d.description='tampered'};Commit-Repo $identityVariant 'identity mismatch'
+ Test-Case 'definition identity mismatch rejected'{Assert-Rejection {Invoke-FixtureEval $identityVariant 'specops-core-contract-integrity'} 'DEFINITION_IDENTITY_MISMATCH' 2}
+
+ $semanticVariant=Join-Path $tempBase 'semantic-variant';New-VariantFixture $clean $semanticVariant
+ $semanticPath=Join-Path $semanticVariant '.specops/evals/specops-core-contract-integrity.eval.json'
+ Set-JsonFile $semanticPath {param($d)$d.checks[0].passCondition.value.inventory.pattern='*.json'}
+ $semanticIdentityCli=Invoke-Cli $semanticVariant @('identity','-Path',$semanticPath,'-Mode','EVAL_DEFINITION');if($semanticIdentityCli.ExitCode-ne0){throw"Semantic identity setup failed: $($semanticIdentityCli.Stdout)"};$semanticIdentity=($semanticIdentityCli.Stdout|ConvertFrom-Json).value
+ Set-JsonFile $semanticPath {param($d)$d.contentIdentity.value=$semanticIdentity};Commit-Repo $semanticVariant 'self-consistent unsupported semantics'
+ Test-Case 'self-consistent semantic tamper is rejected by supported identity lock'{Assert-Rejection {Invoke-FixtureEval $semanticVariant 'specops-core-contract-integrity'} 'DEFINITION_SEMANTICS_UNSUPPORTED' 2}
+
+ $duplicateVariant=Join-Path $tempBase 'duplicate-variant';New-VariantFixture $clean $duplicateVariant
+ $duplicatePath=Join-Path $duplicateVariant '.specops/evals/specops-core-contract-integrity.eval.json'
+ Set-JsonFile $duplicatePath {param($d)$d.checks[1].id=$d.checks[0].id;$d.contentIdentity.value=('0'*64)}
+ $identityCli=Invoke-Cli $duplicateVariant @('identity','-Path',$duplicatePath,'-Mode','EVAL_DEFINITION');if($identityCli.ExitCode-ne0){throw"Identity setup failed: $($identityCli.Stdout)"};$newIdentity=($identityCli.Stdout|ConvertFrom-Json).value
+ Set-JsonFile $duplicatePath {param($d)$d.contentIdentity.value=$newIdentity};Commit-Repo $duplicateVariant 'duplicate check IDs'
+ Test-Case 'duplicate definition check IDs rejected'{Assert-Rejection {Invoke-FixtureEval $duplicateVariant 'specops-core-contract-integrity'} 'DEFINITION_CHECK_IDS_INVALID' 2}
+
+ Test-Case 'internal coverage invariant is exit 4'{& (Get-Module SpecOps.Eval) { $definition=[pscustomobject]@{Value=[ordered]@{definitionId='d';definitionVersion='1';checks=@([ordered]@{id='a'},[ordered]@{id='b'})};RecomputedIdentity='x'};$result=[ordered]@{provenance=[ordered]@{executedDefinition=[ordered]@{id='d';version='1'};executedAtUtc='2026-08-24T12:00:00Z';executionId='00000000-0000-4000-8000-000000000000'};definitionContentIdentity=[ordered]@{value='x'};overallResult='PASS';checkResults=@([ordered]@{id='a';executed=$true;result='PASS';observations=@('x')})};try{Assert-SpecOpsEvalResultInvariants $result $definition;throw'Expected invariant failure.'}catch{if($_.Exception.Message-eq'Expected invariant failure.'){throw};if([int]$_.Exception.Data['SpecOpsExitCode']-ne4){throw'Invariant did not map to exit 4.'}}}}
+}
+finally{
+ $resolved=[IO.Path]::GetFullPath($tempBase);$prefix=[IO.Path]::GetFullPath([IO.Path]::GetTempPath());if($resolved.StartsWith($prefix,[StringComparison]::OrdinalIgnoreCase)-and[IO.Directory]::Exists($resolved)){Remove-Item -LiteralPath $resolved -Recurse -Force}
+}
+
+[Console]::Out.WriteLine("Eval tests: $($script:Tests); failures: $($script:Failures.Count)")
+if($script:Failures.Count-gt0){$script:Failures|ForEach-Object{[Console]::Out.WriteLine($_)};exit 1}
+exit 0

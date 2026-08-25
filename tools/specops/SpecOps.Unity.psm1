@@ -20,10 +20,16 @@ foreach ($deviceName in @(
 function New-SpecOpsUnityException {
     param(
         [Parameter(Mandatory)] [string] $Message,
-        [Parameter(Mandatory)] [string] $RejectionClass
+        [Parameter(Mandatory)] [string] $RejectionClass,
+        [System.Exception] $InnerException
     )
 
-    $exception = [System.InvalidOperationException]::new($Message)
+    $exception = if ($null -eq $InnerException) {
+        [System.InvalidOperationException]::new($Message)
+    }
+    else {
+        [System.InvalidOperationException]::new($Message, $InnerException)
+    }
     $exception.Data['SpecOpsRejectionClass'] = $RejectionClass
     return $exception
 }
@@ -45,6 +51,228 @@ function Get-SpecOpsUnityOrdinalSortedStrings {
     $copy = [string[]] @($Values)
     [System.Array]::Sort($copy, [System.StringComparer]::Ordinal)
     return $copy
+}
+
+function Get-SpecOpsUnityNUnit3ResultValue {
+    param([Parameter(Mandatory)] [System.Xml.XmlElement] $Element)
+
+    $result = $Element.GetAttribute('result')
+    if ([string]::IsNullOrEmpty($result) -or
+        -not ($result -cin @('Passed', 'Failed', 'Inconclusive', 'Skipped'))) {
+        throw (New-SpecOpsUnityException 'NUnit3 result contains a missing or unsupported result state.' 'UNITY_NUNIT_RESULT_UNSUPPORTED')
+    }
+    return $result
+}
+
+function Get-SpecOpsUnityNUnit3ObservedCounts {
+    param([Parameter(Mandatory)] [System.Xml.XmlNodeList] $TestCaseNodes)
+
+    $passed = 0L
+    $failed = 0L
+    $inconclusive = 0L
+    $skipped = 0L
+    foreach ($node in $TestCaseNodes) {
+        $result = Get-SpecOpsUnityNUnit3ResultValue -Element ([System.Xml.XmlElement] $node)
+        switch -CaseSensitive ($result) {
+            'Passed' { $passed++ }
+            'Failed' { $failed++ }
+            'Inconclusive' { $inconclusive++ }
+            'Skipped' { $skipped++ }
+        }
+    }
+    return [pscustomobject]@{
+        Total = [int64] $TestCaseNodes.Count
+        Passed = $passed
+        Failed = $failed
+        Inconclusive = $inconclusive
+        Skipped = $skipped
+        NotExecuted = $skipped
+    }
+}
+
+function Get-SpecOpsUnityNUnit3DeclaredCounts {
+    param(
+        [Parameter(Mandatory)] [System.Xml.XmlElement] $Element,
+        [Parameter(Mandatory)] $ObservedCounts
+    )
+
+    $declared = [ordered]@{
+        TestCaseCount = $null
+        Total = $null
+        Passed = $null
+        Failed = $null
+        Inconclusive = $null
+        Skipped = $null
+    }
+    $mapping = [ordered]@{
+        testcasecount = 'Total'
+        total = 'Total'
+        passed = 'Passed'
+        failed = 'Failed'
+        inconclusive = 'Inconclusive'
+        skipped = 'Skipped'
+    }
+    foreach ($attributeName in $mapping.Keys) {
+        if (-not $Element.HasAttribute($attributeName)) { continue }
+        $value = 0L
+        if (-not [int64]::TryParse($Element.GetAttribute($attributeName), [System.Globalization.NumberStyles]::None, [System.Globalization.CultureInfo]::InvariantCulture, [ref] $value)) {
+            throw (New-SpecOpsUnityException 'NUnit3 summary contains an invalid declared count.' 'UNITY_NUNIT_COUNT_INVALID')
+        }
+        $propertyName = if ([string]::Equals($attributeName, 'testcasecount', [System.StringComparison]::Ordinal)) { 'TestCaseCount' } else { $attributeName.Substring(0, 1).ToUpperInvariant() + $attributeName.Substring(1) }
+        $declared[$propertyName] = $value
+        $observedProperty = $mapping[$attributeName]
+        if ($value -ne [int64] $ObservedCounts.$observedProperty) {
+            throw (New-SpecOpsUnityException 'NUnit3 declared and observed counts are inconsistent.' 'UNITY_NUNIT_COUNT_MISMATCH')
+        }
+    }
+    return [pscustomobject] $declared
+}
+
+function Assert-SpecOpsUnityNUnit3AggregateResult {
+    param(
+        [Parameter(Mandatory)] [System.Xml.XmlElement] $Element,
+        [Parameter(Mandatory)] $ObservedCounts
+    )
+
+    if (-not $Element.HasAttribute('result')) { return $null }
+    $result = Get-SpecOpsUnityNUnit3ResultValue -Element $Element
+    $inconsistent = switch -CaseSensitive ($result) {
+        'Passed' { $ObservedCounts.Failed -ne 0 -or $ObservedCounts.Inconclusive -ne 0 }
+        'Failed' { $ObservedCounts.Failed -eq 0 }
+        'Inconclusive' { $ObservedCounts.Failed -ne 0 -or $ObservedCounts.Inconclusive -eq 0 }
+        'Skipped' { ($ObservedCounts.Total - $ObservedCounts.Skipped) -ne 0 }
+    }
+    if ($inconsistent) {
+        throw (New-SpecOpsUnityException 'NUnit3 aggregate result is inconsistent with observed test cases.' 'UNITY_NUNIT_RESULT_INCONSISTENT')
+    }
+    return $result
+}
+
+function Read-SpecOpsUnityNUnit3Result {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)] [AllowEmptyCollection()] [byte[]] $Bytes,
+        [Parameter(Mandatory)] [AllowEmptyCollection()] [string[]] $RequiredTestFullNames
+    )
+
+    if ($Bytes.Length -eq 0) {
+        throw (New-SpecOpsUnityException 'NUnit3 results are empty or not valid XML.' 'UNITY_NUNIT_XML_INVALID')
+    }
+
+    $document = [System.Xml.XmlDocument]::new()
+    $document.XmlResolver = $null
+    $settings = [System.Xml.XmlReaderSettings]::new()
+    $settings.ConformanceLevel = [System.Xml.ConformanceLevel]::Document
+    $settings.DtdProcessing = [System.Xml.DtdProcessing]::Prohibit
+    $settings.XmlResolver = $null
+    $settings.IgnoreComments = $true
+    $settings.IgnoreProcessingInstructions = $true
+    $stream = [System.IO.MemoryStream]::new($Bytes, $false)
+    try {
+        $reader = [System.Xml.XmlReader]::Create($stream, $settings)
+        try { $document.Load($reader) }
+        finally { $reader.Dispose() }
+    }
+    catch {
+        throw (New-SpecOpsUnityException 'NUnit3 results are empty, malformed, or contain prohibited XML constructs.' 'UNITY_NUNIT_XML_INVALID' $_.Exception)
+    }
+    finally {
+        $stream.Dispose()
+    }
+
+    $root = $document.DocumentElement
+    if ($null -eq $root -or -not [string]::Equals($root.Name, 'test-run', [System.StringComparison]::Ordinal)) {
+        throw (New-SpecOpsUnityException 'NUnit3 results must have exactly one test-run document root.' 'UNITY_NUNIT_ROOT_INVALID')
+    }
+
+    $required = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+    if ($RequiredTestFullNames.Count -eq 0) {
+        throw (New-SpecOpsUnityException 'Required NUnit3 test identities must be non-empty and unique.' 'UNITY_NUNIT_REQUIRED_TESTS_INVALID')
+    }
+    foreach ($requiredName in $RequiredTestFullNames) {
+        if ([string]::IsNullOrWhiteSpace($requiredName) -or -not $required.Add($requiredName)) {
+            throw (New-SpecOpsUnityException 'Required NUnit3 test identities must be non-empty and unique.' 'UNITY_NUNIT_REQUIRED_TESTS_INVALID')
+        }
+    }
+
+    $matchingAssemblies = [System.Collections.Generic.List[System.Xml.XmlElement]]::new()
+    foreach ($suiteNode in $root.SelectNodes('.//test-suite')) {
+        $suite = [System.Xml.XmlElement] $suiteNode
+        if ([string]::Equals($suite.GetAttribute('type'), 'Assembly', [System.StringComparison]::Ordinal) -and
+            [string]::Equals($suite.GetAttribute('name'), 'InfiniteMonkey.EditModeTests.dll', [System.StringComparison]::Ordinal)) {
+            $matchingAssemblies.Add($suite)
+        }
+    }
+    if ($matchingAssemblies.Count -eq 0) {
+        throw (New-SpecOpsUnityException 'The required NUnit3 Assembly suite was not found.' 'UNITY_NUNIT_ASSEMBLY_NOT_FOUND')
+    }
+    if ($matchingAssemblies.Count -gt 1) {
+        throw (New-SpecOpsUnityException 'Multiple matching NUnit3 Assembly suites were found.' 'UNITY_NUNIT_ASSEMBLY_AMBIGUOUS')
+    }
+
+    $assembly = $matchingAssemblies[0]
+    $allTestCaseNodes = $root.SelectNodes('.//test-case')
+    $assemblyTestCaseNodes = $assembly.SelectNodes('.//test-case')
+    $allCounts = Get-SpecOpsUnityNUnit3ObservedCounts -TestCaseNodes $allTestCaseNodes
+    $assemblyCounts = Get-SpecOpsUnityNUnit3ObservedCounts -TestCaseNodes $assemblyTestCaseNodes
+    $rootDeclaredCounts = Get-SpecOpsUnityNUnit3DeclaredCounts -Element $root -ObservedCounts $allCounts
+    $assemblyDeclaredCounts = Get-SpecOpsUnityNUnit3DeclaredCounts -Element $assembly -ObservedCounts $assemblyCounts
+    $rootResult = Assert-SpecOpsUnityNUnit3AggregateResult -Element $root -ObservedCounts $allCounts
+    $assemblyResult = Assert-SpecOpsUnityNUnit3AggregateResult -Element $assembly -ObservedCounts $assemblyCounts
+
+    $observationsByName = [System.Collections.Generic.Dictionary[string, object]]::new([System.StringComparer]::Ordinal)
+    foreach ($testCaseNode in $assemblyTestCaseNodes) {
+        $testCase = [System.Xml.XmlElement] $testCaseNode
+        if (-not $testCase.HasAttribute('fullname') -or [string]::IsNullOrEmpty($testCase.GetAttribute('fullname'))) {
+            throw (New-SpecOpsUnityException 'A selected NUnit3 test case has no canonical fullname.' 'UNITY_NUNIT_TEST_IDENTITY_INVALID')
+        }
+        $fullName = $testCase.GetAttribute('fullname')
+        if ($observationsByName.ContainsKey($fullName)) {
+            throw (New-SpecOpsUnityException 'The selected NUnit3 Assembly suite contains a duplicate fullname.' 'UNITY_NUNIT_TEST_IDENTITY_DUPLICATE')
+        }
+        $result = Get-SpecOpsUnityNUnit3ResultValue -Element $testCase
+        $label = if ($testCase.HasAttribute('label')) { $testCase.GetAttribute('label') } else { $null }
+        $runState = if ($testCase.HasAttribute('runstate')) { $testCase.GetAttribute('runstate') } else { $null }
+        $observationsByName.Add($fullName, [pscustomobject]@{
+            FullName = $fullName
+            Result = $result
+            Label = $label
+            RunState = $runState
+            Executed = -not [string]::Equals($result, 'Skipped', [System.StringComparison]::Ordinal)
+        })
+    }
+
+    $missing = [System.Collections.Generic.List[string]]::new()
+    foreach ($requiredName in $required) {
+        if (-not $observationsByName.ContainsKey($requiredName)) { $missing.Add($requiredName) }
+    }
+    if ($missing.Count -gt 0) {
+        throw (New-SpecOpsUnityException 'The selected NUnit3 Assembly suite is missing required test identities.' 'UNITY_NUNIT_REQUIRED_TEST_MISSING')
+    }
+    $unexpected = [System.Collections.Generic.List[string]]::new()
+    foreach ($actualName in $observationsByName.Keys) {
+        if (-not $required.Contains($actualName)) { $unexpected.Add($actualName) }
+    }
+    if ($unexpected.Count -gt 0) {
+        throw (New-SpecOpsUnityException 'The selected NUnit3 Assembly suite contains unexpected test identities.' 'UNITY_NUNIT_TEST_UNEXPECTED')
+    }
+
+    $orderedNames = Get-SpecOpsUnityOrdinalSortedStrings @($observationsByName.Keys)
+    $orderedObservations = [System.Collections.Generic.List[object]]::new()
+    foreach ($name in $orderedNames) { $orderedObservations.Add($observationsByName[$name]) }
+    return [pscustomobject]@{
+        RootName = $root.Name
+        RootResult = $rootResult
+        RootDeclaredCounts = $rootDeclaredCounts
+        AssemblyName = 'InfiniteMonkey.EditModeTests'
+        AssemblyFileName = $assembly.GetAttribute('name')
+        AssemblyFullName = if ($assembly.HasAttribute('fullname')) { $assembly.GetAttribute('fullname') } else { $null }
+        AssemblyResult = $assemblyResult
+        AssemblyDeclaredCounts = $assemblyDeclaredCounts
+        Counts = $assemblyCounts
+        FullyQualifiedTestNames = $orderedNames
+        TestCases = @($orderedObservations)
+    }
 }
 
 function Assert-SpecOpsUnitySubjectPath {
@@ -558,6 +786,7 @@ Export-ModuleMember -Function @(
     'New-SpecOpsUnityArgumentVector',
     'New-SpecOpsUnitySubjectMaterialization',
     'New-SpecOpsUnityWorkspace',
+    'Read-SpecOpsUnityNUnit3Result',
     'Read-SpecOpsUnityProjectVersionRequirement',
     'Remove-SpecOpsUnityWorkspace',
     'Select-SpecOpsUnityExecutable'

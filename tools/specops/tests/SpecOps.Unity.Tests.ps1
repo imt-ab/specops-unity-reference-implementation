@@ -53,6 +53,38 @@ function Invoke-ProcessCore {
     param([string] $File, [string[]] $Arguments, [int] $Timeout = 5000, [int] $TerminationWait = 30000)
     return & $module { param($f, $a, $t, $w) Invoke-SpecOpsControlledProcessCore -FilePath $f -ArgumentList $a -TimeoutMilliseconds $t -TerminationWaitMilliseconds $w } $File $Arguments $Timeout $TerminationWait
 }
+function Escape-XmlAttribute { param([string] $Value) return [System.Security.SecurityElement]::Escape($Value) }
+function New-NUnit3Xml {
+    param(
+        [string[]] $TestNames = $requiredTests,
+        [hashtable] $ResultOverrides = @{},
+        [string] $AssemblyName = 'InfiniteMonkey.EditModeTests.dll',
+        [string] $AssemblyFullName = 'C:\machine-specific\Library\ScriptAssemblies\InfiniteMonkey.EditModeTests.dll',
+        [int] $MissingFullNameIndex = -1,
+        [switch] $DuplicateAssembly,
+        [hashtable] $RootCountOverrides = @{}
+    )
+    $testCases = [System.Collections.Generic.List[string]]::new()
+    $counts = [ordered]@{ Passed = 0; Failed = 0; Inconclusive = 0; Skipped = 0 }
+    for ($index = 0; $index -lt $TestNames.Count; $index++) {
+        $name = $TestNames[$index]
+        $state = if ($ResultOverrides.ContainsKey($name)) { $ResultOverrides[$name] } else { [pscustomobject]@{ Result = 'Passed' } }
+        if ($counts.Contains($state.Result)) { $counts[$state.Result]++ }
+        $identity = if ($index -eq $MissingFullNameIndex) { '' } else { ' fullname="{0}"' -f (Escape-XmlAttribute $name) }
+        $label = if ($null -ne $state.PSObject.Properties['Label']) { ' label="{0}"' -f (Escape-XmlAttribute ([string] $state.Label)) } else { '' }
+        $runState = if ($null -ne $state.PSObject.Properties['RunState']) { ' runstate="{0}"' -f (Escape-XmlAttribute ([string] $state.RunState)) } else { '' }
+        $testCases.Add(('<test-case name="display-{0}"{1} result="{2}"{3}{4} />' -f $index, $identity, (Escape-XmlAttribute ([string] $state.Result)), $label, $runState))
+    }
+    $total = $TestNames.Count
+    $suiteResult = if ($counts.Failed -gt 0) { 'Failed' } elseif ($counts.Inconclusive -gt 0) { 'Inconclusive' } elseif ($counts.Skipped -eq $total -and $total -gt 0) { 'Skipped' } else { 'Passed' }
+    $suite = '<test-suite type="Assembly" name="{0}" fullname="{1}" result="{2}" testcasecount="{3}" total="{3}" passed="{4}" failed="{5}" inconclusive="{6}" skipped="{7}"><test-suite type="TestFixture" name="fixture">{8}</test-suite></test-suite>' -f (Escape-XmlAttribute $AssemblyName), (Escape-XmlAttribute $AssemblyFullName), $suiteResult, $total, $counts.Passed, $counts.Failed, $counts.Inconclusive, $counts.Skipped, ([string]::Join('', $testCases))
+    $rootValues = [ordered]@{ testcasecount = $total; total = $total; passed = $counts.Passed; failed = $counts.Failed; inconclusive = $counts.Inconclusive; skipped = $counts.Skipped }
+    foreach ($key in $RootCountOverrides.Keys) { $rootValues[$key] = $RootCountOverrides[$key] }
+    $rootResult = if ($counts.Failed -gt 0) { 'Failed' } elseif ($counts.Inconclusive -gt 0) { 'Inconclusive' } elseif ($counts.Skipped -eq $total -and $total -gt 0) { 'Skipped' } else { 'Passed' }
+    $assemblies = if ($DuplicateAssembly) { $suite + $suite } else { $suite }
+    return '<?xml version="1.0" encoding="utf-8"?><test-run result="{0}" testcasecount="{1}" total="{2}" passed="{3}" failed="{4}" inconclusive="{5}" skipped="{6}">{7}</test-run>' -f $rootResult, $rootValues.testcasecount, $rootValues.total, $rootValues.passed, $rootValues.failed, $rootValues.inconclusive, $rootValues.skipped, $assemblies
+}
+function Read-TestNUnit3 { param([string] $Xml) return Read-SpecOpsUnityNUnit3Result -Bytes $utf8.GetBytes($Xml) -RequiredTestFullNames $requiredTests }
 function Remove-TestDirectory {
     param([string] $Path)
     $resolved = [System.IO.Path]::GetFullPath($Path)
@@ -64,7 +96,70 @@ function Remove-TestDirectory {
 $fixtureRoot = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), "specops-unity-tests-$([guid]::NewGuid().ToString('N'))")
 $null = [System.IO.Directory]::CreateDirectory($fixtureRoot)
 $ownedWorkspaces = [System.Collections.Generic.List[object]]::new()
+$evalPath = [System.IO.Path]::GetFullPath([System.IO.Path]::Combine($PSScriptRoot, '..', '..', '..', '.specops', 'evals', 'unity-editmode-validation.eval.json'))
+$evalDefinition = Get-Content -Raw -LiteralPath $evalPath | ConvertFrom-Json
+$requiredTests = [string[]] @(($evalDefinition.checks | Where-Object { $_.id -ceq 'editmode-required-tests-discovered' }).passCondition.value.requiredItems)
 try {
+    Test-Case 'NUnit3 valid exact 14 of 14 Passed result parsed' {
+        $result = Read-TestNUnit3 (New-NUnit3Xml)
+        Assert-Equal 14 $result.Counts.Total 'Observed total mismatch.'
+        Assert-Equal 14 $result.Counts.Passed 'Passed count mismatch.'
+        Assert-Equal 0 $result.Counts.Failed 'Failed count mismatch.'
+        Assert-Equal 0 $result.Counts.Inconclusive 'Inconclusive count mismatch.'
+        Assert-Equal 0 $result.Counts.NotExecuted 'Not-executed count mismatch.'
+        Assert-Equal 14 @($result.TestCases).Count 'Test observation count mismatch.'
+        $expectedNames = [string[]] @($requiredTests)
+        [System.Array]::Sort($expectedNames, [System.StringComparer]::Ordinal)
+        Assert-Equal ([string]::Join([char] 0, $expectedNames)) ([string]::Join([char] 0, $result.FullyQualifiedTestNames)) 'Exact fullname inventory or ordinal order changed.'
+    }
+    Test-Case 'NUnit3 one failed test retained without eval decision' {
+        $failedName = $requiredTests[0]
+        $result = Read-TestNUnit3 (New-NUnit3Xml -ResultOverrides @{ $failedName = [pscustomobject]@{ Result = 'Failed'; Label = 'Error'; RunState = 'Runnable' } })
+        Assert-Equal 1 $result.Counts.Failed 'Failed count mismatch.'
+        $test = $result.TestCases | Where-Object { $_.FullName -ceq $failedName }
+        Assert-Equal 'Failed' $test.Result 'Failed result was normalized incorrectly.'
+        Assert-Equal 'Error' $test.Label 'Failure label was not retained.'
+        Assert-True $test.Executed 'Failed test was not marked executed.'
+    }
+    Test-Case 'NUnit3 one inconclusive test retained' {
+        $name = $requiredTests[1]
+        $result = Read-TestNUnit3 (New-NUnit3Xml -ResultOverrides @{ $name = [pscustomobject]@{ Result = 'Inconclusive'; Label = 'Inconclusive' } })
+        Assert-Equal 1 $result.Counts.Inconclusive 'Inconclusive count mismatch.'
+        Assert-Equal 'Inconclusive' (($result.TestCases | Where-Object { $_.FullName -ceq $name }).Result) 'Inconclusive state changed.'
+    }
+    Test-Case 'NUnit3 skipped not-executed representation retained' {
+        $name = $requiredTests[2]
+        $result = Read-TestNUnit3 (New-NUnit3Xml -ResultOverrides @{ $name = [pscustomobject]@{ Result = 'Skipped'; Label = 'Ignored'; RunState = 'Ignored' } })
+        $test = $result.TestCases | Where-Object { $_.FullName -ceq $name }
+        Assert-Equal 1 $result.Counts.Skipped 'Skipped count mismatch.'
+        Assert-Equal 1 $result.Counts.NotExecuted 'Not-executed count mismatch.'
+        Assert-Equal 'Ignored' $test.RunState 'Run state was not retained.'
+        Assert-False $test.Executed 'Skipped test was marked executed.'
+    }
+    Test-Case 'NUnit3 missing required test rejected' { Assert-Rejected { Read-TestNUnit3 (New-NUnit3Xml -TestNames $requiredTests[0..12]) } 'UNITY_NUNIT_REQUIRED_TEST_MISSING' }
+    Test-Case 'NUnit3 unexpected extra test rejected' { Assert-Rejected { Read-TestNUnit3 (New-NUnit3Xml -TestNames @($requiredTests + 'InfiniteMonkey.EditModeTests.Unexpected.Extra')) } 'UNITY_NUNIT_TEST_UNEXPECTED' }
+    Test-Case 'NUnit3 empty required inventory rejected' { Assert-Rejected { Read-SpecOpsUnityNUnit3Result -Bytes $utf8.GetBytes((New-NUnit3Xml)) -RequiredTestFullNames ([string[]] @()) } 'UNITY_NUNIT_REQUIRED_TESTS_INVALID' }
+    Test-Case 'NUnit3 whitespace-only required identity rejected' { Assert-Rejected { Read-SpecOpsUnityNUnit3Result -Bytes $utf8.GetBytes((New-NUnit3Xml)) -RequiredTestFullNames ([string[]] @(' ')) } 'UNITY_NUNIT_REQUIRED_TESTS_INVALID' }
+    Test-Case 'NUnit3 duplicate fullname rejected' { Assert-Rejected { Read-TestNUnit3 (New-NUnit3Xml -TestNames @($requiredTests + $requiredTests[0])) } 'UNITY_NUNIT_TEST_IDENTITY_DUPLICATE' }
+    Test-Case 'NUnit3 missing fullname rejected' { Assert-Rejected { Read-TestNUnit3 (New-NUnit3Xml -MissingFullNameIndex 0) } 'UNITY_NUNIT_TEST_IDENTITY_INVALID' }
+    Test-Case 'NUnit3 wrong assembly rejected' { Assert-Rejected { Read-TestNUnit3 (New-NUnit3Xml -AssemblyName 'Wrong.EditModeTests.dll') } 'UNITY_NUNIT_ASSEMBLY_NOT_FOUND' }
+    Test-Case 'NUnit3 duplicate matching assembly rejected' { Assert-Rejected { Read-TestNUnit3 (New-NUnit3Xml -DuplicateAssembly) } 'UNITY_NUNIT_ASSEMBLY_AMBIGUOUS' }
+    Test-Case 'NUnit3 wrong root rejected' { Assert-Rejected { Read-TestNUnit3 ((New-NUnit3Xml).Replace('<test-run ', '<wrong-root ').Replace('</test-run>', '</wrong-root>')) } 'UNITY_NUNIT_ROOT_INVALID' }
+    Test-Case 'NUnit3 malformed XML rejected deterministically' { Assert-Rejected { Read-TestNUnit3 '<test-run><broken></test-run>' } 'UNITY_NUNIT_XML_INVALID' }
+    Test-Case 'NUnit3 empty and non-XML input rejected deterministically' { Assert-Rejected { Read-SpecOpsUnityNUnit3Result -Bytes ([byte[]] @()) -RequiredTestFullNames $requiredTests } 'UNITY_NUNIT_XML_INVALID'; Assert-Rejected { Read-TestNUnit3 'not xml' } 'UNITY_NUNIT_XML_INVALID' }
+    Test-Case 'NUnit3 DTD entity attempt rejected without resolution' {
+        $xml = '<!DOCTYPE test-run [<!ENTITY external SYSTEM "https://invalid.example/specops">]><test-run><test-suite type="Assembly" name="InfiniteMonkey.EditModeTests.dll">&external;</test-suite></test-run>'
+        Assert-Rejected { Read-TestNUnit3 $xml } 'UNITY_NUNIT_XML_INVALID'
+    }
+    Test-Case 'NUnit3 declared count mismatch rejected' { Assert-Rejected { Read-TestNUnit3 (New-NUnit3Xml -RootCountOverrides @{ total = 15 }) } 'UNITY_NUNIT_COUNT_MISMATCH' }
+    Test-Case 'NUnit3 unknown result state rejected' { $name = $requiredTests[0]; Assert-Rejected { Read-TestNUnit3 (New-NUnit3Xml -ResultOverrides @{ $name = [pscustomobject]@{ Result = 'UnknownState' } }) } 'UNITY_NUNIT_RESULT_UNSUPPORTED' }
+    Test-Case 'NUnit3 absolute assembly fullname does not affect identity' {
+        $absolute = 'D:\agents\different-machine\Library\ScriptAssemblies\InfiniteMonkey.EditModeTests.dll'
+        $result = Read-TestNUnit3 (New-NUnit3Xml -AssemblyFullName $absolute)
+        Assert-Equal 'InfiniteMonkey.EditModeTests.dll' $result.AssemblyFileName 'Assembly filename identity mismatch.'
+        Assert-Equal $absolute $result.AssemblyFullName 'Assembly diagnostic fullname was not retained.'
+    }
+
     Test-Case 'ProjectVersion valid current form' {
         $requirement = Read-SpecOpsUnityProjectVersionRequirement -Bytes (Get-VersionBytes)
         Assert-Equal '6000.5.8f1' $requirement.EditorVersion 'Version mismatch.'

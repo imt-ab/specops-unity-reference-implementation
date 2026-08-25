@@ -3,6 +3,8 @@ $ErrorActionPreference = 'Stop'
 
 $script:CanonicalTimeoutMilliseconds = 20 * 60 * 1000
 $script:TerminationWaitMilliseconds = 30 * 1000
+$script:ObservationQuiescenceMilliseconds = 30 * 1000
+$script:ObservationStableIntervalMilliseconds = 100
 $script:WorkspacePrefix = 'specops-unity-'
 $script:OwnerMarkerName = '.specops-unity-owner'
 $script:Utf8Strict = [System.Text.UTF8Encoding]::new($false, $true)
@@ -667,6 +669,314 @@ function New-SpecOpsUnitySubjectMaterialization {
     }
 }
 
+function Test-SpecOpsUnityExactBytes {
+    param(
+        [AllowNull()] [byte[]] $Left,
+        [AllowNull()] [byte[]] $Right
+    )
+
+    if ($null -eq $Left -or $null -eq $Right -or $Left.LongLength -ne $Right.LongLength) { return $false }
+    for ($index = 0L; $index -lt $Left.LongLength; $index++) {
+        if ($Left[$index] -ne $Right[$index]) { return $false }
+    }
+    return $true
+}
+
+function Read-SpecOpsUnityStableFileBytes {
+    param(
+        [Parameter(Mandatory)] [string] $Path,
+        [Parameter(Mandatory)] [string] $LogicalName,
+        [Parameter(Mandatory)] [bool] $RequireNonEmpty,
+        [Parameter(Mandatory)] [int] $TimeoutMilliseconds,
+        [Parameter(Mandatory)] [int] $StableIntervalMilliseconds,
+        [Parameter(Mandatory)] [scriptblock] $ReadFileBytes
+    )
+
+    $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+    [byte[]] $previous = $null
+    $hasPrevious = $false
+    while ($true) {
+        try {
+            if ([System.IO.File]::Exists($Path)) {
+                [byte[]] $current = @(& $ReadFileBytes $Path)
+                if ((-not $RequireNonEmpty -or $current.LongLength -gt 0) -and
+                    $hasPrevious -and (Test-SpecOpsUnityExactBytes -Left $previous -Right $current)) {
+                    Write-Output -NoEnumerate $current
+                    return
+                }
+                if (-not $RequireNonEmpty -or $current.LongLength -gt 0) {
+                    $previous = $current
+                    $hasPrevious = $true
+                }
+                else {
+                    $previous = $null
+                    $hasPrevious = $false
+                }
+            }
+            else {
+                $previous = $null
+                $hasPrevious = $false
+            }
+        }
+        catch {
+            $previous = $null
+            $hasPrevious = $false
+        }
+
+        if ($stopwatch.ElapsedMilliseconds -ge $TimeoutMilliseconds) {
+            throw (New-SpecOpsUnityException "Required observation output did not become readable and stable: $LogicalName" 'UNITY_OBSERVATION_OUTPUT_NOT_QUIESCENT')
+        }
+        $remaining = $TimeoutMilliseconds - [int] $stopwatch.ElapsedMilliseconds
+        $delay = [System.Math]::Max(1, [System.Math]::Min($StableIntervalMilliseconds, $remaining))
+        Start-Sleep -Milliseconds $delay
+    }
+}
+
+function Assert-SpecOpsUnityObservationOutputPath {
+    param(
+        [Parameter(Mandatory)] $Workspace,
+        [Parameter(Mandatory)] [string] $Path,
+        [Parameter(Mandatory)] [string] $LogicalName
+    )
+
+    if (-not [System.IO.Path]::IsPathFullyQualified($Path)) {
+        throw (New-SpecOpsUnityException "Observation output path must be absolute: $LogicalName" 'UNITY_OBSERVATION_PATH_INVALID')
+    }
+    $outputRoot = [System.IO.Path]::GetFullPath([string] $Workspace.OutputRoot).TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
+    $canonical = [System.IO.Path]::GetFullPath($Path)
+    if (-not $canonical.StartsWith($outputRoot + [System.IO.Path]::DirectorySeparatorChar, [System.StringComparison]::OrdinalIgnoreCase)) {
+        throw (New-SpecOpsUnityException "Observation output path is outside the owned output workspace: $LogicalName" 'UNITY_OBSERVATION_PATH_INVALID')
+    }
+    return $canonical
+}
+
+function Get-SpecOpsUnityPostRunFileInventory {
+    param([Parameter(Mandatory)] [string] $ProjectRoot)
+
+    $inventory = [System.Collections.Generic.Dictionary[string, string]]::new([System.StringComparer]::Ordinal)
+    $pending = [System.Collections.Generic.Stack[string]]::new()
+    $pending.Push($ProjectRoot)
+    try {
+        while ($pending.Count -gt 0) {
+            $directory = $pending.Pop()
+            $directoryAttributes = [System.IO.File]::GetAttributes($directory)
+            if (($directoryAttributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) {
+                throw (New-SpecOpsUnityException 'Post-run subject inventory contains a filesystem reparse point.' 'UNITY_SUBJECT_INVENTORY_REPARSE_POINT')
+            }
+            foreach ($hostPath in [System.IO.Directory]::EnumerateFileSystemEntries($directory)) {
+                $attributes = [System.IO.File]::GetAttributes($hostPath)
+                if (($attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) {
+                    throw (New-SpecOpsUnityException 'Post-run subject inventory contains a filesystem reparse point.' 'UNITY_SUBJECT_INVENTORY_REPARSE_POINT')
+                }
+                if (($attributes -band [System.IO.FileAttributes]::Directory) -ne 0) {
+                    $pending.Push($hostPath)
+                    continue
+                }
+                $relative = [System.IO.Path]::GetRelativePath($ProjectRoot, $hostPath).Replace([System.IO.Path]::DirectorySeparatorChar, '/')
+                $null = Assert-SpecOpsUnitySubjectPath -Path $relative
+                if ($inventory.ContainsKey($relative)) {
+                    throw (New-SpecOpsUnityException 'Post-run subject inventory contains a duplicate path identity.' 'UNITY_SUBJECT_INVENTORY_INVALID')
+                }
+                $inventory.Add($relative, $hostPath)
+            }
+        }
+    }
+    catch {
+        if ($_.Exception.Data.Contains('SpecOpsRejectionClass')) { throw }
+        throw (New-SpecOpsUnityException 'Unable to enumerate the post-run subject safely.' 'UNITY_SUBJECT_INVENTORY_READ_FAILED' $_.Exception)
+    }
+    return $inventory
+}
+
+function Get-SpecOpsUnitySubjectObservation {
+    param(
+        [Parameter(Mandatory)] $Workspace,
+        [Parameter(Mandatory)] $Materialization
+    )
+
+    $projectRoot = [System.IO.Path]::GetFullPath([string] $Materialization.ProjectRoot).TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
+    if (-not [string]::Equals($projectRoot, [System.IO.Path]::GetFullPath([string] $Workspace.SubjectRoot).TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar), [System.StringComparison]::OrdinalIgnoreCase) -or
+        $null -eq $Materialization.PSObject.Properties['Manifest']) {
+        throw (New-SpecOpsUnityException 'Subject materialization does not match the owned workspace.' 'UNITY_SUBJECT_INVENTORY_INVALID')
+    }
+
+    $baseline = [System.Collections.Generic.Dictionary[string, object]]::new([System.StringComparer]::Ordinal)
+    foreach ($entry in @($Materialization.Manifest)) {
+        $path = Assert-SpecOpsUnitySubjectPath -Path ([string] $entry.Path)
+        if ($baseline.ContainsKey($path) -or $null -eq $entry.PSObject.Properties['ComparisonBytes']) {
+            throw (New-SpecOpsUnityException 'Subject materialization manifest is invalid.' 'UNITY_SUBJECT_INVENTORY_INVALID')
+        }
+        [byte[]] $beforeBytes = @($entry.ComparisonBytes)
+        $baseline.Add($path, [pscustomobject]@{ Path = $path; Bytes = $beforeBytes })
+    }
+
+    $actual = Get-SpecOpsUnityPostRunFileInventory -ProjectRoot $projectRoot
+    $changed = [System.Collections.Generic.List[object]]::new()
+    foreach ($path in (Get-SpecOpsUnityOrdinalSortedStrings @($baseline.Keys))) {
+        $before = [byte[]] $baseline[$path].Bytes
+        if (-not $actual.ContainsKey($path)) {
+            $changed.Add([pscustomobject]@{ Path = $path; Change = 'Missing'; BeforeBytes = $before; AfterBytes = $null })
+            continue
+        }
+        [byte[]] $after = [System.IO.File]::ReadAllBytes($actual[$path])
+        if (-not (Test-SpecOpsUnityExactBytes -Left $before -Right $after)) {
+            $changed.Add([pscustomobject]@{ Path = $path; Change = 'Modified'; BeforeBytes = $before; AfterBytes = $after })
+        }
+    }
+
+    $generated = [System.Collections.Generic.List[string]]::new()
+    foreach ($relative in $actual.Keys) {
+        if (-not $baseline.ContainsKey($relative)) { $generated.Add($relative) }
+    }
+    $generatedPaths = Get-SpecOpsUnityOrdinalSortedStrings @($generated)
+
+    $lockPath = 'Packages/packages-lock.json'
+    $lockStatus = 'NotInBaseline'
+    $lockPreserved = $false
+    if ($baseline.ContainsKey($lockPath)) {
+        $lockChange = @($changed | Where-Object { [string]::Equals($_.Path, $lockPath, [System.StringComparison]::Ordinal) })
+        if ($lockChange.Count -eq 0) { $lockStatus = 'Preserved'; $lockPreserved = $true }
+        else { $lockStatus = [string] $lockChange[0].Change }
+    }
+
+    return [pscustomobject]@{
+        ChangedEntries = @($changed)
+        GeneratedPaths = $generatedPaths
+        PackagesLock = [pscustomobject]@{
+            Path = $lockPath
+            BaselineExists = $baseline.ContainsKey($lockPath)
+            ExactBytePreserved = $lockPreserved
+            Status = $lockStatus
+        }
+    }
+}
+
+function Get-SpecOpsUnityExternalObservations {
+    param(
+        [AllowEmptyCollection()] [object[]] $Targets,
+        [Parameter(Mandatory)] [int] $TimeoutMilliseconds,
+        [Parameter(Mandatory)] [int] $StableIntervalMilliseconds,
+        [Parameter(Mandatory)] [scriptblock] $ReadFileBytes
+    )
+
+    $byName = [System.Collections.Generic.Dictionary[string, object]]::new([System.StringComparer]::Ordinal)
+    foreach ($target in @($Targets)) {
+        foreach ($property in @('LogicalName', 'Path', 'Exists')) {
+            if ($null -eq $target.PSObject.Properties[$property]) {
+                throw (New-SpecOpsUnityException 'External observation target is incomplete.' 'UNITY_EXTERNAL_TARGET_INVALID')
+            }
+        }
+        $logicalName = [string] $target.LogicalName
+        $path = [string] $target.Path
+        if ([string]::IsNullOrWhiteSpace($logicalName) -or -not [System.IO.Path]::IsPathFullyQualified($path) -or $byName.ContainsKey($logicalName)) {
+            throw (New-SpecOpsUnityException 'External observation target is invalid or duplicated.' 'UNITY_EXTERNAL_TARGET_INVALID')
+        }
+        $beforeExists = [bool] $target.Exists
+        $bytesProperty = $target.PSObject.Properties['Bytes']
+        if ($beforeExists -and ($null -eq $bytesProperty -or $null -eq $bytesProperty.Value)) {
+            throw (New-SpecOpsUnityException 'Present external baseline has no exact bytes.' 'UNITY_EXTERNAL_TARGET_INVALID')
+        }
+        [byte[]] $beforeBytes = $null
+        if ($beforeExists) { $beforeBytes = [byte[]] $bytesProperty.Value }
+        $canonical = [System.IO.Path]::GetFullPath($path)
+        $afterExists = [System.IO.File]::Exists($canonical)
+        [byte[]] $afterBytes = if ($afterExists) {
+            Read-SpecOpsUnityStableFileBytes -Path $canonical -LogicalName $logicalName -RequireNonEmpty $false -TimeoutMilliseconds $TimeoutMilliseconds -StableIntervalMilliseconds $StableIntervalMilliseconds -ReadFileBytes $ReadFileBytes
+        }
+        else { $null }
+        $state = if (-not $beforeExists -and -not $afterExists) { 'AbsentBeforeAbsentAfter' }
+            elseif (-not $beforeExists) { 'Created' }
+            elseif (-not $afterExists) { 'Missing' }
+            elseif (Test-SpecOpsUnityExactBytes -Left $beforeBytes -Right $afterBytes) { 'Unchanged' }
+            else { 'Modified' }
+        $byName.Add($logicalName, [pscustomobject]@{
+            LogicalName = $logicalName
+            Path = $canonical
+            BeforeExists = $beforeExists
+            AfterExists = $afterExists
+            State = $state
+            BeforeBytes = $beforeBytes
+            AfterBytes = $afterBytes
+        })
+    }
+
+    $ordered = [System.Collections.Generic.List[object]]::new()
+    foreach ($name in (Get-SpecOpsUnityOrdinalSortedStrings @($byName.Keys))) { $ordered.Add($byName[$name]) }
+    return @($ordered)
+}
+
+function Invoke-SpecOpsUnityObservationLifecycleCore {
+    param(
+        [Parameter(Mandatory)] $Workspace,
+        [Parameter(Mandatory)] $Materialization,
+        [Parameter(Mandatory)] [string] $ResultsPath,
+        [Parameter(Mandatory)] [string] $LogPath,
+        [string] $TracePath,
+        [Parameter(Mandatory)] [AllowEmptyCollection()] [string[]] $RequiredTestFullNames,
+        [AllowEmptyCollection()] [object[]] $ExternalTargets = @(),
+        [Parameter(Mandatory)] [int] $QuiescenceTimeoutMilliseconds,
+        [Parameter(Mandatory)] [int] $StableIntervalMilliseconds,
+        [Parameter(Mandatory)] [scriptblock] $ReadFileBytes,
+        [Parameter(Mandatory)] [scriptblock] $CleanupWorkspace
+    )
+
+    $null = Assert-SpecOpsUnityOwnedWorkspace -Workspace $Workspace
+    $canonicalResults = Assert-SpecOpsUnityObservationOutputPath -Workspace $Workspace -Path $ResultsPath -LogicalName 'results.xml'
+    $canonicalLog = Assert-SpecOpsUnityObservationOutputPath -Workspace $Workspace -Path $LogPath -LogicalName 'unity.log'
+    [byte[]] $resultBytes = Read-SpecOpsUnityStableFileBytes -Path $canonicalResults -LogicalName 'results.xml' -RequireNonEmpty $true -TimeoutMilliseconds $QuiescenceTimeoutMilliseconds -StableIntervalMilliseconds $StableIntervalMilliseconds -ReadFileBytes $ReadFileBytes
+    $nunit = Read-SpecOpsUnityNUnit3Result -Bytes $resultBytes -RequiredTestFullNames $RequiredTestFullNames
+    [byte[]] $logBytes = Read-SpecOpsUnityStableFileBytes -Path $canonicalLog -LogicalName 'unity.log' -RequireNonEmpty $true -TimeoutMilliseconds $QuiescenceTimeoutMilliseconds -StableIntervalMilliseconds $StableIntervalMilliseconds -ReadFileBytes $ReadFileBytes
+
+    $trace = if ([string]::IsNullOrEmpty($TracePath) -or -not [System.IO.File]::Exists($TracePath)) {
+        [pscustomobject]@{ Exists = $false; Path = if ([string]::IsNullOrEmpty($TracePath)) { $null } else { [System.IO.Path]::GetFullPath($TracePath) }; Bytes = $null }
+    }
+    else {
+        $canonicalTrace = [System.IO.Path]::GetFullPath($TracePath)
+        [byte[]] $traceBytes = Read-SpecOpsUnityStableFileBytes -Path $canonicalTrace -LogicalName 'trace' -RequireNonEmpty $false -TimeoutMilliseconds $QuiescenceTimeoutMilliseconds -StableIntervalMilliseconds $StableIntervalMilliseconds -ReadFileBytes $ReadFileBytes
+        [pscustomobject]@{ Exists = $true; Path = $canonicalTrace; Bytes = $traceBytes }
+    }
+    $subject = Get-SpecOpsUnitySubjectObservation -Workspace $Workspace -Materialization $Materialization
+    $external = Get-SpecOpsUnityExternalObservations -Targets $ExternalTargets -TimeoutMilliseconds $QuiescenceTimeoutMilliseconds -StableIntervalMilliseconds $StableIntervalMilliseconds -ReadFileBytes $ReadFileBytes
+
+    $result = [pscustomobject]@{
+        Results = [pscustomobject]@{ Path = $canonicalResults; Bytes = $resultBytes; NUnit3 = $nunit }
+        Log = [pscustomobject]@{ Path = $canonicalLog; Bytes = $logBytes }
+        Trace = $trace
+        ChangedEntries = $subject.ChangedEntries
+        GeneratedPaths = $subject.GeneratedPaths
+        PackagesLock = $subject.PackagesLock
+        ExternalTargets = $external
+        Cleanup = [pscustomobject]@{ Attempted = $false; Succeeded = $false; RejectionClass = $null; Diagnostic = $null }
+    }
+
+    $result.Cleanup.Attempted = $true
+    try {
+        $null = & $CleanupWorkspace $Workspace
+        $result.Cleanup.Succeeded = $true
+    }
+    catch {
+        $metadata = Get-SpecOpsUnityErrorMetadata -ErrorRecord $_
+        $result.Cleanup.RejectionClass = $metadata.RejectionClass
+        $result.Cleanup.Diagnostic = $_.Exception.Message
+    }
+    return $result
+}
+
+function Invoke-SpecOpsUnityObservationLifecycle {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)] $Workspace,
+        [Parameter(Mandatory)] $Materialization,
+        [Parameter(Mandatory)] [string] $ResultsPath,
+        [Parameter(Mandatory)] [string] $LogPath,
+        [string] $TracePath,
+        [Parameter(Mandatory)] [AllowEmptyCollection()] [string[]] $RequiredTestFullNames,
+        [AllowEmptyCollection()] [object[]] $ExternalTargets = @()
+    )
+
+    return Invoke-SpecOpsUnityObservationLifecycleCore -Workspace $Workspace -Materialization $Materialization -ResultsPath $ResultsPath -LogPath $LogPath -TracePath $TracePath -RequiredTestFullNames $RequiredTestFullNames -ExternalTargets $ExternalTargets -QuiescenceTimeoutMilliseconds $script:ObservationQuiescenceMilliseconds -StableIntervalMilliseconds $script:ObservationStableIntervalMilliseconds -ReadFileBytes { param($path) [System.IO.File]::ReadAllBytes($path) } -CleanupWorkspace { param($ownedWorkspace) Remove-SpecOpsUnityWorkspace -Workspace $ownedWorkspace }
+}
+
 function New-SpecOpsUnityArgumentVector {
     [CmdletBinding()]
     param(
@@ -783,6 +1093,7 @@ Export-ModuleMember -Function @(
     'Get-SpecOpsUnityErrorMetadata',
     'Get-SpecOpsUnityExecutableMetadata',
     'Invoke-SpecOpsControlledProcess',
+    'Invoke-SpecOpsUnityObservationLifecycle',
     'New-SpecOpsUnityArgumentVector',
     'New-SpecOpsUnitySubjectMaterialization',
     'New-SpecOpsUnityWorkspace',

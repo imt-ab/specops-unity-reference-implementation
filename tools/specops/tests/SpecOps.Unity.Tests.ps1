@@ -92,6 +92,44 @@ function Remove-TestDirectory {
     if (-not $resolved.StartsWith($temp, [System.StringComparison]::OrdinalIgnoreCase)) { throw "Unsafe test cleanup path: $resolved" }
     if ([System.IO.Directory]::Exists($resolved)) { [System.IO.Directory]::Delete($resolved, $true) }
 }
+function Write-TestFileBytes {
+    param([string] $Path, [byte[]] $Bytes)
+    $parent = [System.IO.Path]::GetDirectoryName($Path)
+    if (-not [System.IO.Directory]::Exists($parent)) { $null = [System.IO.Directory]::CreateDirectory($parent) }
+    [System.IO.File]::WriteAllBytes($Path, $Bytes)
+}
+function New-ObservationFixture {
+    param([hashtable] $Baseline = @{ 'Assets/a.bin' = [byte[]] @(1, 2, 3); 'Packages/packages-lock.json' = [byte[]] @(4, 5, 6) })
+    $workspace = New-SpecOpsUnityWorkspace
+    $ownedWorkspaces.Add($workspace)
+    $entries = [System.Collections.Generic.List[object]]::new()
+    $blobs = [System.Collections.Generic.Dictionary[string, byte[]]]::new([System.StringComparer]::Ordinal)
+    foreach ($path in $Baseline.Keys) { $entries.Add((New-TestEntry $path)); $blobs.Add($path, [byte[]] $Baseline[$path]) }
+    $reader = { param($ignored, $path) return $blobs[$path] }.GetNewClosure()
+    $materialization = New-SpecOpsUnitySubjectMaterialization (New-TestSnapshot @($entries)) $reader $workspace
+    $resultsPath = [System.IO.Path]::Combine($workspace.OutputRoot, 'results.xml')
+    $logPath = [System.IO.Path]::Combine($workspace.OutputRoot, 'unity.log')
+    Write-TestFileBytes $resultsPath $utf8.GetBytes((New-NUnit3Xml))
+    Write-TestFileBytes $logPath $utf8.GetBytes('unity-log')
+    return [pscustomobject]@{ Workspace = $workspace; Materialization = $materialization; ResultsPath = $resultsPath; LogPath = $logPath }
+}
+function Invoke-ObservationCore {
+    param(
+        $Fixture,
+        [string] $TracePath = '',
+        [object[]] $ExternalTargets = @(),
+        [scriptblock] $FileReader,
+        [scriptblock] $Cleanup,
+        [int] $Timeout = 1000,
+        [int] $StableInterval = 1
+    )
+    if ($null -eq $FileReader) { $FileReader = { param($path) [System.IO.File]::ReadAllBytes($path) } }
+    if ($null -eq $Cleanup) { $Cleanup = { param($workspace) [pscustomobject]@{ Removed = $true; Root = $workspace.Root } } }
+    return & $module {
+        param($f, $required, $trace, $external, $timeout, $interval, $read, $cleanup)
+        Invoke-SpecOpsUnityObservationLifecycleCore -Workspace $f.Workspace -Materialization $f.Materialization -ResultsPath $f.ResultsPath -LogPath $f.LogPath -TracePath $trace -RequiredTestFullNames $required -ExternalTargets $external -QuiescenceTimeoutMilliseconds $timeout -StableIntervalMilliseconds $interval -ReadFileBytes $read -CleanupWorkspace $cleanup
+    } $Fixture $requiredTests $TracePath $ExternalTargets $Timeout $StableInterval $FileReader $Cleanup
+}
 
 $fixtureRoot = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), "specops-unity-tests-$([guid]::NewGuid().ToString('N'))")
 $null = [System.IO.Directory]::CreateDirectory($fixtureRoot)
@@ -276,6 +314,187 @@ try {
         $materialized = New-SpecOpsUnitySubjectMaterialization (New-TestSnapshot @((New-TestEntry 'Assets/NULish.txt'))) { [byte[]] @(7, 8, 9) } $workspace
         Assert-Equal 'Assets/NULish.txt' $materialized.Manifest[0].Path 'Ordinary filename identity changed.'
         Assert-Bytes ([byte[]] @(7, 8, 9)) ([System.IO.File]::ReadAllBytes([System.IO.Path]::Combine($materialized.ProjectRoot, 'Assets', 'NULish.txt'))) 'Ordinary filename bytes changed.'
+    }
+
+    Test-Case 'Observation capture completes before cleanup' {
+        $fixture = New-ObservationFixture
+        $state = [pscustomobject]@{ ResultReads = 0; LogReads = 0; CleanupCalls = 0 }
+        $read = { param($path) if ($path -ceq $fixture.ResultsPath) { $state.ResultReads++ } elseif ($path -ceq $fixture.LogPath) { $state.LogReads++ }; [System.IO.File]::ReadAllBytes($path) }.GetNewClosure()
+        $cleanup = { param($workspace) $state.CleanupCalls++; if ($state.ResultReads -lt 2 -or $state.LogReads -lt 2) { throw 'Cleanup preceded stable capture.' } }.GetNewClosure()
+        $result = Invoke-ObservationCore $fixture -FileReader $read -Cleanup $cleanup
+        Assert-Equal 1 $state.CleanupCalls 'Cleanup call count mismatch.'
+        Assert-True $result.Cleanup.Succeeded 'Cleanup did not follow complete capture.'
+        Assert-Equal 14 $result.Results.NUnit3.Counts.Total 'Normalized result was not retained.'
+    }
+    Test-Case 'Missing contracted results rejects without cleanup and preserves workspace' {
+        $fixture = New-ObservationFixture; [System.IO.File]::Delete($fixture.ResultsPath); $state = [pscustomobject]@{ CleanupCalls = 0 }
+        $cleanup = { param($workspace) $state.CleanupCalls++ }.GetNewClosure()
+        Assert-Rejected { Invoke-ObservationCore $fixture -Cleanup $cleanup -Timeout 10 } 'UNITY_OBSERVATION_OUTPUT_NOT_QUIESCENT'
+        Assert-Equal 0 $state.CleanupCalls 'Cleanup ran after results capture failure.'
+        Assert-True ([System.IO.Directory]::Exists($fixture.Workspace.Root)) 'Workspace was removed after capture failure.'
+    }
+    Test-Case 'Missing unity log rejects without cleanup' {
+        $fixture = New-ObservationFixture; [System.IO.File]::Delete($fixture.LogPath); $state = [pscustomobject]@{ CleanupCalls = 0 }
+        $cleanup = { param($workspace) $state.CleanupCalls++ }.GetNewClosure()
+        Assert-Rejected { Invoke-ObservationCore $fixture -Cleanup $cleanup -Timeout 10 } 'UNITY_OBSERVATION_OUTPUT_NOT_QUIESCENT'
+        Assert-Equal 0 $state.CleanupCalls 'Cleanup ran after log capture failure.'
+    }
+    Test-Case 'Unreadable unity log rejects without cleanup' {
+        $fixture = New-ObservationFixture; $state = [pscustomobject]@{ CleanupCalls = 0 }
+        $read = { param($path) if ($path -ceq $fixture.LogPath) { throw 'sharing violation' }; [System.IO.File]::ReadAllBytes($path) }.GetNewClosure()
+        $cleanup = { param($workspace) $state.CleanupCalls++ }.GetNewClosure()
+        Assert-Rejected { Invoke-ObservationCore $fixture -FileReader $read -Cleanup $cleanup -Timeout 10 } 'UNITY_OBSERVATION_OUTPUT_NOT_QUIESCENT'
+        Assert-Equal 0 $state.CleanupCalls 'Cleanup ran after unreadable log capture failure.'
+    }
+    Test-Case 'Temporarily unavailable and unstable output becomes stable before cleanup' {
+        $fixture = New-ObservationFixture; $state = [pscustomobject]@{ LogReads = 0; CleanupCalls = 0 }
+        $responses = [System.Collections.Generic.Queue[object]]::new()
+        $responses.Enqueue([System.IO.IOException]::new('held')); $responses.Enqueue($utf8.GetBytes('partial')); $responses.Enqueue($utf8.GetBytes('complete')); $responses.Enqueue($utf8.GetBytes('complete'))
+        $read = { param($path) if ($path -ceq $fixture.LogPath) { $state.LogReads++; $response = if ($responses.Count -gt 0) { $responses.Dequeue() } else { $utf8.GetBytes('complete') }; if ($response -is [System.Exception]) { throw $response }; return [byte[]] $response }; [System.IO.File]::ReadAllBytes($path) }.GetNewClosure()
+        $cleanup = { param($workspace) $state.CleanupCalls++; if ($responses.Count -ne 0) { throw 'Cleanup preceded stable log.' } }.GetNewClosure()
+        $result = Invoke-ObservationCore $fixture -FileReader $read -Cleanup $cleanup -Timeout 2000
+        Assert-Bytes $utf8.GetBytes('complete') $result.Log.Bytes 'Stable log bytes mismatch.'
+        Assert-Equal 1 $state.CleanupCalls 'Cleanup did not run exactly once.'
+        Assert-True $result.Cleanup.Succeeded 'Cleanup failed after eventual quiescence.'
+    }
+    Test-Case 'Malformed contracted XML preserves parser rejection and prevents cleanup' {
+        $fixture = New-ObservationFixture; Write-TestFileBytes $fixture.ResultsPath $utf8.GetBytes('<test-run><broken></test-run>'); $state = [pscustomobject]@{ CleanupCalls = 0 }
+        $cleanup = { param($workspace) $state.CleanupCalls++ }.GetNewClosure()
+        Assert-Rejected { Invoke-ObservationCore $fixture -Cleanup $cleanup } 'UNITY_NUNIT_XML_INVALID'
+        Assert-Equal 0 $state.CleanupCalls 'Cleanup ran after NUnit parser rejection.'
+    }
+    Test-Case 'Present trace exact bytes captured' {
+        $fixture = New-ObservationFixture; $tracePath = [System.IO.Path]::Combine($fixture.Workspace.OutputRoot, 'trace.log'); $traceBytes = [byte[]] @(0, 10, 13, 255); Write-TestFileBytes $tracePath $traceBytes
+        $result = Invoke-ObservationCore $fixture -TracePath $tracePath
+        Assert-True $result.Trace.Exists 'Present trace reported absent.'
+        Assert-Bytes $traceBytes $result.Trace.Bytes 'Trace bytes changed.'
+    }
+    Test-Case 'Absent trace remains explicit and is not fabricated' {
+        $fixture = New-ObservationFixture; $tracePath = [System.IO.Path]::Combine($fixture.Workspace.OutputRoot, 'absent.trace')
+        $result = Invoke-ObservationCore $fixture -TracePath $tracePath
+        Assert-False $result.Trace.Exists 'Absent trace reported present.'
+        Assert-True ($null -eq $result.Trace.Bytes) 'Absent trace was converted to empty content.'
+        Assert-False ([System.IO.File]::Exists($tracePath)) 'Absent trace file was fabricated.'
+    }
+    Test-Case 'Timestamp-only subject touches produce zero changes' {
+        $fixture = New-ObservationFixture
+        foreach ($entry in $fixture.Materialization.Manifest) { [System.IO.File]::SetLastWriteTimeUtc([System.IO.Path]::Combine($fixture.Materialization.ProjectRoot, $entry.Path.Replace('/', [System.IO.Path]::DirectorySeparatorChar)), [datetime]::UtcNow.AddHours(1)) }
+        $result = Invoke-ObservationCore $fixture
+        Assert-Equal 0 @($result.ChangedEntries).Count 'Timestamp-only touch was treated as byte change.'
+    }
+    Test-Case 'Byte-modified subject entry retains exact before and after bytes' {
+        $fixture = New-ObservationFixture; $path = [System.IO.Path]::Combine($fixture.Materialization.ProjectRoot, 'Assets', 'a.bin'); Write-TestFileBytes $path ([byte[]] @(9, 8))
+        $result = Invoke-ObservationCore $fixture; $change = @($result.ChangedEntries)[0]
+        Assert-Equal 'Assets/a.bin' $change.Path 'Modified path mismatch.'; Assert-Equal 'Modified' $change.Change 'Modified state mismatch.'
+        Assert-Bytes ([byte[]] @(1, 2, 3)) $change.BeforeBytes 'Before bytes changed.'; Assert-Bytes ([byte[]] @(9, 8)) $change.AfterBytes 'After bytes changed.'
+    }
+    Test-Case 'Missing original subject entry is returned exactly' {
+        $fixture = New-ObservationFixture; [System.IO.File]::Delete([System.IO.Path]::Combine($fixture.Materialization.ProjectRoot, 'Assets', 'a.bin'))
+        $result = Invoke-ObservationCore $fixture; $change = @($result.ChangedEntries)[0]
+        Assert-Equal 'Assets/a.bin' $change.Path 'Missing path mismatch.'; Assert-Equal 'Missing' $change.Change 'Missing state mismatch.'; Assert-True ($null -eq $change.AfterBytes) 'Missing entry has after bytes.'
+    }
+    Test-Case 'Case-only subject path change is missing plus generated' {
+        $fixture = New-ObservationFixture -Baseline @{ 'Assets/Foo.bin' = [byte[]] @(1, 2, 3) }
+        $original = [System.IO.Path]::Combine($fixture.Materialization.ProjectRoot, 'Assets', 'Foo.bin')
+        $intermediate = [System.IO.Path]::Combine($fixture.Materialization.ProjectRoot, 'Assets', 'rename-intermediate.bin')
+        $renamed = [System.IO.Path]::Combine($fixture.Materialization.ProjectRoot, 'Assets', 'foo.bin')
+        [System.IO.File]::Move($original, $intermediate); [System.IO.File]::Move($intermediate, $renamed)
+        $result = Invoke-ObservationCore $fixture
+        Assert-Equal 1 @($result.ChangedEntries).Count 'Case-only rename changed-entry count mismatch.'
+        Assert-Equal 'Assets/Foo.bin' $result.ChangedEntries[0].Path 'Baseline case identity was not preserved.'
+        Assert-Equal 'Missing' $result.ChangedEntries[0].Change 'Case-only rename was not reported missing.'
+        Assert-Equal 'Assets/foo.bin' @($result.GeneratedPaths)[0] 'Actual case identity was not reported generated.'
+    }
+    Test-Case 'Generated new path is inventory only' {
+        $fixture = New-ObservationFixture; Write-TestFileBytes ([System.IO.Path]::Combine($fixture.Materialization.ProjectRoot, 'Library', 'seed.bin')) ([byte[]] @(7))
+        $result = Invoke-ObservationCore $fixture
+        Assert-Equal 'Library/seed.bin' @($result.GeneratedPaths)[0] 'Generated path mismatch.'; Assert-Equal 0 @($result.ChangedEntries).Count 'Generated path became subject mutation.'
+    }
+    Test-Case 'Generated reparse-point escape is rejected where supported' {
+        $fixture = New-ObservationFixture
+        $outside = [System.IO.Path]::Combine($fixtureRoot, "reparse-target-$([guid]::NewGuid().ToString('N'))")
+        $link = [System.IO.Path]::Combine($fixture.Materialization.ProjectRoot, 'Library', 'escape')
+        $null = [System.IO.Directory]::CreateDirectory($outside); Write-TestFileBytes ([System.IO.Path]::Combine($outside, 'escaped.bin')) ([byte[]] @(9))
+        try {
+            try {
+                $null = if ($IsWindows) { New-Item -ItemType Junction -Path $link -Target $outside -ErrorAction Stop } else { New-Item -ItemType SymbolicLink -Path $link -Target $outside -ErrorAction Stop }
+            }
+            catch {
+                [Console]::Out.WriteLine("INFO Reparse-point fixture unsupported: $($_.Exception.Message)")
+                return
+            }
+            $state = [pscustomobject]@{ CleanupCalls = 0 }
+            $cleanup = { param($workspace) $state.CleanupCalls++ }.GetNewClosure()
+            Assert-Rejected { Invoke-ObservationCore $fixture -Cleanup $cleanup } 'UNITY_SUBJECT_INVENTORY_REPARSE_POINT'
+            Assert-Equal 0 $state.CleanupCalls 'Cleanup ran after reparse-point inventory rejection.'
+        }
+        finally {
+            if ([System.IO.Directory]::Exists($link)) { [System.IO.Directory]::Delete($link) }
+        }
+    }
+    Test-Case 'Changed and generated paths are ordinally sorted' {
+        $fixture = New-ObservationFixture -Baseline @{ 'z.bin' = [byte[]] @(1); 'A.bin' = [byte[]] @(2); 'Packages/packages-lock.json' = [byte[]] @(3) }
+        Write-TestFileBytes ([System.IO.Path]::Combine($fixture.Materialization.ProjectRoot, 'z.bin')) ([byte[]] @(9)); Write-TestFileBytes ([System.IO.Path]::Combine($fixture.Materialization.ProjectRoot, 'A.bin')) ([byte[]] @(8))
+        Write-TestFileBytes ([System.IO.Path]::Combine($fixture.Materialization.ProjectRoot, 'zeta', 'z.bin')) ([byte[]] @(1)); Write-TestFileBytes ([System.IO.Path]::Combine($fixture.Materialization.ProjectRoot, 'Alpha', 'A.bin')) ([byte[]] @(1))
+        $result = Invoke-ObservationCore $fixture
+        Assert-Equal ([string]::Join('|', @('A.bin', 'z.bin'))) ([string]::Join('|', @($result.ChangedEntries.Path))) 'Changed entries are not ordinal.'
+        Assert-Equal ([string]::Join('|', @('Alpha/A.bin', 'zeta/z.bin'))) ([string]::Join('|', @($result.GeneratedPaths))) 'Generated paths are not ordinal.'
+    }
+    Test-Case 'Packages lock exact preservation is explicit' {
+        $result = Invoke-ObservationCore (New-ObservationFixture)
+        Assert-True $result.PackagesLock.ExactBytePreserved 'Exact packages lock was not preserved.'; Assert-Equal 'Preserved' $result.PackagesLock.Status 'Packages lock status mismatch.'
+    }
+    Test-Case 'Modified packages lock uses generic delta and preservation fact' {
+        $fixture = New-ObservationFixture; Write-TestFileBytes ([System.IO.Path]::Combine($fixture.Materialization.ProjectRoot, 'Packages', 'packages-lock.json')) ([byte[]] @(0))
+        $result = Invoke-ObservationCore $fixture; $lockChange = @($result.ChangedEntries | Where-Object { $_.Path -ceq 'Packages/packages-lock.json' })
+        Assert-False $result.PackagesLock.ExactBytePreserved 'Modified packages lock reported preserved.'; Assert-Equal 'Modified' $result.PackagesLock.Status 'Modified lock status mismatch.'; Assert-Equal 1 $lockChange.Count 'Generic delta omitted packages lock.'
+    }
+    Test-Case 'External target unchanged is exact-byte observed' {
+        $fixture = New-ObservationFixture; $path = [System.IO.Path]::Combine($fixtureRoot, 'external-unchanged.xml'); $bytes = [byte[]] @(1, 0, 2); Write-TestFileBytes $path $bytes
+        $result = Invoke-ObservationCore $fixture -ExternalTargets @([pscustomobject]@{ LogicalName = 'runner'; Path = $path; Exists = $true; Bytes = $bytes })
+        Assert-Equal 'Unchanged' $result.ExternalTargets[0].State 'External unchanged state mismatch.'; Assert-Bytes $bytes $result.ExternalTargets[0].AfterBytes 'External after bytes changed.'
+    }
+    Test-Case 'Present external null baseline rejected while explicit empty bytes remain valid' {
+        $path = [System.IO.Path]::Combine($fixtureRoot, 'external-empty.xml'); Write-TestFileBytes $path ([byte[]]::new(0))
+        $rejectedFixture = New-ObservationFixture; $state = [pscustomobject]@{ CleanupCalls = 0 }
+        $cleanup = { param($workspace) $state.CleanupCalls++ }.GetNewClosure()
+        Assert-Rejected { Invoke-ObservationCore $rejectedFixture -ExternalTargets @([pscustomobject]@{ LogicalName = 'runner'; Path = $path; Exists = $true; Bytes = $null }) -Cleanup $cleanup } 'UNITY_EXTERNAL_TARGET_INVALID'
+        Assert-Equal 0 $state.CleanupCalls 'Cleanup ran after null external baseline rejection.'
+        $accepted = Invoke-ObservationCore (New-ObservationFixture) -ExternalTargets @([pscustomobject]@{ LogicalName = 'runner'; Path = $path; Exists = $true; Bytes = [byte[]]::new(0) })
+        Assert-Equal 'Unchanged' $accepted.ExternalTargets[0].State 'Explicit empty external baseline was rejected or changed.'
+        Assert-Equal 0 $accepted.ExternalTargets[0].BeforeBytes.Length 'Explicit empty baseline did not remain zero length.'
+    }
+    Test-Case 'External target creation is observed' {
+        $fixture = New-ObservationFixture; $path = [System.IO.Path]::Combine($fixtureRoot, 'external-created.xml'); $bytes = [byte[]] @(3, 4); Write-TestFileBytes $path $bytes
+        $result = Invoke-ObservationCore $fixture -ExternalTargets @([pscustomobject]@{ LogicalName = 'runner'; Path = $path; Exists = $false })
+        Assert-Equal 'Created' $result.ExternalTargets[0].State 'External created state mismatch.'; Assert-Bytes $bytes $result.ExternalTargets[0].AfterBytes 'Created bytes changed.'
+    }
+    Test-Case 'External target modification is observed' {
+        $fixture = New-ObservationFixture; $path = [System.IO.Path]::Combine($fixtureRoot, 'external-modified.xml'); Write-TestFileBytes $path ([byte[]] @(8))
+        $result = Invoke-ObservationCore $fixture -ExternalTargets @([pscustomobject]@{ LogicalName = 'runner'; Path = $path; Exists = $true; Bytes = [byte[]] @(7) })
+        Assert-Equal 'Modified' $result.ExternalTargets[0].State 'External modified state mismatch.'; Assert-Bytes ([byte[]] @(7)) $result.ExternalTargets[0].BeforeBytes 'External before bytes changed.'; Assert-Bytes ([byte[]] @(8)) $result.ExternalTargets[0].AfterBytes 'External after bytes changed.'
+    }
+    Test-Case 'External target removal is observed' {
+        $fixture = New-ObservationFixture; $path = [System.IO.Path]::Combine($fixtureRoot, 'external-removed.xml')
+        $result = Invoke-ObservationCore $fixture -ExternalTargets @([pscustomobject]@{ LogicalName = 'runner'; Path = $path; Exists = $true; Bytes = [byte[]] @(7) })
+        Assert-Equal 'Missing' $result.ExternalTargets[0].State 'External missing state mismatch.'; Assert-False $result.ExternalTargets[0].AfterExists 'Removed external target reported present.'
+    }
+    Test-Case 'External target absent before and after is explicit' {
+        $fixture = New-ObservationFixture; $path = [System.IO.Path]::Combine($fixtureRoot, 'external-absent.xml')
+        $result = Invoke-ObservationCore $fixture -ExternalTargets @([pscustomobject]@{ LogicalName = 'runner'; Path = $path; Exists = $false })
+        Assert-Equal 'AbsentBeforeAbsentAfter' $result.ExternalTargets[0].State 'External absent state mismatch.'
+    }
+    Test-Case 'Cleanup failure remains separate from captured observation' {
+        $fixture = New-ObservationFixture
+        $cleanup = { param($workspace) throw 'simulated cleanup rejection' }
+        $result = Invoke-ObservationCore $fixture -Cleanup $cleanup
+        Assert-True $result.Cleanup.Attempted 'Cleanup attempt was not reported.'; Assert-False $result.Cleanup.Succeeded 'Cleanup failure reported success.'; Assert-Equal 'UNITY_ADAPTER_FAILURE' $result.Cleanup.RejectionClass 'Cleanup rejection class mismatch.'
+        Assert-Equal 14 $result.Results.NUnit3.Counts.Total 'Captured parser facts were lost.'; Assert-Bytes $utf8.GetBytes('unity-log') $result.Log.Bytes 'Captured log was lost.'; Assert-True ([System.IO.Directory]::Exists($fixture.Workspace.Root)) 'Simulated cleanup unexpectedly removed workspace.'
+    }
+    Test-Case 'Public observation lifecycle fixes quiescence and exposes no override' {
+        $command = Get-Command Invoke-SpecOpsUnityObservationLifecycle
+        Assert-False $command.Parameters.ContainsKey('QuiescenceTimeoutMilliseconds') 'Public lifecycle exposes quiescence override.'
+        Assert-Equal 30000 (& $module { $script:ObservationQuiescenceMilliseconds }) 'Canonical observation quiescence is not 30 seconds.'
     }
 
     Test-Case 'Unity argument vector is exact and discrete' {

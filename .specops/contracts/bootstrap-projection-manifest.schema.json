@@ -15,6 +15,7 @@
     "goldenBaseline",
     "sourceIdentity",
     "canonicalOrdering",
+    "bootstrapImplementationSupport",
     "bootstrapSourceMetadata",
     "authoredSourceInventory",
     "generatedOutputInventory",
@@ -101,6 +102,9 @@
         }
       }
     },
+    "bootstrapImplementationSupport": {
+      "$ref": "#/$defs/bootstrapImplementationSupport"
+    },
     "bootstrapSourceMetadata": {
       "type": "array",
       "minItems": 2,
@@ -130,6 +134,31 @@
     }
   },
   "$defs": {
+    "bootstrapImplementationSupport": {
+      "description": "Closed source-repository boundary for co-located Bootstrap implementation support. Files beneath this root are outside Bootstrap Source Metadata, Authored Source Inventory, projected child output, and Golden Baseline Source Identity.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root",
+        "classification",
+        "pathComparison",
+        "sourceIdentityBinding"
+      ],
+      "properties": {
+        "root": {
+          "const": "tools/specops/bootstrap/"
+        },
+        "classification": {
+          "const": "SOURCE_SIDE_IMPLEMENTATION_SUPPORT"
+        },
+        "pathComparison": {
+          "const": "ordinal"
+        },
+        "sourceIdentityBinding": {
+          "const": "EXCLUDED_FROM_GOLDEN_BASELINE_SOURCE_IDENTITY"
+        }
+      }
+    },
     "repositoryPath": {
       "type": "string",
       "minLength": 1,

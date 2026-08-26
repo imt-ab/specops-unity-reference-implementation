@@ -10,7 +10,7 @@
   },
   "sourceIdentity": {
     "profile": "specops-bootstrap-source-jcs-sha256-v1",
-    "digest": "96cca6caac04ede2b089368ea87d8ae36ac6635641066601cd266e702bf18eb1"
+    "digest": "99f717831cf2c164abf6edaf1034dcd85909aeeb1cf1beec0ea51a0cdeaca103"
   },
   "canonicalOrdering": {
     "bootstrapSourceMetadata": "path-ordinal-ascending",
@@ -19,6 +19,12 @@
     "transforms": "id-ordinal-ascending",
     "semanticInputSets": "ordinal-ascending",
     "stringSets": "ordinal-ascending"
+  },
+  "bootstrapImplementationSupport": {
+    "root": "tools/specops/bootstrap/",
+    "classification": "SOURCE_SIDE_IMPLEMENTATION_SUPPORT",
+    "pathComparison": "ordinal",
+    "sourceIdentityBinding": "EXCLUDED_FROM_GOLDEN_BASELINE_SOURCE_IDENTITY"
   },
   "bootstrapSourceMetadata": [
     {
@@ -31,8 +37,8 @@
       "role": "PROJECTION_MANIFEST_SCHEMA",
       "identityBinding": "EXACT_BYTE_SHA256",
       "byteIdentity": {
-        "byteLength": 20239,
-        "sha256": "5d1e96d9b462b9ab6ff5ea15af75936cde0406b6a12d51fb2e882eff2c977688"
+        "byteLength": 21254,
+        "sha256": "3ebf087e05dc9079e48fb1de89450e6da82350ac54639eab3cac1fa0db0e22a4"
       }
     }
   ],
@@ -6078,8 +6084,8 @@
     {
       "sourcePath": "tools/specops/tests/SpecOps.BootstrapProjection.Tests.ps1",
       "byteIdentity": {
-        "byteLength": 32936,
-        "sha256": "52022d92aee08c86cc79cfca2a80d4b3dada3a3849cde8dc762194efda5d9c24"
+        "byteLength": 41221,
+        "sha256": "629b83afb58169a563c6caf7432740fa7a7dce796849d1b55f0ece5fc049e212"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "SOURCE_VALIDATION_TEST"

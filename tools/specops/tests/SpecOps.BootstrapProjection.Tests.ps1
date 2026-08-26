@@ -40,6 +40,98 @@ function Test-OrdinalOrder {
     return [string]::Join("`0", $actual) -ceq [string]::Join("`0", $expected)
 }
 
+function Test-UniqueOrdinalStrings {
+    param([AllowEmptyCollection()] [string[]] $Values)
+
+    $seen = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    foreach ($value in $Values) {
+        if (-not $seen.Add($value)) { return $false }
+    }
+    return $true
+}
+
+function Test-OrdinalPathSetsDisjoint {
+    param(
+        [AllowEmptyCollection()] [string[]] $Left,
+        [AllowEmptyCollection()] [string[]] $Right
+    )
+
+    $leftSet = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    foreach ($path in $Left) { [void] $leftSet.Add($path) }
+    foreach ($path in $Right) {
+        if ($leftSet.Contains($path)) { return $false }
+    }
+    return $true
+}
+
+function Test-ClosedBootstrapRepositoryAccounting {
+    param(
+        [AllowEmptyCollection()] [string[]] $RepositoryPaths,
+        [AllowEmptyCollection()] [string[]] $MetadataPaths,
+        [AllowEmptyCollection()] [string[]] $AuthoredPaths,
+        [AllowEmptyCollection()] [string[]] $ImplementationSupportPaths,
+        [Parameter(Mandatory)] [string] $ImplementationSupportRoot
+    )
+
+    if (-not (Test-UniqueOrdinalStrings $RepositoryPaths) -or
+        -not (Test-UniqueOrdinalStrings $MetadataPaths) -or
+        -not (Test-UniqueOrdinalStrings $AuthoredPaths) -or
+        -not (Test-UniqueOrdinalStrings $ImplementationSupportPaths)) { return $false }
+    foreach ($path in $ImplementationSupportPaths) {
+        if (-not $path.StartsWith($ImplementationSupportRoot, [StringComparison]::Ordinal)) { return $false }
+    }
+
+    $union = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    foreach ($path in @($MetadataPaths) + @($AuthoredPaths) + @($ImplementationSupportPaths)) {
+        if (-not $union.Add($path)) { return $false }
+    }
+    $repository = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    foreach ($path in $RepositoryPaths) { [void] $repository.Add($path) }
+    if ($repository.Count -ne $union.Count) { return $false }
+    foreach ($path in $repository) {
+        if (-not $union.Contains($path)) { return $false }
+    }
+    return $true
+}
+
+function Test-PathOrPrefixOverlap {
+    param(
+        [Parameter(Mandatory)] [string] $Left,
+        [Parameter(Mandatory)] [string] $Right
+    )
+
+    $leftPath = $Left.TrimEnd('/')
+    $rightPath = $Right.TrimEnd('/')
+    return $leftPath.Equals($rightPath, [StringComparison]::Ordinal) -or
+        $leftPath.StartsWith($rightPath + '/', [StringComparison]::Ordinal) -or
+        $rightPath.StartsWith($leftPath + '/', [StringComparison]::Ordinal)
+}
+
+function Test-BootstrapImplementationDescriptor {
+    param(
+        [Parameter(Mandatory)] [byte[]] $Bytes,
+        [Parameter(Mandatory)] [string] $ExpectedVersion
+    )
+
+    if ($Bytes.Length -ge 3 -and $Bytes[0] -eq 0xEF -and $Bytes[1] -eq 0xBB -and $Bytes[2] -eq 0xBF) {
+        return $false
+    }
+    try {
+        $text = [Text.UTF8Encoding]::new($false, $true).GetString($Bytes)
+        $descriptor = $text | ConvertFrom-Json -Depth 10
+    }
+    catch {
+        return $false
+    }
+    $properties = @($descriptor.PSObject.Properties)
+    $expectedText = "{`n  `"implementationVersion`": `"$ExpectedVersion`"`n}`n"
+    return $properties.Count -eq 1 -and
+        $properties[0].Name -ceq 'implementationVersion' -and
+        [string] $properties[0].Value -ceq $ExpectedVersion -and
+        $ExpectedVersion -cmatch '^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$' -and
+        $text -ceq $expectedText
+}
+
 function Get-OutputPath {
     param([Parameter(Mandatory)] $Entry)
 
@@ -240,6 +332,7 @@ $repositoryRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../../..'))
 $manifestPath = Join-Path $repositoryRoot '.specops/bootstrap/bootstrap-v1.projection-manifest.json'
 $manifestSchemaPath = Join-Path $repositoryRoot '.specops/contracts/bootstrap-projection-manifest.schema.json'
 $provenanceSchemaPath = Join-Path $repositoryRoot '.specops/contracts/bootstrap-provenance.schema.json'
+$implementationDescriptorPath = Join-Path $repositoryRoot 'tools/specops/bootstrap/bootstrap-implementation.json'
 $manifestJson = Get-Content -LiteralPath $manifestPath -Raw
 $manifest = $manifestJson | ConvertFrom-Json -Depth 100
 $manifestSchemaValid = Test-Json -Json $manifestJson -SchemaFile $manifestSchemaPath -ErrorAction Stop
@@ -266,13 +359,96 @@ $workspacePaths = [string[]] @(
         Where-Object { Test-Path -LiteralPath (Join-Path $repositoryRoot $_) -PathType Leaf }
 )
 $workspacePaths = Get-OrdinalSortedStrings $workspacePaths
-$accountedPaths = Get-OrdinalSortedStrings ([string[]] @(
-    $manifest.bootstrapSourceMetadata.path + $manifest.authoredSourceInventory.sourcePath
-))
-Test-Assertion 'closed source accounting' (
-    $workspacePaths.Count -eq $accountedPaths.Count -and
-    [string]::Join("`0", $workspacePaths) -ceq [string]::Join("`0", $accountedPaths)
+$metadataPaths = [string[]] @($manifest.bootstrapSourceMetadata.path)
+$authoredPaths = [string[]] @($manifest.authoredSourceInventory.sourcePath)
+$implementationSupportRoot = [string] $manifest.bootstrapImplementationSupport.root
+$implementationSupportPaths = [string[]] @($workspacePaths | Where-Object {
+    $_.StartsWith($implementationSupportRoot, [StringComparison]::Ordinal)
+})
+$closedAccountingArguments = @{
+    RepositoryPaths = $workspacePaths
+    MetadataPaths = $metadataPaths
+    AuthoredPaths = $authoredPaths
+    ImplementationSupportPaths = $implementationSupportPaths
+    ImplementationSupportRoot = $implementationSupportRoot
+}
+$closedAccountingValid = Test-ClosedBootstrapRepositoryAccounting @closedAccountingArguments
+Test-Assertion 'three-way closed source accounting' $closedAccountingValid
+Test-Assertion 'source accounting categories are mutually exclusive' (
+    (Test-OrdinalPathSetsDisjoint $metadataPaths $authoredPaths) -and
+    (Test-OrdinalPathSetsDisjoint $metadataPaths $implementationSupportPaths) -and
+    (Test-OrdinalPathSetsDisjoint $authoredPaths $implementationSupportPaths)
 )
+
+$futureSupportPath = 'tools/specops/bootstrap/Invoke-SpecOpsBootstrap.ps1'
+$futureSupportWorkspacePaths = [string[]] @($workspacePaths + $futureSupportPath)
+$futureSupportPaths = [string[]] @($implementationSupportPaths + $futureSupportPath)
+$identityBeforeFutureSupport = Get-SourceIdentityDigests -ManifestJson $manifestJson -RepositoryRoot $repositoryRoot
+$identityAfterFutureSupport = Get-SourceIdentityDigests -ManifestJson $manifestJson -RepositoryRoot $repositoryRoot
+$futureSupportArguments = @{
+    RepositoryPaths = $futureSupportWorkspacePaths
+    MetadataPaths = $metadataPaths
+    AuthoredPaths = $authoredPaths
+    ImplementationSupportPaths = $futureSupportPaths
+    ImplementationSupportRoot = $implementationSupportRoot
+}
+Test-Assertion 'future implementation-support file is accepted without changing logical Source Identity' (
+    (Test-ClosedBootstrapRepositoryAccounting @futureSupportArguments) -and
+    $identityBeforeFutureSupport.Primary -ceq $identityAfterFutureSupport.Primary -and
+    $identityBeforeFutureSupport.Independent -ceq $identityAfterFutureSupport.Independent
+)
+
+foreach ($unexpectedPath in @('unexpected-file.txt', 'tools/specops/SomeOtherUndeclaredTool.ps1')) {
+    $unexpectedSourceArguments = @{
+        RepositoryPaths = [string[]] @($workspacePaths + $unexpectedPath)
+        MetadataPaths = $metadataPaths
+        AuthoredPaths = $authoredPaths
+        ImplementationSupportPaths = $implementationSupportPaths
+        ImplementationSupportRoot = $implementationSupportRoot
+    }
+    Test-Assertion "undeclared source is rejected: $unexpectedPath" (-not (
+        Test-ClosedBootstrapRepositoryAccounting @unexpectedSourceArguments
+    ))
+}
+$outsideSupportArguments = @{
+    RepositoryPaths = [string[]] @($workspacePaths + 'tools/specops/SomeOtherUndeclaredTool.ps1')
+    MetadataPaths = $metadataPaths
+    AuthoredPaths = $authoredPaths
+    ImplementationSupportPaths = [string[]] @(
+        $implementationSupportPaths + 'tools/specops/SomeOtherUndeclaredTool.ps1'
+    )
+    ImplementationSupportRoot = $implementationSupportRoot
+}
+Test-Assertion 'implementation support outside approved root is rejected' (-not (
+    Test-ClosedBootstrapRepositoryAccounting @outsideSupportArguments
+))
+
+$declaredProjectionPaths = [string[]] @(
+    $metadataPaths +
+    $authoredPaths +
+    @($manifest.authoredSourceInventory | Where-Object disposition -ne 'EXCLUDE' | ForEach-Object { Get-OutputPath $_ }) +
+    @($manifest.generatedOutputInventory.outputPath)
+)
+$supportBoundaryDisjoint = $true
+foreach ($path in $declaredProjectionPaths) {
+    if (Test-PathOrPrefixOverlap $implementationSupportRoot $path) { $supportBoundaryDisjoint = $false }
+}
+Test-Assertion 'implementation-support root cannot overlap source or output declarations' (
+    $supportBoundaryDisjoint -and
+    (Test-PathOrPrefixOverlap $implementationSupportRoot ($implementationSupportRoot + 'synthetic-output.json'))
+)
+
+$descriptorBytes = [IO.File]::ReadAllBytes($implementationDescriptorPath)
+Test-Assertion 'implementation descriptor is deterministic UTF-8 and version 1.0.0' (
+    (Test-BootstrapImplementationDescriptor -Bytes $descriptorBytes -ExpectedVersion '1.0.0') -and
+    $implementationSupportPaths -ccontains 'tools/specops/bootstrap/bootstrap-implementation.json'
+)
+$ambientDescriptorBytes = [Text.UTF8Encoding]::new($false, $true).GetBytes(
+    "{`n  `"implementationVersion`": `"1.0.0`",`n  `"gitCommit`": `"ambient`"`n}`n"
+)
+Test-Assertion 'implementation descriptor rejects ambient-state fields' (-not (
+    Test-BootstrapImplementationDescriptor -Bytes $ambientDescriptorBytes -ExpectedVersion '1.0.0'
+))
 
 $dispositionGroups = @{}
 $manifest.authoredSourceInventory | Group-Object disposition | ForEach-Object { $dispositionGroups[$_.Name] = $_.Count }
@@ -658,7 +834,10 @@ if ($CalculateIdentityOnly) {
     Tests = $script:TestCount
     Failures = @()
     SourceIdentity = $identityDigests.Primary
+    BootstrapSourceMetadataCount = $metadataPaths.Count
     AuthoredSourceCount = $manifest.authoredSourceInventory.Count
+    BootstrapImplementationSupportCount = $implementationSupportPaths.Count
+    RepositoryRegularLeafCount = $workspacePaths.Count
     CopyExactCount = $dispositionGroups.COPY_EXACT
     TransformScopedCount = $dispositionGroups.TRANSFORM_SCOPED
     ExcludeCount = $dispositionGroups.EXCLUDE

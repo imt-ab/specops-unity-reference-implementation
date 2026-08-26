@@ -131,9 +131,14 @@ Before writing the files:
 
 - Ensure Domain and Application are marked as:
   "noEngineReferences": true
-- Ensure dependency order matches:
-  Domain → Application → AI → Infrastructure / Presentation
-  Composition wires everything.
+- Ensure the dependency graph matches:
+  Domain -> []
+  Application -> Domain, Utility
+  AI -> Application, Domain, Utility
+  Infrastructure -> Application, Domain, Utility
+  Presentation -> Application, Utility
+  Composition -> Application, Domain, Infrastructure, Presentation, Utility
+  Utility -> [] and is not referenced by Domain
 - Ensure logging rule references IMonkeyLogger.
 - Ensure the testing summary reflects the current `Testing and Validation` section of `GLOBAL_CONSTRAINTS.md` without turning available frameworks or template conventions into mandatory ceremony.
 - Do not add a rule that is missing from current authority.

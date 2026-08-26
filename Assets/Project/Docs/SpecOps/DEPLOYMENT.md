@@ -42,6 +42,6 @@ These are deployment mappings only. Codex and Junie do not define or own logical
 
 Legacy Rider templates, DotSettings artifacts, agent adapters, and ignore files predate the v2 consolidation. E1 preserves them unchanged and does not claim that they are already v2-conformant. Their later treatment requires separately authorized migration work.
 
-The derived `.specops/specops.json` manifest now records public-repository deployment defaults. Exactly seven logical Skills, five permission profiles, and five structured contracts are installed beneath current authority. They do not make legacy Rider or agent integrations v2-conformant.
+The derived `.specops/specops.json` manifest now records public-repository deployment defaults. Exactly seven logical Skills, five permission profiles, and ten structured contracts are installed beneath current authority. They do not make legacy Rider or agent integrations v2-conformant.
 
-The eval path is planned but has no installed definitions, and no feature-state instance or bootstrap exists yet.
+Four eval definitions are installed under `.specops/evals/`, and `reference-architecture-example` has an instantiated derived feature state. The canonical Unity evaluation path is implemented. No bootstrap or release evidence exists.

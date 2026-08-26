@@ -120,7 +120,7 @@
   "initialization": {
     "referenceStatus": "authority-and-operational-foundation",
     "featureTemplatesInstalled": true,
-    "featureStateInstancePresent": false,
+    "featureStateInstancePresent": true,
     "evalDefinitionsPresent": true,
     "evalPathStatus": "installed",
     "bootstrapPresent": false,

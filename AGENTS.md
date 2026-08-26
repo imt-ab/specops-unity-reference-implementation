@@ -45,6 +45,6 @@ Exactly seven derived logical Skills are installed under `.agents/skills/`:
 - `specops-sync`
 - `specops-audit`
 
-Use the Skills as executor-neutral procedures after authority routing. Eval definitions and feature-state instances remain uninstalled; do not assume that planned paths contain artifacts.
+Use the Skills as executor-neutral procedures after authority routing. Four eval definitions are installed under [`.specops/evals/`](.specops/evals/), and `reference-architecture-example` has an instantiated derived feature state. Do not infer release evidence or other artifacts from planned paths.
 
-Canonical feature scaffolding is installed under [`Assets/Project/Docs/Specifications/_templates/feature/`](Assets/Project/Docs/Specifications/_templates/feature/). Its `SPECOPS_STATE.json` conforms to [`.specops/contracts/feature-state.schema.json`](.specops/contracts/feature-state.schema.json) but remains a derived template, not a feature instance or authority. No instantiated feature state is installed by E3.
+Canonical feature scaffolding is installed under [`Assets/Project/Docs/Specifications/_templates/feature/`](Assets/Project/Docs/Specifications/_templates/feature/). Its `SPECOPS_STATE.json` conforms to [`.specops/contracts/feature-state.schema.json`](.specops/contracts/feature-state.schema.json) but remains a derived template, not a feature instance or authority.

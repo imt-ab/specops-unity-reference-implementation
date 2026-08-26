@@ -16,7 +16,7 @@ This is a repository-specific adaptation of the pattern. It is practical structu
 
 ## Architectural Intent
 
-The architecture is built around a simple rule: dependencies point inward.
+The architecture is built around explicit allowed dependency directions. Core-facing dependencies point inward, while Utility remains a standalone cross-cutting leaf rather than a layer beneath Domain.
 
 Core rules and use cases should not depend on Unity engine behavior. Engine-facing code should adapt Unity concepts to the core, not the other way around.
 
@@ -29,21 +29,25 @@ The repository uses these layers:
 | Layer | Responsibility | Dependency Rule |
 | --- | --- | --- |
 | `Domain` | Core rules, entities, and invariants | Depends on nothing |
-| `Application` | Use cases, orchestration, and ports | Depends on `Domain` only |
-| `AI` | AI-related policies and coordination used by the runtime | Depends on `Application` and `Domain` |
-| `Infrastructure` | Adapters for files, services, persistence, and external systems | Depends on `Application` and `Domain` |
-| `Presentation` | Unity-facing UI, input, scene hooks, and interaction flow | Depends on `Application` and Unity APIs as needed |
-| `Composition` | Dependency wiring and lifetime scope setup | Wires concrete implementations only |
-| `Utility` | Shared technical helpers and cross-cutting abstractions | Kept standalone and reusable |
+| `Application` | Use cases, orchestration, and ports | Depends on `Domain` and `Utility` |
+| `AI` | AI-related policies and coordination used by the runtime | Depends on `Application`, `Domain`, and `Utility` |
+| `Infrastructure` | Adapters for files, services, persistence, and external systems | Depends on `Application`, `Domain`, and `Utility` |
+| `Presentation` | Unity-facing UI, input, scene hooks, and interaction flow | Depends on `Application`, `Utility`, and Unity APIs as needed |
+| `Composition` | Dependency wiring and lifetime scope setup | Depends on `Application`, `Domain`, `Infrastructure`, `Presentation`, and `Utility` for wiring only |
+| `Utility` | Shared technical helpers and cross-cutting abstractions | References no runtime layer; may be referenced by every runtime layer except `Domain` |
 
 The concrete assemblies in this repository follow the `InfiniteMonkey.*` naming convention.
 
 ## Dependency Rules
 
-- `Domain` and `Application` must remain free of Unity engine references.
+- `Domain` depends on no runtime layer and must remain free of Unity engine references.
+- `Application` may depend on `Domain` and `Utility` and must remain free of Unity engine references.
+- `AI` and `Infrastructure` may depend on `Application`, `Domain`, and `Utility`.
+- `Presentation` may depend on `Application` and `Utility`, plus Unity APIs as needed.
 - `Presentation` converts Unity events into application calls.
 - `Infrastructure` contains adapters, not business rules.
-- `Composition` wires objects together and should not hold gameplay logic.
+- `Composition` may depend on `Application`, `Domain`, `Infrastructure`, `Presentation`, and `Utility`; it wires objects together and should not hold gameplay logic.
+- `Utility` references no runtime layer. It may be referenced by `Application`, `AI`, `Infrastructure`, `Presentation`, and `Composition`, but deliberately not by `Domain`.
 - `Utility` should stay small and should not become a hidden application layer.
 
 If a class needs engine access, it belongs near the edge. If a class needs to express the core rule, it belongs inward.

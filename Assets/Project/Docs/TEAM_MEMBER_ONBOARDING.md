@@ -25,7 +25,7 @@
 
 ### Technology Stack
 
-- **Unity Version:** Unity 6000.3 (Unity 6.3)
+- **Unity Version:** Unity 6000.5.8f1 (revision `5cb7df797b7d`)
 - **Language:** C# 9.0 (net471)
 - **Version Control (current instance):** Git/GitHub
 - **Legacy VCS material retained for E9:** Plastic SCM (Unity Version Control), non-operative
@@ -49,7 +49,7 @@ authority and retained explanation are routed through:
 
 ### Required Tools
 
-1. **Unity 6000.3 (Unity 6.3)**
+1. **Unity 6000.5.8f1 (revision `5cb7df797b7d`)**
    - Download and install from Unity Hub
    - Ensure all required modules are installed
 
@@ -180,23 +180,23 @@ Assets/Project/
 
 2. **Application**
    - Use cases, orchestration, and ports (interfaces)
-   - Depends **only** on Domain
+   - Depends **only** on Domain and Utility
    - **NO** `UnityEngine` references
    - Assembly: `InfiniteMonkey.Application`
 
 3. **AI**
    - AI strategies and policies
-   - Depends on Application + Domain
+   - Depends on Application + Domain + Utility
    - Assembly: `InfiniteMonkey.AI`
 
 4. **Infrastructure**
    - Adapters: persistence, files, networking, platform services
-   - Depends on Application + Domain
+   - Depends on Application + Domain + Utility
    - Assembly: `InfiniteMonkey.Infrastructure`
 
 5. **Presentation**
    - Unity-facing layer: views, input translation, scene hooks
-   - Depends on Application
+   - Depends on Application + Utility
    - **CAN** reference `UnityEngine`
    - Assembly: `InfiniteMonkey.Presentation`
 
@@ -204,33 +204,36 @@ Assets/Project/
    - VContainer LifetimeScopes and registrations **only**
    - **NO** gameplay logic
    - Wires all concrete implementations to interfaces
+   - Depends on Application + Domain + Infrastructure + Presentation + Utility
    - Assembly: `InfiniteMonkey.Composition`
 
 7. **Utility**
    - Cross-cutting helpers and shared utilities (e.g., logging interfaces)
-   - Standalone; can be referenced by other layers
+   - Standalone cross-cutting leaf; references no runtime layer
+   - May be referenced by Application, AI, Infrastructure, Presentation, and Composition, but not Domain
    - Assembly: `InfiniteMonkey.Utility`
 
 #### Dependency Graph
 
 ```
-Domain ← Application ← AI
-                    ← Infrastructure
-                    ← Presentation
-
-Composition wires all layers
-Utility is standalone
+Domain        -> []
+Application   -> Domain, Utility
+AI            -> Application, Domain, Utility
+Infrastructure -> Application, Domain, Utility
+Presentation  -> Application, Utility
+Composition   -> Application, Domain, Infrastructure, Presentation, Utility
+Utility       -> []
 ```
 
 #### Critical Dependency Rules
 
 - **Domain:** Depends on nothing. No `UnityEngine`.
-- **Application:** Depends on Domain. No `UnityEngine`.
-- **AI:** Depends on Application, Domain.
-- **Infrastructure:** Depends on Application, Domain.
-- **Presentation:** Depends on Application (and Unity APIs).
-- **Composition:** Depends on all layers (for wiring only).
-- **Utility:** Standalone.
+- **Application:** Depends on Domain and Utility. No `UnityEngine`.
+- **AI:** Depends on Application, Domain, and Utility.
+- **Infrastructure:** Depends on Application, Domain, and Utility.
+- **Presentation:** Depends on Application and Utility (and Unity APIs).
+- **Composition:** Depends on Application, Domain, Infrastructure, Presentation, and Utility (for wiring only).
+- **Utility:** References no runtime layer; it may be referenced by every runtime layer except Domain.
 
 **Violations of these dependency rules are not permitted.**
 

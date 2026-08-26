@@ -10,6 +10,7 @@ Import-Module -Name $script:UnityPath -Force -ErrorAction Stop
 $script:ProfileId = 'specops-json-jcs-sha256-v1'
 $script:DefinitionContractVersion = '1.0.0'
 $script:Utf8Strict = [System.Text.UTF8Encoding]::new($false, $true)
+$script:TrackedStateInlineTextMaxCombinedBytes = 65536
 $script:SupportedDefinitionIdentities = [ordered]@{
     'specops-core-contract-integrity' = 'c9406453833d46e6813186cfbae5ba249a0c8e7c76af460b292073412cd23dd2'
     'specops-derived-state-consistency' = '4702aae1c11777990afab0073fbe35f07e86611d0837b3748998f8801a9c5612'
@@ -187,6 +188,75 @@ function Get-SpecOpsCanonicalDefinitionDigest {
     $canonical = ConvertTo-SpecOpsCanonicalJson -Bytes $Bytes -Mode EVAL_DEFINITION
     $canonicalBytes = $script:Utf8Strict.GetBytes($canonical)
     return [Convert]::ToHexString([System.Security.Cryptography.SHA256]::HashData($canonicalBytes)).ToLowerInvariant()
+}
+
+function Get-SpecOpsByteSha256Hex {
+    param([Parameter(Mandatory)] [AllowEmptyCollection()] [byte[]] $Bytes)
+    return [Convert]::ToHexString([System.Security.Cryptography.SHA256]::HashData($Bytes)).ToLowerInvariant()
+}
+
+function Get-SpecOpsTrackedStateEntryObservations {
+    param(
+        [Parameter(Mandatory)] $Entry,
+        [Parameter(Mandatory)] [int] $Index
+    )
+
+    $prefix = "changedEntry[$Index]"
+    $details = [System.Collections.Generic.List[string]]::new()
+    $pathJson = [System.Text.Json.JsonSerializer]::Serialize([string] $Entry.Path, [System.Text.Json.JsonSerializerOptions] $null)
+    $change = [string] $Entry.Change
+    $details.Add("$prefix.pathJson=$pathJson")
+    $details.Add("$prefix.change=$change")
+
+    $beforeProperty = $Entry.PSObject.Properties['BeforeBytes']
+    $afterProperty = $Entry.PSObject.Properties['AfterBytes']
+    $beforeAvailable = $null -ne $beforeProperty -and $null -ne $beforeProperty.Value
+    $afterAvailable = $null -ne $afterProperty -and $null -ne $afterProperty.Value
+    [byte[]] $beforeBytes = if ($beforeAvailable) { [byte[]] $beforeProperty.Value } else { $null }
+    [byte[]] $afterBytes = if ($afterAvailable) { [byte[]] $afterProperty.Value } else { $null }
+
+    foreach ($side in @(
+        [pscustomobject]@{ Name = 'before'; Available = $beforeAvailable; Bytes = $beforeBytes },
+        [pscustomobject]@{ Name = 'after'; Available = $afterAvailable; Bytes = $afterBytes }
+    )) {
+        if ($side.Available) {
+            $details.Add("$prefix.$($side.Name).length=$($side.Bytes.Length)")
+            $details.Add("$prefix.$($side.Name).sha256=$(Get-SpecOpsByteSha256Hex -Bytes $side.Bytes)")
+        }
+        else {
+            $details.Add("$prefix.$($side.Name).length=unavailable")
+            $details.Add("$prefix.$($side.Name).sha256=unavailable")
+        }
+    }
+
+    if (-not [string]::Equals($change, 'Modified', [StringComparison]::Ordinal)) {
+        $details.Add("$prefix.textDiagnostic=not-applicable;reason=change-not-modified")
+        return @($details)
+    }
+    if (-not $beforeAvailable -or -not $afterAvailable) {
+        $details.Add("$prefix.textDiagnostic=omitted;reason=bytes-unavailable")
+        return @($details)
+    }
+
+    $combinedLength = [long] $beforeBytes.Length + [long] $afterBytes.Length
+    if ($combinedLength -gt $script:TrackedStateInlineTextMaxCombinedBytes) {
+        $details.Add("$prefix.textDiagnostic=omitted;reason=size-limit;combinedBytes=$combinedLength;maxCombinedBytes=$script:TrackedStateInlineTextMaxCombinedBytes")
+        return @($details)
+    }
+
+    try {
+        $beforeText = $script:Utf8Strict.GetString($beforeBytes)
+        $afterText = $script:Utf8Strict.GetString($afterBytes)
+    }
+    catch [System.Text.DecoderFallbackException] {
+        $details.Add("$prefix.textDiagnostic=omitted;reason=non-utf8")
+        return @($details)
+    }
+
+    $details.Add("$prefix.textDiagnostic=included;encoding=utf-8;combinedBytes=$combinedLength;maxCombinedBytes=$script:TrackedStateInlineTextMaxCombinedBytes")
+    $details.Add("$prefix.before.utf8Json=$([System.Text.Json.JsonSerializer]::Serialize($beforeText, [System.Text.Json.JsonSerializerOptions] $null))")
+    $details.Add("$prefix.after.utf8Json=$([System.Text.Json.JsonSerializer]::Serialize($afterText, [System.Text.Json.JsonSerializerOptions] $null))")
+    return @($details)
 }
 
 function Get-SpecOpsSchemaAdapterCapability {
@@ -1037,7 +1107,9 @@ function Invoke-SpecOpsUnityDefinitionCheck {
             $changed = @($Execution.ChangedEntries)
             $details = [System.Collections.Generic.List[string]]::new()
             $details.Add("changedEntries=$($changed.Count);comparison=exact-byte;pathIdentity=repository-relative-ordinal")
-            foreach ($entry in $changed) { $details.Add("$([string] $entry.Path):$([string] $entry.Change)") }
+            for ($index = 0; $index -lt $changed.Count; $index++) {
+                foreach ($observation in @(Get-SpecOpsTrackedStateEntryObservations -Entry $changed[$index] -Index $index)) { $details.Add($observation) }
+            }
             $details.Add("generatedPaths=$(@($Execution.GeneratedPaths).Count);generatedPathsExcluded=true")
             $details.Add("packagesLock=$([string] $Execution.PackagesLock.Status);specialRule=false")
             return New-SpecOpsPassOrFail $id ($changed.Count -eq 0) @($details)

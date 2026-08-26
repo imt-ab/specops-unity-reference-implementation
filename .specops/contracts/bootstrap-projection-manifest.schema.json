@@ -1,0 +1,778 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "bootstrap-projection-manifest.schema.json",
+  "title": "SpecOps Bootstrap v1 Projection Manifest",
+  "description": "Derived, subordinate, fail-closed inventory and transform contract for the approved Bootstrap v1 Golden Baseline projection. The manifest records no execution result, validation evidence, release evidence, or Human Authority claim.",
+  "x-contract-version": "1.0.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "manifestVersion",
+    "bootstrapContractVersion",
+    "classification",
+    "authorityStatus",
+    "goldenBaseline",
+    "sourceIdentity",
+    "canonicalOrdering",
+    "bootstrapSourceMetadata",
+    "authoredSourceInventory",
+    "generatedOutputInventory",
+    "staticInvariants"
+  ],
+  "properties": {
+    "$schema": {
+      "const": "../contracts/bootstrap-projection-manifest.schema.json"
+    },
+    "manifestVersion": {
+      "const": "1.0.0"
+    },
+    "bootstrapContractVersion": {
+      "const": "1.0.0"
+    },
+    "classification": {
+      "const": "DERIVED_BOOTSTRAP_PROJECTION_CONTRACT"
+    },
+    "authorityStatus": {
+      "const": "SUBORDINATE_NON_AUTHORITY"
+    },
+    "goldenBaseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "version"
+      ],
+      "properties": {
+        "id": {
+          "const": "specops-unity-clean-architecture-golden-baseline"
+        },
+        "version": {
+          "const": "2.0.0"
+        }
+      }
+    },
+    "sourceIdentity": {
+      "description": "The profile is present in both an initial calculation candidate and a stored manifest. The digest is absent only while constructing the initial identity, then inserted exactly once; complete stored-manifest verification requires it independently of schema-document conformance.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile"
+      ],
+      "properties": {
+        "profile": {
+          "const": "specops-bootstrap-source-jcs-sha256-v1"
+        },
+        "digest": {
+          "description": "Final stored digest. Identity calculation removes only this member; no placeholder or iterative self-hash is permitted.",
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "canonicalOrdering": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bootstrapSourceMetadata",
+        "authoredSourceInventory",
+        "generatedOutputInventory",
+        "transforms",
+        "semanticInputSets",
+        "stringSets"
+      ],
+      "properties": {
+        "bootstrapSourceMetadata": {
+          "const": "path-ordinal-ascending"
+        },
+        "authoredSourceInventory": {
+          "const": "sourcePath-ordinal-ascending"
+        },
+        "generatedOutputInventory": {
+          "const": "outputPath-ordinal-ascending"
+        },
+        "transforms": {
+          "const": "id-ordinal-ascending"
+        },
+        "semanticInputSets": {
+          "const": "ordinal-ascending"
+        },
+        "stringSets": {
+          "const": "ordinal-ascending"
+        }
+      }
+    },
+    "bootstrapSourceMetadata": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/sourceMetadataEntry"
+      }
+    },
+    "authoredSourceInventory": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/authoredSourceEntry"
+      }
+    },
+    "generatedOutputInventory": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/generatedOutputEntry"
+      }
+    },
+    "staticInvariants": {
+      "$ref": "#/$defs/staticInvariants"
+    }
+  },
+  "$defs": {
+    "repositoryPath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*(?:^|/)\\.(?:/|$))(?!.*//)(?:[^/\\r\\n]+/)*[^/\\r\\n]+$"
+    },
+    "pathTemplate": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//)(?:[^/\\r\\n]+/)*[^/\\r\\n]+$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "byteIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "byteLength",
+        "sha256"
+      ],
+      "properties": {
+        "byteLength": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "sourceMetadataEntry": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "role",
+            "identityBinding"
+          ],
+          "properties": {
+            "path": {
+              "const": ".specops/bootstrap/bootstrap-v1.projection-manifest.json"
+            },
+            "role": {
+              "const": "PROJECTION_MANIFEST"
+            },
+            "identityBinding": {
+              "const": "SEMANTIC_CALCULATION_VALUE_WITH_DIGEST_OMITTED"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "role",
+            "identityBinding",
+            "byteIdentity"
+          ],
+          "properties": {
+            "path": {
+              "const": ".specops/contracts/bootstrap-projection-manifest.schema.json"
+            },
+            "role": {
+              "const": "PROJECTION_MANIFEST_SCHEMA"
+            },
+            "identityBinding": {
+              "const": "EXACT_BYTE_SHA256"
+            },
+            "byteIdentity": {
+              "$ref": "#/$defs/byteIdentity"
+            }
+          }
+        }
+      ]
+    },
+    "projectionRole": {
+      "enum": [
+        "LEGACY_MIGRATION_OR_DEVELOPMENT",
+        "PUBLIC_REPOSITORY_INSTANCE",
+        "REFERENCE_FEATURE_INSTANCE",
+        "REQUIRED_ATTRIBUTION",
+        "REUSABLE_CHILD_CONTENT",
+        "SOURCE_VALIDATION_TEST",
+        "VCS_HOSTING_SPECIFIC"
+      ]
+    },
+    "outputMapping": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "path"
+          ],
+          "properties": {
+            "path": {
+              "$ref": "#/$defs/repositoryPath"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "pathTemplate",
+            "pathInputs"
+          ],
+          "properties": {
+            "pathTemplate": {
+              "$ref": "#/$defs/pathTemplate"
+            },
+            "pathInputs": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "CodeNamespaceRoot"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "authoredSourceEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourcePath",
+        "byteIdentity",
+        "disposition",
+        "projectionRole"
+      ],
+      "properties": {
+        "sourcePath": {
+          "$ref": "#/$defs/repositoryPath"
+        },
+        "byteIdentity": {
+          "$ref": "#/$defs/byteIdentity"
+        },
+        "disposition": {
+          "enum": [
+            "COPY_EXACT",
+            "TRANSFORM_SCOPED",
+            "EXCLUDE"
+          ]
+        },
+        "projectionRole": {
+          "$ref": "#/$defs/projectionRole"
+        },
+        "output": {
+          "$ref": "#/$defs/outputMapping"
+        },
+        "transforms": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/transform"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "const": "COPY_EXACT"
+              }
+            },
+            "required": [
+              "disposition"
+            ]
+          },
+          "then": {
+            "required": [
+              "output"
+            ],
+            "not": {
+              "required": [
+                "transforms"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "const": "TRANSFORM_SCOPED"
+              }
+            },
+            "required": [
+              "disposition"
+            ]
+          },
+          "then": {
+            "required": [
+              "output",
+              "transforms"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "disposition": {
+                "const": "EXCLUDE"
+              }
+            },
+            "required": [
+              "disposition"
+            ]
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "output"
+                  ]
+                },
+                {
+                  "required": [
+                    "transforms"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "transform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "selectorClass",
+        "selector",
+        "expectedSourceValue",
+        "expectedMatchCount",
+        "replacement",
+        "encodingAndEscaping",
+        "postcondition",
+        "forbiddenResidualValues"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "selectorClass": {
+          "description": "Closed parser/token selector class. JSON string-token classes select only explicitly declared exact ordinal substring segments inside already parsed JSON member-name or string-value tokens; they never imply whole-token equality and never authorize regex or raw-file replacement.",
+          "enum": [
+            "CSHARP_UTF8_TOKEN",
+            "EVAL_DEFINITION_CONTENT_IDENTITY",
+            "JSON_ARRAY_ITEMS_BY_EXACT_VALUE",
+            "JSON_POINTER_MEMBER",
+            "JSON_POINTER_VALUE",
+            "JSON_MEMBER_NAME_OR_STRING_VALUE_TOKEN",
+            "JSON_STRING_VALUE_TOKEN",
+            "TEXT_UTF8_EXACT_SPAN",
+            "TEXT_UTF8_TOKEN",
+            "UNITY_YAML_SCALAR"
+          ]
+        },
+        "selector": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expectedSourceValue": true,
+        "expectedMatchCount": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "replacement": {
+          "$ref": "#/$defs/replacement"
+        },
+        "encodingAndEscaping": {
+          "$ref": "#/$defs/encodingAndEscaping"
+        },
+        "postcondition": {
+          "$ref": "#/$defs/postcondition"
+        },
+        "forbiddenResidualValues": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "replacement": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "name"
+          ],
+          "properties": {
+            "kind": {
+              "const": "CONTENT_INPUT"
+            },
+            "name": {
+              "enum": [
+                "ApplicationIdentifier",
+                "CodeNamespaceRoot",
+                "CompanyName",
+                "ProductName",
+                "ProjectId"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "name",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "APPROVED_CONSTANT"
+            },
+            "name": {
+              "enum": [
+                "BOOTSTRAP_PRESENT_TRUE",
+                "EMPTY_YAML_SCALAR",
+                "FEATURE_STATE_INSTANCE_PRESENT_FALSE",
+                "FRESH_REPOSITORY_PURPOSE",
+                "FRESH_REPOSITORY_TYPE",
+                "NO_VCS_BINDING_TEXT",
+                "PUBLIC_FEATURE_STATE_ABSENT_TEXT",
+                "SPECOPS_CHILD_FRAMEWORK_TEXT",
+                "SPECOPS_CHILD_GLOBAL_CONSTRAINT_TEXT",
+                "UNITY_EDITMODE_GENERIC_DESCRIPTION"
+              ]
+            },
+            "value": true
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "name",
+            "inputs"
+          ],
+          "properties": {
+            "kind": {
+              "const": "DETERMINISTIC_DERIVATION"
+            },
+            "name": {
+              "enum": [
+                "EVAL_DEFINITION_CONTENT_IDENTITY_V1",
+                "PLAYERSETTINGS_PRODUCT_GUID_V1",
+                "REPOSITORY_ID_MEMBER_V1"
+              ]
+            },
+            "inputs": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "enum": [
+                  "ApplicationIdentifier",
+                  "ProjectId",
+                  "TransformedEvalDefinition"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "REMOVE_SELECTED_SPAN"
+            }
+          }
+        }
+      ]
+    },
+    "encodingAndEscaping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sourceEncoding",
+        "replacementEncoding",
+        "escaping",
+        "preserveNonSelectedBytes"
+      ],
+      "properties": {
+        "sourceEncoding": {
+          "const": "UTF-8_NO_BOM"
+        },
+        "replacementEncoding": {
+          "const": "UTF-8_NO_BOM"
+        },
+        "escaping": {
+          "enum": [
+            "CSHARP_IDENTIFIER_OR_STRING_SEGMENT",
+            "EXACT_UTF8",
+            "JSON_RFC8259",
+            "UNITY_YAML_PLAIN_SCALAR"
+          ]
+        },
+        "preserveNonSelectedBytes": {
+          "const": true
+        }
+      }
+    },
+    "postcondition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "selector"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "EVAL_DEFINITION_IDENTITY_VALID",
+            "SELECTED_ITEMS_ABSENT",
+            "SELECTOR_ABSENT",
+            "SELECTOR_EQUALS_REPLACEMENT",
+            "TOKEN_ABSENT"
+          ]
+        },
+        "selector": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "generatedOutputEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "disposition",
+        "outputPath",
+        "generatorContract",
+        "allowedSemanticInputs",
+        "approvedConstants",
+        "schemaRequirement",
+        "representation",
+        "generationCount",
+        "postconditions",
+        "verificationRequirements"
+      ],
+      "properties": {
+        "disposition": {
+          "const": "GENERATE_DETERMINISTIC"
+        },
+        "outputPath": {
+          "$ref": "#/$defs/repositoryPath"
+        },
+        "generatorContract": {
+          "const": "bootstrap-provenance-json-v1"
+        },
+        "allowedSemanticInputs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "ApplicationIdentifier",
+              "BootstrapContractVersion",
+              "BootstrapImplementationVersion",
+              "CodeNamespaceRoot",
+              "CompanyName",
+              "GoldenBaselineId",
+              "GoldenBaselineVersion",
+              "ProductName",
+              "ProjectId",
+              "SourceIdentity"
+            ]
+          }
+        },
+        "approvedConstants": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "DERIVED_BOOTSTRAP_PROVENANCE",
+              "NON_AUTHORITATIVE",
+              "NON_RELEASE_EVIDENCE",
+              "PROVENANCE_CONTRACT_VERSION_1_0_0"
+            ]
+          }
+        },
+        "schemaRequirement": {
+          "const": ".specops/contracts/bootstrap-provenance.schema.json"
+        },
+        "representation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "format",
+            "canonicalization",
+            "encoding",
+            "bom",
+            "trailingNewline"
+          ],
+          "properties": {
+            "format": {
+              "const": "JSON"
+            },
+            "canonicalization": {
+              "const": "RFC8785_JCS"
+            },
+            "encoding": {
+              "const": "UTF-8"
+            },
+            "bom": {
+              "const": false
+            },
+            "trailingNewline": {
+              "const": false
+            }
+          }
+        },
+        "generationCount": {
+          "const": 1
+        },
+        "postconditions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "requirement"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]*$"
+              },
+              "requirement": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "verificationRequirements": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "ALLOWED_INPUTS_ONLY",
+              "DETERMINISTIC_BYTES_REPRODUCIBLE",
+              "EXACTLY_ONE_OUTPUT",
+              "NO_AMBIENT_EXECUTION_FACTS",
+              "OUTPUT_SCHEMA_VALID",
+              "PATH_COLLISION_FREE"
+            ]
+          }
+        }
+      }
+    },
+    "staticInvariants": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pathComparison",
+        "windowsPathComparison",
+        "sourceHashAlgorithm",
+        "metaPolicy",
+        "projectVersion",
+        "projectRevision",
+        "packagePolicy",
+        "runInBackground",
+        "prohibitedOutputPrefixes",
+        "prohibitedOutputPaths"
+      ],
+      "properties": {
+        "pathComparison": {
+          "const": "ordinal"
+        },
+        "windowsPathComparison": {
+          "const": "ordinal-ignore-case"
+        },
+        "sourceHashAlgorithm": {
+          "const": "SHA-256-EXACT-BYTES"
+        },
+        "metaPolicy": {
+          "const": "RETAIN_OR_MOVE_ADJACENT_EXACT_BYTES_AND_GUID"
+        },
+        "projectVersion": {
+          "const": "6000.5.8f1"
+        },
+        "projectRevision": {
+          "const": "5cb7df797b7d"
+        },
+        "packagePolicy": {
+          "const": "MANIFEST_DIRECT_SET_EQUALS_DEPTH_ZERO_LOCK_SET_WITH_MATCHING_VERSIONS"
+        },
+        "runInBackground": {
+          "const": 1
+        },
+        "prohibitedOutputPrefixes": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "prohibitedOutputPaths": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

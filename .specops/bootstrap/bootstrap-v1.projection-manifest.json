@@ -10,7 +10,7 @@
   },
   "sourceIdentity": {
     "profile": "specops-bootstrap-source-jcs-sha256-v1",
-    "digest": "43d7762a9cc5d9971d8061246e4be0747fd42a9be0c703c259bec1ba61fb69b7"
+    "digest": "041eed9afc2b673f2297cffcb8c1f860eecf3ba5db93b0721839d350f0650eaf"
   },
   "canonicalOrdering": {
     "bootstrapSourceMetadata": "path-ordinal-ascending",
@@ -130,8 +130,8 @@
     {
       "sourcePath": ".aiignore",
       "byteIdentity": {
-        "byteLength": 173,
-        "sha256": "66b99be454dd5683cc29458280df3e9ece8399ce83cac18d40557196ccf24632"
+        "byteLength": 168,
+        "sha256": "dd7b826f9537586fa924d2284a031ed885cd0f73775b550951a92456f54b57bf"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "LEGACY_MIGRATION_OR_DEVELOPMENT"
@@ -148,8 +148,8 @@
     {
       "sourcePath": ".editorconfig",
       "byteIdentity": {
-        "byteLength": 7393,
-        "sha256": "2a1b38e50ed61026150f85bcf126526b3920269505dc1cf3dced5b32a12ed262"
+        "byteLength": 7252,
+        "sha256": "22c6fe71854f010a7e11e27fd6371c6f8ee9bf2af01274b00db60f9e023668ab"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -160,8 +160,8 @@
     {
       "sourcePath": ".gitattributes",
       "byteIdentity": {
-        "byteLength": 974,
-        "sha256": "ce97a6d6e488aad78f95258e005bc46adb2f7d23e3f281145f3ebaf35cfcf011"
+        "byteLength": 923,
+        "sha256": "907613e74ab3cc10c3f65b9625931fa59b7488392223b5aaa4dcb9eaa9b313ed"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "VCS_HOSTING_SPECIFIC"
@@ -223,8 +223,8 @@
     {
       "sourcePath": ".gitignore",
       "byteIdentity": {
-        "byteLength": 1865,
-        "sha256": "4bf7dab672a50614517778a063c75e7bf2a23e9122473f1e7c952a15bfe882c0"
+        "byteLength": 1781,
+        "sha256": "a0c3803b42f6f14ef479e57f88906fa47f2a9cf56bb1f766348fbfef041a30dd"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "VCS_HOSTING_SPECIFIC"
@@ -232,8 +232,8 @@
     {
       "sourcePath": ".junie/guidelines.md",
       "byteIdentity": {
-        "byteLength": 1314,
-        "sha256": "8fdc9ddf293c9067c8def6918b4a2da48fd93d68a571e8fe8c7716bea2f46126"
+        "byteLength": 1313,
+        "sha256": "b7cf3ae9b31a7b4cae02794fa6063b56ddb612784a293fff8ac01e3ea5e8d3f8"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "LEGACY_MIGRATION_OR_DEVELOPMENT"
@@ -1044,8 +1044,8 @@
     {
       "sourcePath": "Assets/Project/Art/Materials/README.md",
       "byteIdentity": {
-        "byteLength": 56,
-        "sha256": "1d0aa5589f6ad0a3e5d1d82da684187135f5d1399c45b41606cfcd331e284d2c"
+        "byteLength": 55,
+        "sha256": "dd30ded95e0558e34d2206ea9c820d22758a8adc6c64e6951528f4b402ab1b8c"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -1080,8 +1080,8 @@
     {
       "sourcePath": "Assets/Project/Art/Models/README.md",
       "byteIdentity": {
-        "byteLength": 53,
-        "sha256": "ea6001999c6f66b9ac98ff8eb9575db309b28223648e86993d8aa5eedfbb4a7f"
+        "byteLength": 52,
+        "sha256": "73c21350e0637b2f8e07f2ea3de4f9a2ae605d47109e3a25bced0425adbd0c66"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -1104,8 +1104,8 @@
     {
       "sourcePath": "Assets/Project/Art/README.md",
       "byteIdentity": {
-        "byteLength": 50,
-        "sha256": "9f8a044bed018d0a7b1425cc92b349f0ddbc5777971563e2d6c52dad5d9cefec"
+        "byteLength": 49,
+        "sha256": "110da42853b91caecb52d8ba428a087e04c5664aff22e102037a33b8b126d553"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -1140,8 +1140,8 @@
     {
       "sourcePath": "Assets/Project/Art/Shaders/README.md",
       "byteIdentity": {
-        "byteLength": 54,
-        "sha256": "866a773b0f290a3230758cb4527a579d0dc65ede53552a5711f66c8a8a013599"
+        "byteLength": 53,
+        "sha256": "69c5b033e8a1ede56b0a8f322fa1178506fb1d0f1c34b165e56473e7cb75cd34"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -1176,8 +1176,8 @@
     {
       "sourcePath": "Assets/Project/Art/Textures/README.md",
       "byteIdentity": {
-        "byteLength": 55,
-        "sha256": "0e83d3ea024db0e54f4834e95edd5801ec25a1d6e842ba8ecac3e7744de900d4"
+        "byteLength": 54,
+        "sha256": "796238d5af4004c4bfd8f14aa708375289444d37ba2fb50acfc8cdeac334fc00"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -1224,8 +1224,8 @@
     {
       "sourcePath": "Assets/Project/Audio/Music/README.md",
       "byteIdentity": {
-        "byteLength": 52,
-        "sha256": "b46a4fd6ea7971eb174e3a7ffba8eb71a883107161fc6637e1cbcb25169f7a51"
+        "byteLength": 51,
+        "sha256": "700f55724dbf0b591f322837082108082d2c5bb0b2e3f6e5b8c53aeb3a537b33"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -1248,8 +1248,8 @@
     {
       "sourcePath": "Assets/Project/Audio/README.md",
       "byteIdentity": {
-        "byteLength": 52,
-        "sha256": "68cefe700f2ada50d00331f5a7ae31fbbf619efb1c14f45883050ea9e1e1c493"
+        "byteLength": 51,
+        "sha256": "701437ad54f5c9cd70a79831c2bf5d05c99de9fa2b2d00ef23109a457086de18"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -1284,8 +1284,8 @@
     {
       "sourcePath": "Assets/Project/Audio/SFX/README.md",
       "byteIdentity": {
-        "byteLength": 50,
-        "sha256": "fbc8f2b60fbab695e9696c6fe9c17fa3734079c8171592622c9ed1eb8a8eab31"
+        "byteLength": 49,
+        "sha256": "f5047bc5e9f632c426e5e5bcf2301d24129b592b79bd1f9f961e15e945c13720"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -1320,8 +1320,8 @@
     {
       "sourcePath": "Assets/Project/Code/README.md",
       "byteIdentity": {
-        "byteLength": 51,
-        "sha256": "6f5f0c083596aa9a33d0c5a3d838d1ea8fc1819aeffc4253f8ee1777f2121d1a"
+        "byteLength": 50,
+        "sha256": "7deec29622f6d76a71e55ca14ea180dfb7e61773637a221b48d0078331e5d1b3"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -1368,8 +1368,8 @@
     {
       "sourcePath": "Assets/Project/Code/Runtime/AI/Dummy.cs",
       "byteIdentity": {
-        "byteLength": 295,
-        "sha256": "78522abf6f3a9aa87ecd27eca082d3597d6c49b16f243b6ec0c1f6ac92393029"
+        "byteLength": 274,
+        "sha256": "966fdd1a01fba3c0d8a112fc3a338b3d6b382a348f56bd8b02a7bab2061a1757"
       },
       "disposition": "TRANSFORM_SCOPED",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -1474,8 +1474,8 @@
     {
       "sourcePath": "Assets/Project/Code/Runtime/AI/README.md",
       "byteIdentity": {
-        "byteLength": 49,
-        "sha256": "39d88fd9683388af59768e35e8d249a112e07021213d0adb6bf62d5025f6726f"
+        "byteLength": 48,
+        "sha256": "5359f2d4c260dca7c1d23aa22c263b4d70584fe6b1015ea667b690ad09405d98"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -1528,8 +1528,8 @@
     {
       "sourcePath": "Assets/Project/Code/Runtime/Application/Dummy.cs",
       "byteIdentity": {
-        "byteLength": 306,
-        "sha256": "df18c1f13030cf98068a68047f31e496a9da203d8c6865b40d0e5b25ba80893f"
+        "byteLength": 284,
+        "sha256": "f5282b73a4f9378c4fd3ddc9b6ae7724a47d65c1ee2569b43cb610ab5546ba93"
       },
       "disposition": "TRANSFORM_SCOPED",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -1652,8 +1652,8 @@
     {
       "sourcePath": "Assets/Project/Code/Runtime/Application/README.md",
       "byteIdentity": {
-        "byteLength": 58,
-        "sha256": "9ebf05c8f9ac90021e5cd6b61ee017edc98b9acf6c8fc915c4a536dcd85173c8"
+        "byteLength": 57,
+        "sha256": "38ba1d5ae5ad550bccf183df77bb3e5bfe205828285ff70e772a4e516632d401"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -1688,8 +1688,8 @@
     {
       "sourcePath": "Assets/Project/Code/Runtime/Composition/Dummy.cs",
       "byteIdentity": {
-        "byteLength": 304,
-        "sha256": "e92fc097b15e133d8500c478e2b87053ee6d6ade30965f49ecc99c629330a2d2"
+        "byteLength": 283,
+        "sha256": "e345c7715a61bd528d335e8d1e406f3796005190a907e7496d631cfdf83fa356"
       },
       "disposition": "TRANSFORM_SCOPED",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -1750,8 +1750,8 @@
     {
       "sourcePath": "Assets/Project/Code/Runtime/Composition/Factories/README.md",
       "byteIdentity": {
-        "byteLength": 56,
-        "sha256": "b72a08882c7f4767430eb076f495c6971026c63e1bb564cf3ce1103243fd6d28"
+        "byteLength": 55,
+        "sha256": "f01d877867f2e0d16f43f9d2d2e6d28c59bb95f03ad633ec1905481f550f25bc"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -1884,8 +1884,8 @@
     {
       "sourcePath": "Assets/Project/Code/Runtime/Composition/README.md",
       "byteIdentity": {
-        "byteLength": 58,
-        "sha256": "7e5880a790dae493a14bbe807a79b7207a9ced4b59560965bb275bac80c58f41"
+        "byteLength": 57,
+        "sha256": "5142c04755ac861938b5125e93afe3090d141f598dd6093b9adf95b60b7df4a2"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -1920,8 +1920,8 @@
     {
       "sourcePath": "Assets/Project/Code/Runtime/Domain/Dummy.cs",
       "byteIdentity": {
-        "byteLength": 301,
-        "sha256": "a8202e2406e29c0e1778ef02a2b9cd3ea66bee65673195c954908ff09c3ae44e"
+        "byteLength": 279,
+        "sha256": "9431400ff95f18d3c2855813eb2a800ba1219b90e8cc947bc81f7f6edfdd8778"
       },
       "disposition": "TRANSFORM_SCOPED",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -2026,8 +2026,8 @@
     {
       "sourcePath": "Assets/Project/Code/Runtime/Domain/README.md",
       "byteIdentity": {
-        "byteLength": 53,
-        "sha256": "fd723fda8af3c77719f70b68a64788b64c76b13314187049635d4aa01e332da8"
+        "byteLength": 52,
+        "sha256": "2af6cf2b4dbb9074a18fd73e236b3a087706517572bdda110bcf6b99c52d5546"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -2080,8 +2080,8 @@
     {
       "sourcePath": "Assets/Project/Code/Runtime/Infrastructure/Dummy.cs",
       "byteIdentity": {
-        "byteLength": 307,
-        "sha256": "0b98cbe55e5044e469604cb8055bd2b62e50230b0b3b35c79c1c878f70f4cb38"
+        "byteLength": 286,
+        "sha256": "10b31ee670bbdb7450e0c1c92fc1499f929e33b0bd4fc6cb1a7b3b048f41cb94"
       },
       "disposition": "TRANSFORM_SCOPED",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -2204,8 +2204,8 @@
     {
       "sourcePath": "Assets/Project/Code/Runtime/Infrastructure/README.md",
       "byteIdentity": {
-        "byteLength": 61,
-        "sha256": "63bf664548e38f3341184e80bfbeeef54f307c4fc9559aa2e356f35dc37233d2"
+        "byteLength": 60,
+        "sha256": "8fad269f4cefcd1c78ec28efae4a5b3ea63b910931d76aede751040d492d9ee9"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -2240,8 +2240,8 @@
     {
       "sourcePath": "Assets/Project/Code/Runtime/Presentation/Dummy.cs",
       "byteIdentity": {
-        "byteLength": 305,
-        "sha256": "8e5ab926c9f55c4c2f9fd9809ad60cd965670ddb879a155868c611dea185a851"
+        "byteLength": 284,
+        "sha256": "0427c8d1910a1ccbaed1bbaa0670714b48da87b2fcb2a7e9cd50916a820a3979"
       },
       "disposition": "TRANSFORM_SCOPED",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -2358,8 +2358,8 @@
     {
       "sourcePath": "Assets/Project/Code/Runtime/Presentation/Input/README.md",
       "byteIdentity": {
-        "byteLength": 52,
-        "sha256": "bcdcbdecacabbd5376ed9b3d96bdac46fd94790002f76d5e31abcde0a1c64565"
+        "byteLength": 51,
+        "sha256": "c3fc3a7b33616cdc1b1af43d1b570499ee46ccef512dc4c9ec1402289bf35545"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -2394,8 +2394,8 @@
     {
       "sourcePath": "Assets/Project/Code/Runtime/Presentation/Navigation/README.md",
       "byteIdentity": {
-        "byteLength": 57,
-        "sha256": "1bd12294cbe516a05135d9ada2aeb7ec2c82d96b8bfb44e06d27331d71c5b9b0"
+        "byteLength": 56,
+        "sha256": "39566a02f03cde2dd7de1a1e3a8a3371e8e975f61d5029986cdec5e1bc566dc4"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -2418,8 +2418,8 @@
     {
       "sourcePath": "Assets/Project/Code/Runtime/Presentation/README.md",
       "byteIdentity": {
-        "byteLength": 59,
-        "sha256": "1e61eda0209637b6b78234895113a8d141347754c812a999eab4ea0d27768a99"
+        "byteLength": 58,
+        "sha256": "7fc08843dc23b3b1dd0ae8756a26d42efae54be1b15f19535ff79216b64917a6"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -2472,8 +2472,8 @@
     {
       "sourcePath": "Assets/Project/Code/Runtime/Presentation/UI/README.md",
       "byteIdentity": {
-        "byteLength": 49,
-        "sha256": "69359e2b10a4c814154e720faabd535451519846c5c5e9b4d9c917a803e9d9dd"
+        "byteLength": 48,
+        "sha256": "9ce2e1db33ef31a616ab214bfb710f1a5dd8a96fec7fded9daa9b16f29df31f8"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -2496,8 +2496,8 @@
     {
       "sourcePath": "Assets/Project/Code/Runtime/README.md",
       "byteIdentity": {
-        "byteLength": 54,
-        "sha256": "22316cc06d79d2200b7ed5e64d303cfbedd25468649d890ed4db98e1b5556139"
+        "byteLength": 53,
+        "sha256": "213ea955567a970cd0d6ab045559e1ee27f54cfb7894b255d55c68b7af8acaff"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -2532,8 +2532,8 @@
     {
       "sourcePath": "Assets/Project/Code/Runtime/Utility/Dummy.cs",
       "byteIdentity": {
-        "byteLength": 300,
-        "sha256": "fd526d55386ee9d8a47a58025e44b7ac4acaeacd3e9bdf2b573117ab279e4858"
+        "byteLength": 279,
+        "sha256": "1250f6b54ac142f16f62ae2e3d394f031d822ffe52564c78e8780b8c66835982"
       },
       "disposition": "TRANSFORM_SCOPED",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -2650,8 +2650,8 @@
     {
       "sourcePath": "Assets/Project/Code/Runtime/Utility/Interfaces/IMonkeyLogger.cs",
       "byteIdentity": {
-        "byteLength": 272,
-        "sha256": "067b1ba4cb1622877df5c01d927050b36424b2dccc16b48380b28577fa9bde21"
+        "byteLength": 260,
+        "sha256": "fac55d29ceac4e385e1e93c05ca97c69c455340389d109f89166682ac3249e59"
       },
       "disposition": "TRANSFORM_SCOPED",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -2700,8 +2700,8 @@
     {
       "sourcePath": "Assets/Project/Code/Runtime/Utility/Interfaces/IVersionProvider.cs",
       "byteIdentity": {
-        "byteLength": 320,
-        "sha256": "b8f1f3f4d2fcc90194c5504e9aa1460447669e56f65537a39598f37925cc8b8e"
+        "byteLength": 307,
+        "sha256": "79fe5e43ae662742a1259cad6aa7d2bfb6ef074bc432522de5698e37f8363a4f"
       },
       "disposition": "TRANSFORM_SCOPED",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -2750,8 +2750,8 @@
     {
       "sourcePath": "Assets/Project/Code/Runtime/Utility/MonkeyDebugLogger.cs",
       "byteIdentity": {
-        "byteLength": 603,
-        "sha256": "bf44c63c6fa79d8b995619359b668ced082ed92828e71aada28d9d255f6f0441"
+        "byteLength": 575,
+        "sha256": "5f4f0aa1e4f2d2ef4e6da44394a8a46f37ac167ca1eacc123ca9b48ea58bc021"
       },
       "disposition": "TRANSFORM_SCOPED",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -2800,8 +2800,8 @@
     {
       "sourcePath": "Assets/Project/Code/Runtime/Utility/MonkeyNullLogger.cs",
       "byteIdentity": {
-        "byteLength": 583,
-        "sha256": "4f22687f685867278c76e0a3b0fe60f3ae13517cd9db4031119d58006861c299"
+        "byteLength": 557,
+        "sha256": "81b6635f5080896d4f0315ae959598230947966b4b862ae47e5f8478f20014e7"
       },
       "disposition": "TRANSFORM_SCOPED",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -2850,8 +2850,8 @@
     {
       "sourcePath": "Assets/Project/Code/Runtime/Utility/README.md",
       "byteIdentity": {
-        "byteLength": 54,
-        "sha256": "59935432dd660bda185c48298ea8c6a5113f0cbc96364f2b3070b682287b6534"
+        "byteLength": 53,
+        "sha256": "5e4cbcdc4ae7f8953d7ea8a4ca41fdec07ff0806df0bdeb1c1cd2005bc95e64e"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -2874,8 +2874,8 @@
     {
       "sourcePath": "Assets/Project/Code/Runtime/Utility/VersionProvider.cs",
       "byteIdentity": {
-        "byteLength": 1128,
-        "sha256": "db95f23f2e3b8282fc803bf6981c4e364bd0035108ea0c666ccfd5745783c8b0"
+        "byteLength": 1089,
+        "sha256": "8d1501f0f6f0914502995bc69f241d4cf884818afec8e5e5a519278bd1f3f34e"
       },
       "disposition": "TRANSFORM_SCOPED",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -2998,8 +2998,8 @@
     {
       "sourcePath": "Assets/Project/Code/Tests/EditMode/Dummy.cs",
       "byteIdentity": {
-        "byteLength": 306,
-        "sha256": "3236c019c71577f25e36713823f008be0ed1de25c98a90f0fa6b2f8fd8b5a4c6"
+        "byteLength": 285,
+        "sha256": "22ccbdc506e8550b73a611a6d80b0f879c89c35cfee70c60f7381e33b339dfde"
       },
       "disposition": "TRANSFORM_SCOPED",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -3104,8 +3104,8 @@
     {
       "sourcePath": "Assets/Project/Code/Tests/EditMode/MoqSmokeTest.cs",
       "byteIdentity": {
-        "byteLength": 463,
-        "sha256": "c4f02ce051549f31ba2d0ccc791cfc92687b70ebc1d9cd1cf6905b6a07187e5d"
+        "byteLength": 439,
+        "sha256": "65fc3706384dcefb82e6c15cde71100344aef4874c740c3f34917441c85b9dc4"
       },
       "disposition": "TRANSFORM_SCOPED",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -3154,8 +3154,8 @@
     {
       "sourcePath": "Assets/Project/Code/Tests/EditMode/README.md",
       "byteIdentity": {
-        "byteLength": 55,
-        "sha256": "3f8a1d2d049e3c10afaeec9132f1acea6a911dc143c2e8c938bd5e19b4ce6550"
+        "byteLength": 54,
+        "sha256": "eed1ccce692a8336506c91530d3ddfdda5bdb63e36066c49edbcebdd73e63205"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -3226,8 +3226,8 @@
     {
       "sourcePath": "Assets/Project/Code/Tests/PlayMode/Dummy.cs",
       "byteIdentity": {
-        "byteLength": 306,
-        "sha256": "08a054cefab60ad21009392bedbfa9d024d77059ec1c18b2c5c8bcdb36a5e92e"
+        "byteLength": 285,
+        "sha256": "8b763c8266bf8f02c0ca34a692f63feb0b32de727a64c7a567300168ca8b3559"
       },
       "disposition": "TRANSFORM_SCOPED",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -3332,8 +3332,8 @@
     {
       "sourcePath": "Assets/Project/Code/Tests/PlayMode/README.md",
       "byteIdentity": {
-        "byteLength": 55,
-        "sha256": "545af6808f913aca9fa2332d1236caec41d7f81a90a9224b457d4f8bbabe5b95"
+        "byteLength": 54,
+        "sha256": "03f56fa78166c12b5ea0c0d1f1ee9691533af75d5fbff830c309ddf31b8e9ad1"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -3356,8 +3356,8 @@
     {
       "sourcePath": "Assets/Project/Code/Tests/README.md",
       "byteIdentity": {
-        "byteLength": 52,
-        "sha256": "db670dc62e38aed5e327970d3d6dcd65e6247f03d387fc817e1fa50dd4d43ae0"
+        "byteLength": 51,
+        "sha256": "f2f9103abb767f1baf53a681a87f0991126d3992f92dd600c1bab975328ae9b3"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -3404,8 +3404,8 @@
     {
       "sourcePath": "Assets/Project/Content/Addressables/README.md",
       "byteIdentity": {
-        "byteLength": 59,
-        "sha256": "4d9c3bbbfc7c652c848d395e03f56a0739312d2ad701ed323e9c72686fce1939"
+        "byteLength": 58,
+        "sha256": "071849d00d7973c42b4543524d95486cfd8ecae13eaaef06a5edd7b0ad6b452d"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -3440,8 +3440,8 @@
     {
       "sourcePath": "Assets/Project/Content/Animations/README.md",
       "byteIdentity": {
-        "byteLength": 57,
-        "sha256": "4ced503470d142c083473b5b1bc218c8e7d2b53e6ca9b3792ce2cb7887e348da"
+        "byteLength": 56,
+        "sha256": "45ad2f1c1777570a8e1fa53aa43fcb16c310b24523f6b2d8da81b511c68a225b"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -3476,8 +3476,8 @@
     {
       "sourcePath": "Assets/Project/Content/Input/README.md",
       "byteIdentity": {
-        "byteLength": 52,
-        "sha256": "bcdcbdecacabbd5376ed9b3d96bdac46fd94790002f76d5e31abcde0a1c64565"
+        "byteLength": 51,
+        "sha256": "c3fc3a7b33616cdc1b1af43d1b570499ee46ccef512dc4c9ec1402289bf35545"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -3512,8 +3512,8 @@
     {
       "sourcePath": "Assets/Project/Content/Prefabs/README.md",
       "byteIdentity": {
-        "byteLength": 54,
-        "sha256": "2be327f21bde39d108527f0ddb4544d9d31a0ba998d856ff81f6b2ccb3ee601a"
+        "byteLength": 53,
+        "sha256": "644df6e43b3c45f02506173d13c18ee790e8dbe548ecd0a200918001dc0b0417"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -3536,8 +3536,8 @@
     {
       "sourcePath": "Assets/Project/Content/README.md",
       "byteIdentity": {
-        "byteLength": 54,
-        "sha256": "5f4717ca12d33f85c16a8e82848b611cdb857ee2637fa532df2c8e646e74d333"
+        "byteLength": 53,
+        "sha256": "640b7285227785b060456fe89ada304e3943e126caf9f89670dde7f8aaa812a4"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -3572,8 +3572,8 @@
     {
       "sourcePath": "Assets/Project/Content/Scenes/README.md",
       "byteIdentity": {
-        "byteLength": 53,
-        "sha256": "3e102afc9978f1f366f3f10e131c2773513e5e1185105c5e05a7cf95ab642a46"
+        "byteLength": 52,
+        "sha256": "d0b65a1326b8991af7e79d9606a7e5e58580bf39179a24134ecaff39db481c4e"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -3620,8 +3620,8 @@
     {
       "sourcePath": "Assets/Project/Content/Settings/Lighting/README.md",
       "byteIdentity": {
-        "byteLength": 55,
-        "sha256": "1f395276388d6ff19589b26d68b5046c76fa4068f9b265d2c4ed7e937724cec0"
+        "byteLength": 54,
+        "sha256": "b43914df269d5319b17fce6441ec0240adc202710e1392058c447684be8c2cb0"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -3656,8 +3656,8 @@
     {
       "sourcePath": "Assets/Project/Content/Settings/Quality/README.md",
       "byteIdentity": {
-        "byteLength": 54,
-        "sha256": "0a8fa6f1a850bd1d9879bc98eda971aec14f3331abbcc08215c45ddd63c9dd48"
+        "byteLength": 53,
+        "sha256": "1080e07f3a8e517b9adb71d74915d338cf716d5c572ebae450ce807025751ab8"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -3680,8 +3680,8 @@
     {
       "sourcePath": "Assets/Project/Content/Settings/README.md",
       "byteIdentity": {
-        "byteLength": 55,
-        "sha256": "70fa9ba07565266bfd5fd3ee0c06ec6e2b4bb946444ae95f469a5358968a4ea8"
+        "byteLength": 54,
+        "sha256": "c7f034158b13d02f15e4fab9508e200d1dc9ad27817266a9cb53449d6bbe3668"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -3812,8 +3812,8 @@
     {
       "sourcePath": "Assets/Project/Content/Settings/Rendering/README.md",
       "byteIdentity": {
-        "byteLength": 56,
-        "sha256": "9edcdfc58b1989cf37aa23b5a7fd5b7f4dc3b9d52bbb10addd7221080db27c5a"
+        "byteLength": 55,
+        "sha256": "17793b599f9898d478b865db6122a3272b51af7a0b30425d84d225974b23bb65"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -3944,8 +3944,8 @@
     {
       "sourcePath": "Assets/Project/Content/UI/README.md",
       "byteIdentity": {
-        "byteLength": 49,
-        "sha256": "69359e2b10a4c814154e720faabd535451519846c5c5e9b4d9c917a803e9d9dd"
+        "byteLength": 48,
+        "sha256": "9ce2e1db33ef31a616ab214bfb710f1a5dd8a96fec7fded9daa9b16f29df31f8"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -4037,8 +4037,8 @@
     {
       "sourcePath": "Assets/Project/Docs/Architecture/ARCHITECTURE.md",
       "byteIdentity": {
-        "byteLength": 3014,
-        "sha256": "ce2220499a58a2f578e86010c30736f8c17f55083e83b15277a51b1a41a8f3f7"
+        "byteLength": 2988,
+        "sha256": "c1de2702bc92c5d40fca450110dc2963524fb469431a208db97f652b549f344f"
       },
       "disposition": "TRANSFORM_SCOPED",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -4376,8 +4376,8 @@
     {
       "sourcePath": "Assets/Project/Docs/README.md",
       "byteIdentity": {
-        "byteLength": 100,
-        "sha256": "49d74419786ecc9021e2e460ccd65e87073e0e1d175ae8741cd4411223d07016"
+        "byteLength": 99,
+        "sha256": "0f023e12f3b19699c336b08fcc8c4bb650d7b5dc897fa1647d551c9bb1f8d841"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -4881,8 +4881,8 @@
     {
       "sourcePath": "Assets/Project/Docs/TEAM_MEMBER_ONBOARDING.md",
       "byteIdentity": {
-        "byteLength": 25163,
-        "sha256": "321ec9881332880caa2b33c65130301bceb954d6f722227dc8b617670cab9645"
+        "byteLength": 24534,
+        "sha256": "e80b5e90fb6c37ff3f6837d810ca04974445b830c7d9f4efcc32b16e5b1c96d0"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "PUBLIC_REPOSITORY_INSTANCE"
@@ -4961,8 +4961,8 @@
     {
       "sourcePath": "Assets/Project/Editor/Dummy.cs",
       "byteIdentity": {
-        "byteLength": 246,
-        "sha256": "1853ad355c68b7f638c246563533f7cdad17ec21bf0159947dd54f691a278f13"
+        "byteLength": 226,
+        "sha256": "fc384095cb52c0740fdff408ddad43ad3623882bf76250e03596b0a332af8b36"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -5041,8 +5041,8 @@
     {
       "sourcePath": "Assets/Project/Editor/README.md",
       "byteIdentity": {
-        "byteLength": 102,
-        "sha256": "2f8f297a98ab8764d18390cd7f7857e4a6321b9de58fbb72d7719b8cc859d259"
+        "byteLength": 101,
+        "sha256": "e0d98077e0f207b408dc52071eb631b3fb11dd750400e390e0f43077154d5a95"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -5185,8 +5185,8 @@
     {
       "sourcePath": "Assets/ScriptTemplates/01-Monkey Mono C# Script-NewMonkeyMonoScript.cs.txt",
       "byteIdentity": {
-        "byteLength": 411,
-        "sha256": "29b1f44ff3a318546c494ba712f665492d3f25b8426d74c22dfac34c5fc63ab5"
+        "byteLength": 377,
+        "sha256": "86c8eff4b98e6e7a6d25a919edbed0de962290182697784aae3a05a96b3809d1"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -5209,8 +5209,8 @@
     {
       "sourcePath": "Assets/ScriptTemplates/02-Monkey Plain C# Script-NewMonkeyMonoScript.cs.txt",
       "byteIdentity": {
-        "byteLength": 253,
-        "sha256": "09a0825abfbcaf7682a673fd23af7bf2dde6f74283caef2186ceac991f0ef531"
+        "byteLength": 233,
+        "sha256": "dd7e645d74395c2c2891a620ebd996356db31b1827215f3ee9cb2367eb165929"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -5233,8 +5233,8 @@
     {
       "sourcePath": "Assets/ScriptTemplates/README.md",
       "byteIdentity": {
-        "byteLength": 111,
-        "sha256": "408fbc729305efc8b9abfcf39b22ca455bef0f9018d39c738d76cb7d34c53c9f"
+        "byteLength": 110,
+        "sha256": "a2879c8632fc6255ce688f527d13300a60d06b1e4dd53ac81066383174d6ed8f"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -5365,8 +5365,8 @@
     {
       "sourcePath": "LICENSE",
       "byteIdentity": {
-        "byteLength": 10357,
-        "sha256": "ce1ca10f5fa19f306c6fd0b573a8b74f51013992a624b60b782f93a5bd242b8a"
+        "byteLength": 10254,
+        "sha256": "f33a57d38feea2d56523159754db0c0173b49be29fae27d652115f231ba0892a"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REQUIRED_ATTRIBUTION",
@@ -5377,8 +5377,8 @@
     {
       "sourcePath": "NOTICE",
       "byteIdentity": {
-        "byteLength": 665,
-        "sha256": "f49c0318d24e22452c0bb2473b8ba9aea48104aaa6262485ff5f0f3d5c0ddf52"
+        "byteLength": 652,
+        "sha256": "8f9d059d05507df3d0356bad9635eff131c064c85e5abf2372b84458565ff105"
       },
       "disposition": "COPY_EXACT",
       "projectionRole": "REQUIRED_ATTRIBUTION",
@@ -6018,8 +6018,8 @@
     {
       "sourcePath": "TOOLING_RULES.md",
       "byteIdentity": {
-        "byteLength": 4293,
-        "sha256": "725f2b4e2152987647ae65e93231fd30ebf26ae172fc46777542313a29943147"
+        "byteLength": 4210,
+        "sha256": "4a19c3097674bdc2daa28adc9994a2c9d2b9ac9423a82020684778ad4b30e091"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "LEGACY_MIGRATION_OR_DEVELOPMENT"
@@ -6027,8 +6027,8 @@
     {
       "sourcePath": "ignore.conf",
       "byteIdentity": {
-        "byteLength": 833,
-        "sha256": "e836ef2b3f1519446619bbd1eb9ea045e32355830d198ad9e21ba06f7ca4d271"
+        "byteLength": 772,
+        "sha256": "31fd59a3f1aec3fc068b12f424208b0f5bb5ec92dcc0320878ff097794215d12"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "LEGACY_MIGRATION_OR_DEVELOPMENT"

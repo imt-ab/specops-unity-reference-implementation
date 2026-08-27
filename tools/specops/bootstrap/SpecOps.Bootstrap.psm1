@@ -1201,7 +1201,7 @@ function Read-BootstrapRetainedBytes {
     $bytes=[byte[]]::new([int]$Stream.Length)
     $offset=0
     while($offset-lt$bytes.Length){$read=$Stream.Read($bytes,$offset,$bytes.Length-$offset);if($read-eq0){Throw-BootstrapExecutionFailure SOURCE_READ 'Unexpected end of retained source handle.'};$offset+=$read}
-    return $bytes
+    return ,$bytes
 }
 
 function New-BootstrapManifestRecordFromBytes {

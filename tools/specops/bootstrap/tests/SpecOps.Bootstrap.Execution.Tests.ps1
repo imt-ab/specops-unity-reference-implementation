@@ -136,6 +136,21 @@ try {
     Assert-Equal Source 'unexpected source leaf class' (($utf8.GetString($sourceFail.StdoutBytes)|ConvertFrom-Json).failureClass) 'CLOSED_ACCOUNTING'
     Assert-True Source 'source failure leaves destination absent' (-not(Test-Path -LiteralPath $sourceFailDestination))
     [IO.File]::Delete($unexpected)
+    $zeroLeafDirectory=Join-Path $mirror.Root 'Library';[void][IO.Directory]::CreateDirectory($zeroLeafDirectory)
+    $zeroLeaf=Join-Path $zeroLeafDirectory 'zero-length-source-leaf.bin';[IO.File]::WriteAllBytes($zeroLeaf,[byte[]]::new(0))
+    $zeroLeafDestinationA=Join-Path $parent 'ZeroLengthSourceFailA';$zeroLeafFailA=Invoke-Direct $mirror.Entry $zeroLeafDestinationA;$zeroLeafJsonA=$utf8.GetString($zeroLeafFailA.StdoutBytes)|ConvertFrom-Json
+    $zeroLeafDestinationB=Join-Path $parent 'ZeroLengthSourceFailB';$zeroLeafFailB=Invoke-Direct $mirror.Entry $zeroLeafDestinationB;$zeroLeafJsonB=$utf8.GetString($zeroLeafFailB.StdoutBytes)|ConvertFrom-Json
+    Assert-True Source 'zero-length source leaf is not an internal invariant' ($zeroLeafJsonA.failureClass-cne'INTERNAL_INVARIANT')
+    Assert-Equal Source 'zero-length source leaf exit' $zeroLeafFailA.ExitCode 3
+    Assert-Equal Source 'zero-length source leaf phase' $zeroLeafJsonA.phase 'source'
+    Assert-Equal Source 'zero-length source leaf class' $zeroLeafJsonA.failureClass 'CLOSED_ACCOUNTING'
+    Assert-True Source 'zero-length source failure leaves destinations absent' (-not(Test-Path -LiteralPath $zeroLeafDestinationA)-and-not(Test-Path -LiteralPath $zeroLeafDestinationB))
+    Assert-Equal Source 'zero-length source failure leaves no owned staging residue' @(Get-ChildItem -LiteralPath $parent -Directory -Force -Filter '.specops-staging-*').Count 0
+    Assert-Equal Source 'zero-length source failure result is deterministic' ([Convert]::ToBase64String($zeroLeafFailA.StdoutBytes)) ([Convert]::ToBase64String($zeroLeafFailB.StdoutBytes))
+    Assert-Equal Source 'repeated zero-length source leaf exit' $zeroLeafFailB.ExitCode 3
+    Assert-Equal Source 'repeated zero-length source leaf phase' $zeroLeafJsonB.phase 'source'
+    Assert-Equal Source 'repeated zero-length source leaf class' $zeroLeafJsonB.failureClass 'CLOSED_ACCOUNTING'
+    [IO.File]::Delete($zeroLeaf);[IO.Directory]::Delete($zeroLeafDirectory,$false)
     Set-Fault AfterSourceAcquisition {param($context);throw (New-HookFailure SOURCE_MUTATION 'Injected retained-handle sharing conflict.')}
     $sourceMutationDestination=Join-Path $parent 'SourceMutation';$sourceMutation=Invoke-Direct $mirror.Entry $sourceMutationDestination;Clear-Faults
     Assert-Equal Source 'source mutation exit' $sourceMutation.ExitCode 3

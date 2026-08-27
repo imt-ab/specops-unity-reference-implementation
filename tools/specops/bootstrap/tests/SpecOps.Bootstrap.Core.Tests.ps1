@@ -199,16 +199,19 @@ try{
     foreach($path in $currentSourcePaths){$destination=Join-Path $integrationRoot $path;$parent=Split-Path -Parent $destination;[void](New-Item -ItemType Directory -Path $parent -Force);[IO.File]::WriteAllBytes($destination,[IO.File]::ReadAllBytes((Join-Path $repositoryRoot $path)))}
     $source=Get-VerifiedBootstrapSource $integrationRoot $record
     Assert-Equal Integration 'current source uses filesystem enumeration' $source.EnumerationMode 'FILESYSTEM'
-    Assert-Equal Integration 'actual enumerated regular-leaf count' $source.RegularLeafCount 399
+    Assert-Equal Integration 'actual enumerated regular-leaf count' $source.RegularLeafCount 401
     $verifiedProvenanceSchema=$source.Bytes['.specops/contracts/bootstrap-provenance.schema.json']
     [IO.File]::WriteAllBytes((Join-Path $integrationRoot '.specops/contracts/bootstrap-provenance.schema.json'),(B '{"tampered":true}'))
     $output=New-BootstrapProspectiveOutputMap $source $inputs '1.0.0'
     Assert-True Provenance 'filesystem schema mutation after materialization is neutral' $output.Bytes.ContainsKey('.specops/bootstrap.json')
 $static=Test-BootstrapByteMapStatic $output
-Assert-Equal Integration 'Source Identity reproduced' $record.SourceIdentity.digest '99f717831cf2c164abf6edaf1034dcd85909aeeb1cf1beec0ea51a0cdeaca103'
+Assert-Equal Integration 'Source Identity reproduced' $record.SourceIdentity.digest 'e4549e9cab8e380c4f8664f0f6ec422092a5c76f520193940942993b83141f09'
 Assert-Equal Integration 'all authored files verified' $source.Bytes.Count 394
 Assert-True Integration 'implementation module recognized as support' ($source.ImplementationSupportPaths-ccontains'tools/specops/bootstrap/SpecOps.Bootstrap.psm1')
 Assert-True Integration 'core tests recognized as support' ($source.ImplementationSupportPaths-ccontains'tools/specops/bootstrap/tests/SpecOps.Bootstrap.Core.Tests.ps1')
+Assert-True Integration 'execution entry point recognized as support' ($source.ImplementationSupportPaths-ccontains'tools/specops/bootstrap/Invoke-SpecOpsBootstrap.ps1')
+Assert-True Integration 'execution tests recognized as support' ($source.ImplementationSupportPaths-ccontains'tools/specops/bootstrap/tests/SpecOps.Bootstrap.Execution.Tests.ps1')
+Assert-Equal Integration 'implementation support topology count' $source.ImplementationSupportPaths.Count 5
 Assert-Equal Integration 'prospective output count' $output.Count 312
 Assert-True Integration 'generated provenance present' $output.Bytes.ContainsKey('.specops/bootstrap.json')
 Assert-True Integration 'static byte-map verification' $static.Pass ($static.Findings-join'; ')

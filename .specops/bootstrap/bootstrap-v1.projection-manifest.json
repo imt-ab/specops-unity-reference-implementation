@@ -10,7 +10,7 @@
   },
   "sourceIdentity": {
     "profile": "specops-bootstrap-source-jcs-sha256-v1",
-    "digest": "99f717831cf2c164abf6edaf1034dcd85909aeeb1cf1beec0ea51a0cdeaca103"
+    "digest": "e4549e9cab8e380c4f8664f0f6ec422092a5c76f520193940942993b83141f09"
   },
   "canonicalOrdering": {
     "bootstrapSourceMetadata": "path-ordinal-ascending",
@@ -6084,8 +6084,8 @@
     {
       "sourcePath": "tools/specops/tests/SpecOps.BootstrapProjection.Tests.ps1",
       "byteIdentity": {
-        "byteLength": 41221,
-        "sha256": "629b83afb58169a563c6caf7432740fa7a7dce796849d1b55f0ece5fc049e212"
+        "byteLength": 41232,
+        "sha256": "c72dca914a422ab0e6618d2a81e07331566fcac4302b743aee24100352571724"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "SOURCE_VALIDATION_TEST"

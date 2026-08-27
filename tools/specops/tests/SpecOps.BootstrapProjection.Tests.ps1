@@ -380,7 +380,7 @@ Test-Assertion 'source accounting categories are mutually exclusive' (
     (Test-OrdinalPathSetsDisjoint $authoredPaths $implementationSupportPaths)
 )
 
-$futureSupportPath = 'tools/specops/bootstrap/Invoke-SpecOpsBootstrap.ps1'
+$futureSupportPath = 'tools/specops/bootstrap/FutureImplementationSupportFixture.ps1'
 $futureSupportWorkspacePaths = [string[]] @($workspacePaths + $futureSupportPath)
 $futureSupportPaths = [string[]] @($implementationSupportPaths + $futureSupportPath)
 $identityBeforeFutureSupport = Get-SourceIdentityDigests -ManifestJson $manifestJson -RepositoryRoot $repositoryRoot

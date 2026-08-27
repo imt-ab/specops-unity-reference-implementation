@@ -5,6 +5,7 @@ $script:Invariant = [Globalization.CultureInfo]::InvariantCulture
 $script:SourceIdentityProfile = 'specops-bootstrap-source-jcs-sha256-v1'
 $script:JsonIdentityProfile = 'specops-json-jcs-sha256-v1'
 $script:SchemaAdapterCapability = $null
+$script:ExecutionFaults = @{}
 $script:SelectorClasses = @(
     'CSHARP_UTF8_TOKEN',
     'EVAL_DEFINITION_CONTENT_IDENTITY',
@@ -967,8 +968,559 @@ function Test-BootstrapByteMapStatic {
     return [pscustomobject][ordered]@{Pass=($findings.Count-eq0);Findings=@($findings);OutputCount=$ProspectiveOutput.Count;UnityExecuted=$false}
 }
 
+function Initialize-BootstrapWindowsNative {
+    if ('SpecOpsBootstrapNative.NativeMethods' -as [type]) { return }
+    Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
+using System.Text;
+
+namespace SpecOpsBootstrapNative {
+    [StructLayout(LayoutKind.Sequential)]
+    public struct BY_HANDLE_FILE_INFORMATION {
+        public uint FileAttributes;
+        public System.Runtime.InteropServices.ComTypes.FILETIME CreationTime;
+        public System.Runtime.InteropServices.ComTypes.FILETIME LastAccessTime;
+        public System.Runtime.InteropServices.ComTypes.FILETIME LastWriteTime;
+        public uint VolumeSerialNumber;
+        public uint FileSizeHigh;
+        public uint FileSizeLow;
+        public uint NumberOfLinks;
+        public uint FileIndexHigh;
+        public uint FileIndexLow;
+    }
+
+    public static class NativeMethods {
+        public const uint FILE_SHARE_READ = 0x00000001;
+        public const uint FILE_SHARE_WRITE = 0x00000002;
+        public const uint FILE_SHARE_DELETE = 0x00000004;
+        public const uint DELETE = 0x00010000;
+        public const uint OPEN_EXISTING = 3;
+        public const uint FILE_FLAG_BACKUP_SEMANTICS = 0x02000000;
+        public const uint FILE_FLAG_OPEN_REPARSE_POINT = 0x00200000;
+        public const uint FILE_TYPE_DISK = 0x0001;
+
+        [DllImport("kernel32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
+        public static extern SafeFileHandle CreateFileW(
+            string name, uint access, uint share, IntPtr security,
+            uint creation, uint flags, IntPtr template);
+
+        [DllImport("kernel32.dll", SetLastError=true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool GetFileInformationByHandle(
+            SafeFileHandle handle, out BY_HANDLE_FILE_INFORMATION information);
+
+        [DllImport("kernel32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
+        public static extern uint GetFinalPathNameByHandleW(
+            SafeFileHandle handle, StringBuilder path, uint length, uint flags);
+
+        [DllImport("kernel32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool CreateDirectoryW(string path, IntPtr security);
+
+        [DllImport("kernel32.dll", CharSet=CharSet.Unicode, SetLastError=true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool GetVolumeInformationByHandleW(
+            SafeFileHandle handle, StringBuilder volumeName, uint volumeNameSize,
+            out uint volumeSerialNumber, out uint maximumComponentLength,
+            out uint fileSystemFlags, StringBuilder fileSystemName, uint fileSystemNameSize);
+
+        [DllImport("kernel32.dll", SetLastError=true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool SetFileInformationByHandle(
+            SafeFileHandle handle, int informationClass, IntPtr information, uint bufferSize);
+
+        public static bool RenameAbsoluteNoReplace(
+            SafeFileHandle source, string destinationPath, out int errorCode) {
+            byte[] nameBytes = Encoding.Unicode.GetBytes(destinationPath);
+            int rootOffset = IntPtr.Size == 8 ? 8 : 4;
+            int lengthOffset = rootOffset + IntPtr.Size;
+            int nameOffset = lengthOffset + 4;
+            int bufferSize = nameOffset + nameBytes.Length + 2;
+            IntPtr buffer = Marshal.AllocHGlobal(bufferSize);
+            try {
+                for (int index = 0; index < bufferSize; index++) { Marshal.WriteByte(buffer, index, 0); }
+                Marshal.WriteByte(buffer, 0, 0);
+                Marshal.WriteIntPtr(buffer, rootOffset, IntPtr.Zero);
+                Marshal.WriteInt32(buffer, lengthOffset, nameBytes.Length);
+                Marshal.Copy(nameBytes, 0, IntPtr.Add(buffer, nameOffset), nameBytes.Length);
+                bool result = SetFileInformationByHandle(source, 3, buffer, (uint)bufferSize);
+                errorCode = result ? 0 : Marshal.GetLastWin32Error();
+                return result;
+            }
+            finally { Marshal.FreeHGlobal(buffer); }
+        }
+
+        [DllImport("kernel32.dll", SetLastError=true)]
+        public static extern uint GetFileType(SafeFileHandle handle);
+    }
+}
+'@
+}
+
+function Throw-BootstrapExecutionFailure {
+    param([Parameter(Mandatory)][string]$Class,[Parameter(Mandatory)][string]$Message)
+    $exception=[IO.InvalidDataException]::new("$Class`: $Message")
+    $exception.Data['BootstrapExecutionFailureClass']=$Class
+    throw $exception
+}
+
+function Invoke-BootstrapExecutionFault {
+    param([Parameter(Mandatory)][string]$Name,$Context)
+    if($script:ExecutionFaults.ContainsKey($Name)) { & $script:ExecutionFaults[$Name] $Context }
+}
+
+function Get-BootstrapWin32Message {
+    param([int]$ErrorCode)
+    return [ComponentModel.Win32Exception]::new($ErrorCode).Message
+}
+
+function Get-BootstrapHandleIdentity {
+    param([Parameter(Mandatory)]$Handle)
+    Initialize-BootstrapWindowsNative
+    $information=[SpecOpsBootstrapNative.BY_HANDLE_FILE_INFORMATION]::new()
+    if(-not[SpecOpsBootstrapNative.NativeMethods]::GetFileInformationByHandle($Handle,[ref]$information)) {
+        $errorCode=[Runtime.InteropServices.Marshal]::GetLastWin32Error()
+        Throw-BootstrapExecutionFailure FILE_IDENTITY "GetFileInformationByHandle failed: $(Get-BootstrapWin32Message $errorCode)"
+    }
+    $index=([uint64]$information.FileIndexHigh-shl32)-bor[uint64]$information.FileIndexLow
+    return [pscustomobject][ordered]@{
+        VolumeSerial=[uint32]$information.VolumeSerialNumber
+        FileIndex=$index
+        Length=(([uint64]$information.FileSizeHigh-shl32)-bor[uint64]$information.FileSizeLow)
+        Attributes=[IO.FileAttributes]$information.FileAttributes
+        Key=('{0:x8}:{1:x16}' -f $information.VolumeSerialNumber,$index)
+    }
+}
+
+function Test-BootstrapIdentityEqual {
+    param($Left,$Right)
+    return $null-ne$Left-and$null-ne$Right-and$Left.VolumeSerial-eq$Right.VolumeSerial-and$Left.FileIndex-eq$Right.FileIndex
+}
+
+function Open-BootstrapDirectoryHandle {
+    param([Parameter(Mandatory)][string]$Path,[switch]$AllowDeleteShare,[switch]$DeleteAccess)
+    Initialize-BootstrapWindowsNative
+    $share=[SpecOpsBootstrapNative.NativeMethods]::FILE_SHARE_READ-bor[SpecOpsBootstrapNative.NativeMethods]::FILE_SHARE_WRITE
+    if($AllowDeleteShare){$share=$share-bor[SpecOpsBootstrapNative.NativeMethods]::FILE_SHARE_DELETE}
+    $flags=[SpecOpsBootstrapNative.NativeMethods]::FILE_FLAG_BACKUP_SEMANTICS-bor[SpecOpsBootstrapNative.NativeMethods]::FILE_FLAG_OPEN_REPARSE_POINT
+    $access=if($DeleteAccess){[SpecOpsBootstrapNative.NativeMethods]::DELETE}else{0}
+    $handle=[SpecOpsBootstrapNative.NativeMethods]::CreateFileW($Path,$access,$share,[IntPtr]::Zero,[SpecOpsBootstrapNative.NativeMethods]::OPEN_EXISTING,$flags,[IntPtr]::Zero)
+    if($handle.IsInvalid){
+        $errorCode=[Runtime.InteropServices.Marshal]::GetLastWin32Error();$handle.Dispose()
+        Throw-BootstrapExecutionFailure DIRECTORY_HANDLE "Cannot open directory '$Path': $(Get-BootstrapWin32Message $errorCode)"
+    }
+    try {
+        $identity=Get-BootstrapHandleIdentity $handle
+        if(($identity.Attributes-band[IO.FileAttributes]::Directory)-eq0-or($identity.Attributes-band[IO.FileAttributes]::ReparsePoint)-ne0){
+            Throw-BootstrapExecutionFailure UNSAFE_DIRECTORY "Path is not a real non-reparse directory: $Path"
+        }
+        return [pscustomobject][ordered]@{Handle=$handle;Identity=$identity;Path=[IO.Path]::GetFullPath($Path)}
+    } catch { $handle.Dispose();throw }
+}
+
+function Get-BootstrapFinalHandlePath {
+    param([Parameter(Mandatory)]$Handle)
+    Initialize-BootstrapWindowsNative
+    $capacity=512
+    while($true){
+        $builder=[Text.StringBuilder]::new($capacity)
+        $length=[SpecOpsBootstrapNative.NativeMethods]::GetFinalPathNameByHandleW($Handle,$builder,$capacity,0)
+        if($length-eq0){$errorCode=[Runtime.InteropServices.Marshal]::GetLastWin32Error();Throw-BootstrapExecutionFailure PHYSICAL_PATH "GetFinalPathNameByHandle failed: $(Get-BootstrapWin32Message $errorCode)"}
+        if($length-lt$capacity){$path=$builder.ToString();break}
+        $capacity=[int]$length+1
+    }
+    if($path.StartsWith('\\?\UNC\',[StringComparison]::OrdinalIgnoreCase)){return '\\'+$path.Substring(8)}
+    if($path.StartsWith('\\?\',[StringComparison]::OrdinalIgnoreCase)){return $path.Substring(4)}
+    return $path
+}
+
+function Get-BootstrapHandleVolumeInformation {
+    param([Parameter(Mandatory)]$Handle)
+    Initialize-BootstrapWindowsNative
+    $volumeName=[Text.StringBuilder]::new(261);$fileSystemName=[Text.StringBuilder]::new(261)
+    [uint32]$serial=0;[uint32]$maximumComponentLength=0;[uint32]$flags=0
+    if(-not[SpecOpsBootstrapNative.NativeMethods]::GetVolumeInformationByHandleW($Handle,$volumeName,$volumeName.Capacity,[ref]$serial,[ref]$maximumComponentLength,[ref]$flags,$fileSystemName,$fileSystemName.Capacity)){
+        $errorCode=[Runtime.InteropServices.Marshal]::GetLastWin32Error();Throw-BootstrapExecutionFailure VOLUME_INFORMATION "GetVolumeInformationByHandleW failed: $(Get-BootstrapWin32Message $errorCode)"
+    }
+    if($maximumComponentLength-lt1){Throw-BootstrapExecutionFailure VOLUME_INFORMATION 'The destination volume reported no usable maximum component length.'}
+    return [pscustomobject][ordered]@{VolumeSerial=$serial;MaximumComponentLength=$maximumComponentLength;FileSystemName=$fileSystemName.ToString();Flags=$flags}
+}
+
+function Assert-BootstrapVolumeComponentRepresentable {
+    param([Parameter(Mandatory)][string]$Component,[Parameter(Mandatory)][uint32]$MaximumComponentLength)
+    if($MaximumComponentLength-lt1-or$Component.Length-gt$MaximumComponentLength){Throw-BootstrapExecutionFailure DESTINATION_REPRESENTATION "A destination component exceeds the verified volume limit of $MaximumComponentLength UTF-16 code units."}
+}
+
+function Assert-BootstrapPathChainNoReparse {
+    param([Parameter(Mandatory)][string]$Path,[switch]$IncludeLeaf)
+    $full=[IO.Path]::GetFullPath($Path)
+    $root=[IO.Path]::GetPathRoot($full)
+    if([string]::IsNullOrEmpty($root)){Throw-BootstrapExecutionFailure UNSAFE_PATH 'Path has no filesystem root.'}
+    $remainder=$full.Substring($root.Length).TrimEnd('\')
+    $current=$root.TrimEnd('\')
+    if($current.Length-eq2){$current+='\'}
+    $parts=if($remainder.Length){@($remainder.Split('\'))}else{@()}
+    $limit=if($IncludeLeaf){$parts.Count}else{[Math]::Max(0,$parts.Count-1)}
+    for($index=0;$index-lt$limit;$index++){
+        $current=[IO.Path]::Combine($current,$parts[$index])
+        try{$attributes=[IO.File]::GetAttributes($current)}catch{Throw-BootstrapExecutionFailure UNSAFE_PATH "Cannot inspect path component '$current'."}
+        if(($attributes-band[IO.FileAttributes]::ReparsePoint)-ne0){Throw-BootstrapExecutionFailure REPARSE_TRAVERSAL "Reparse traversal is prohibited: $current"}
+    }
+}
+
+function Resolve-BootstrapImplementationSource {
+    param([Parameter(Mandatory)][string]$ImplementationScriptPath)
+    if(-not[OperatingSystem]::IsWindows()-or$PSVersionTable.PSEdition-cne'Core'-or$PSVersionTable.PSVersion.Major-lt7-or-not[Environment]::Is64BitProcess){
+        Throw-BootstrapExecutionFailure UNSUPPORTED_PLATFORM 'Bootstrap requires 64-bit PowerShell 7 or later on Windows.'
+    }
+    $scriptPath=[IO.Path]::GetFullPath($ImplementationScriptPath)
+    Assert-BootstrapPathChainNoReparse $scriptPath -IncludeLeaf
+    try{$stream=[IO.FileStream]::new($scriptPath,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read)}catch{Throw-BootstrapExecutionFailure SOURCE_LOCATOR "Cannot retain the implementation entry point: $($_.Exception.Message)"}
+    try{$physical=Get-BootstrapFinalHandlePath $stream.SafeFileHandle}finally{$stream.Dispose()}
+    if(-not$physical.Equals($scriptPath,[StringComparison]::OrdinalIgnoreCase)){Throw-BootstrapExecutionFailure SOURCE_LOCATOR 'Implementation path does not resolve to its own physical spelling.'}
+    $implementationRoot=[IO.DirectoryInfo]::new([IO.Path]::GetDirectoryName($physical))
+    $source=$implementationRoot
+    for($index=0;$index-lt3;$index++){if($null-eq$source.Parent){Throw-BootstrapExecutionFailure SOURCE_LOCATOR 'Implementation root does not have three physical parents.'};$source=$source.Parent}
+    $sourceRoot=$source.FullName
+    Assert-BootstrapPathChainNoReparse $sourceRoot -IncludeLeaf
+    return [pscustomobject][ordered]@{
+        ImplementationRoot=$implementationRoot.FullName
+        SourceRoot=$sourceRoot
+        ManifestPath=[IO.Path]::Combine($sourceRoot,'.specops','bootstrap','bootstrap-v1.projection-manifest.json')
+        SchemaPath=[IO.Path]::Combine($sourceRoot,'.specops','contracts','bootstrap-projection-manifest.schema.json')
+        ImplementationDescriptorPath=[IO.Path]::Combine($sourceRoot,'tools','specops','bootstrap','bootstrap-implementation.json')
+    }
+}
+
+function Read-BootstrapRetainedBytes {
+    param([Parameter(Mandatory)][IO.FileStream]$Stream)
+    $Stream.Position=0
+    if($Stream.Length-gt[int]::MaxValue){Throw-BootstrapExecutionFailure SOURCE_LENGTH 'A source leaf exceeds the supported in-memory size.'}
+    $bytes=[byte[]]::new([int]$Stream.Length)
+    $offset=0
+    while($offset-lt$bytes.Length){$read=$Stream.Read($bytes,$offset,$bytes.Length-$offset);if($read-eq0){Throw-BootstrapExecutionFailure SOURCE_READ 'Unexpected end of retained source handle.'};$offset+=$read}
+    return $bytes
+}
+
+function New-BootstrapManifestRecordFromBytes {
+    param([byte[]]$ManifestBytes,[byte[]]$SchemaBytes,[string]$ManifestPath,[string]$SchemaPath)
+    [void](Read-BootstrapStrictJson $ManifestBytes)
+    $manifest=$script:Utf8.GetString($ManifestBytes)|ConvertFrom-Json -Depth 100
+    $schemaEntries=@($manifest.bootstrapSourceMetadata|Where-Object role -CEQ 'PROJECTION_MANIFEST_SCHEMA')
+    if($schemaEntries.Count-ne1){Throw-BootstrapFailure SOURCE_METADATA 'Projection manifest must bind exactly one schema metadata entry.'}
+    $schemaEntry=$schemaEntries[0]
+    if($SchemaBytes.Length-ne$schemaEntry.byteIdentity.byteLength-or(Get-BootstrapSha256Hex $SchemaBytes)-cne$schemaEntry.byteIdentity.sha256){Throw-BootstrapFailure SOURCE_METADATA 'Projection schema byte identity mismatch.'}
+    [void](Test-BootstrapJsonSchemaBytes $ManifestBytes $SchemaBytes 'Projection manifest')
+    $identity=Get-BootstrapSourceIdentity $ManifestBytes
+    if($manifest.sourceIdentity.profile-cne$identity.profile-or$manifest.sourceIdentity.digest-cne$identity.digest){Throw-BootstrapFailure SOURCE_IDENTITY 'Projection manifest Source Identity mismatch.'}
+    return [pscustomobject][ordered]@{Manifest=$manifest;Bytes=$ManifestBytes;SchemaBytes=$SchemaBytes;SourceIdentity=$identity;ManifestPath=$ManifestPath;SchemaPath=$SchemaPath}
+}
+
+function Open-BootstrapImmutableSource {
+    param([Parameter(Mandatory)]$Locator)
+    $root=$Locator.SourceRoot
+    $rootRecord=Open-BootstrapDirectoryHandle $root
+    try{$physicalRoot=Get-BootstrapFinalHandlePath $rootRecord.Handle;if(-not$physicalRoot.Equals([IO.Path]::GetFullPath($root),[StringComparison]::OrdinalIgnoreCase)){Throw-BootstrapExecutionFailure SOURCE_ALIAS 'SourceRoot physical path is ambiguous or aliased.'}}catch{$rootRecord.Handle.Dispose();throw}
+    try{$paths=Get-BootstrapRegularLeafPaths $root}catch{$rootRecord.Handle.Dispose();throw}
+    $handles=[Collections.Generic.Dictionary[string,IO.FileStream]]::new([StringComparer]::Ordinal)
+    $allBytes=[Collections.Generic.Dictionary[string,byte[]]]::new([StringComparer]::Ordinal)
+    $identities=[Collections.Generic.Dictionary[string,object]]::new([StringComparer]::Ordinal)
+    try {
+        foreach($path in $paths){
+            $full=Assert-BootstrapRegularLeaf $root $path
+            try{$stream=[IO.FileStream]::new($full,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read)}catch{Throw-BootstrapExecutionFailure SOURCE_SHARING "Cannot retain source '$path' with write/delete sharing denied: $($_.Exception.Message)"}
+            try{
+                $before=Get-BootstrapHandleIdentity $stream.SafeFileHandle
+                if(($before.Attributes-band[IO.FileAttributes]::Directory)-ne0-or($before.Attributes-band[IO.FileAttributes]::ReparsePoint)-ne0){Throw-BootstrapExecutionFailure UNSUPPORTED_SOURCE "Source '$path' is not a regular non-reparse file."}
+                if([SpecOpsBootstrapNative.NativeMethods]::GetFileType($stream.SafeFileHandle)-ne[SpecOpsBootstrapNative.NativeMethods]::FILE_TYPE_DISK){Throw-BootstrapExecutionFailure UNSUPPORTED_SOURCE "Source '$path' is not a disk file."}
+                $bytes=Read-BootstrapRetainedBytes $stream
+                $after=Get-BootstrapHandleIdentity $stream.SafeFileHandle
+                if(-not(Test-BootstrapIdentityEqual $before $after)-or$after.Length-ne[uint64]$bytes.Length){Throw-BootstrapExecutionFailure SOURCE_MUTATION "Source identity or length changed while reading '$path'."}
+                $handles.Add($path,$stream);$stream=$null;$allBytes.Add($path,$bytes);$identities.Add($path,$after)
+            }finally{if($null-ne$stream){$stream.Dispose()}}
+        }
+        $manifestRelative='.specops/bootstrap/bootstrap-v1.projection-manifest.json'
+        $schemaRelative='.specops/contracts/bootstrap-projection-manifest.schema.json'
+        if(-not$allBytes.ContainsKey($manifestRelative)-or-not$allBytes.ContainsKey($schemaRelative)){Throw-BootstrapExecutionFailure SOURCE_METADATA 'Fixed Bootstrap metadata paths are absent.'}
+        $record=New-BootstrapManifestRecordFromBytes $allBytes[$manifestRelative] $allBytes[$schemaRelative] $Locator.ManifestPath $Locator.SchemaPath
+        $manifest=$record.Manifest;$metadata=@($manifest.bootstrapSourceMetadata.path);$authored=@($manifest.authoredSourceInventory.sourcePath);$supportRoot=[string]$manifest.bootstrapImplementationSupport.root
+        $support=@($paths|Where-Object{$_.StartsWith($supportRoot,[StringComparison]::Ordinal)})
+        if(-not(Test-BootstrapClosedSourceAccounting $paths $metadata $authored $support $supportRoot)){Throw-BootstrapFailure CLOSED_ACCOUNTING 'Repository regular leaves do not equal the three approved categories.'}
+        $caseSet=[Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase);foreach($path in $paths){if(-not$caseSet.Add($path)){Throw-BootstrapFailure CASE_DUPLICATE "Case-equivalent source path '$path'."}}
+        $authoredBytes=[Collections.Generic.Dictionary[string,byte[]]]::new([StringComparer]::Ordinal)
+        foreach($entry in $manifest.authoredSourceInventory){$path=[string]$entry.sourcePath;if(-not$allBytes.ContainsKey($path)){Throw-BootstrapFailure MISSING_SOURCE "Missing source leaf '$path'."};$bytes=$allBytes[$path];if($bytes.Length-ne$entry.byteIdentity.byteLength){Throw-BootstrapFailure BYTE_LENGTH "Byte length mismatch for '$path'."};if((Get-BootstrapSha256Hex $bytes)-cne$entry.byteIdentity.sha256){Throw-BootstrapFailure BYTE_HASH "SHA-256 mismatch for '$path'."};$authoredBytes.Add($path,$bytes)}
+        $metadataBytes=[Collections.Generic.Dictionary[string,byte[]]]::new([StringComparer]::Ordinal);foreach($path in $metadata){$metadataBytes.Add($path,$allBytes[$path])}
+        $descriptorRelative='tools/specops/bootstrap/bootstrap-implementation.json'
+        if(-not$allBytes.ContainsKey($descriptorRelative)){Throw-BootstrapExecutionFailure IMPLEMENTATION_DESCRIPTOR 'Bootstrap implementation descriptor is absent.'}
+        $descriptor=Read-BootstrapStrictJson $allBytes[$descriptorRelative]
+        $implementationVersion=$null;foreach($property in $descriptor.EnumerateObject()){if($property.Name-ceq'implementationVersion'){$implementationVersion=$property.Value.GetString()}}
+        if($implementationVersion-cne'1.0.0'){Throw-BootstrapExecutionFailure IMPLEMENTATION_VERSION 'Bootstrap Implementation Version must remain 1.0.0.'}
+        return [pscustomobject][ordered]@{Root=$root;PhysicalRootPath=$physicalRoot;RootHandle=$rootRecord.Handle;RootIdentity=$rootRecord.Identity;ManifestRecord=$record;Bytes=$authoredBytes;MetadataBytes=$metadataBytes;MetadataPaths=$metadata;AuthoredPaths=$authored;ImplementationSupportPaths=$support;RepositoryPaths=$paths;RegularLeafCount=$paths.Count;EnumerationMode='FILESYSTEM';SourceIdentity=$record.SourceIdentity.digest;Handles=$handles;AllIdentities=$identities;ImplementationVersion=$implementationVersion}
+    }catch{foreach($stream in $handles.Values){$stream.Dispose()};$rootRecord.Handle.Dispose();throw}
+}
+
+function Close-BootstrapImmutableSource {
+    param($VerifiedSource)
+    if($null-ne$VerifiedSource-and$null-ne$VerifiedSource.Handles){foreach($stream in $VerifiedSource.Handles.Values){$stream.Dispose()}}
+    if($null-ne$VerifiedSource-and$null-ne$VerifiedSource.RootHandle-and-not$VerifiedSource.RootHandle.IsClosed){$VerifiedSource.RootHandle.Dispose()}
+}
+
+function Assert-BootstrapSourceConsistency {
+    param([Parameter(Mandatory)]$VerifiedSource)
+    $current=Get-BootstrapRegularLeafPaths $VerifiedSource.Root
+    if($current.Count-ne$VerifiedSource.RepositoryPaths.Count){Throw-BootstrapExecutionFailure SOURCE_MUTATION 'The closed source leaf count changed during invocation.'}
+    for($index=0;$index-lt$current.Count;$index++){if($current[$index]-cne$VerifiedSource.RepositoryPaths[$index]){Throw-BootstrapExecutionFailure SOURCE_MUTATION 'The closed source path set changed during invocation.'}}
+    foreach($path in $current){
+        $full=[IO.Path]::Combine($VerifiedSource.Root,$path.Replace('/',[IO.Path]::DirectorySeparatorChar))
+        try{$stream=[IO.FileStream]::new($full,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read)}catch{Throw-BootstrapExecutionFailure SOURCE_MUTATION "Cannot reopen retained source '$path' consistently."}
+        try{$identity=Get-BootstrapHandleIdentity $stream.SafeFileHandle;if(-not(Test-BootstrapIdentityEqual $identity $VerifiedSource.AllIdentities[$path])-or$identity.Length-ne$VerifiedSource.AllIdentities[$path].Length){Throw-BootstrapExecutionFailure SOURCE_MUTATION "Source identity changed: $path"}}finally{$stream.Dispose()}
+    }
+}
+
+function Test-BootstrapPathOverlap {
+    param([string]$Left,[string]$Right)
+    $leftFull=[IO.Path]::GetFullPath($Left).TrimEnd('\');$rightFull=[IO.Path]::GetFullPath($Right).TrimEnd('\')
+    return $leftFull.Equals($rightFull,[StringComparison]::OrdinalIgnoreCase)-or$leftFull.StartsWith($rightFull+'\',[StringComparison]::OrdinalIgnoreCase)-or$rightFull.StartsWith($leftFull+'\',[StringComparison]::OrdinalIgnoreCase)
+}
+
+function Assert-BootstrapDestinationAbsent {
+    param([Parameter(Mandatory)][string]$ParentPath,[Parameter(Mandatory)][string]$Leaf)
+    try{$entries=[string[]][IO.Directory]::EnumerateFileSystemEntries($ParentPath)}catch{Throw-BootstrapExecutionFailure DESTINATION_ENUMERATION "Cannot enumerate destination parent '$ParentPath'."}
+    foreach($entry in $entries){if([IO.Path]::GetFileName($entry).Equals($Leaf,[StringComparison]::OrdinalIgnoreCase)){Throw-BootstrapExecutionFailure DESTINATION_EXISTS "A case-equivalent destination entry already exists: $entry"}}
+}
+
+function Get-BootstrapDestinationSafety {
+    param([Parameter(Mandatory)][string]$DestinationPath,[Parameter(Mandatory)]$VerifiedSource)
+    $destination=[IO.Path]::GetFullPath($DestinationPath);$parent=[IO.Path]::GetDirectoryName($destination);$leaf=[IO.Path]::GetFileName($destination)
+    if([string]::IsNullOrEmpty($parent)-or-not[IO.Directory]::Exists($parent)){Throw-BootstrapExecutionFailure DESTINATION_PARENT 'The immediate destination parent must already exist.'}
+    Assert-BootstrapPathChainNoReparse $parent -IncludeLeaf
+    $parentRecord=Open-BootstrapDirectoryHandle $parent
+    try{
+        $physicalParent=Get-BootstrapFinalHandlePath $parentRecord.Handle
+        $volume=Get-BootstrapHandleVolumeInformation $parentRecord.Handle
+        if($volume.VolumeSerial-ne$parentRecord.Identity.VolumeSerial){Throw-BootstrapExecutionFailure DESTINATION_ALIAS 'Destination-parent volume identity is inconsistent.'}
+        Assert-BootstrapVolumeComponentRepresentable $leaf $volume.MaximumComponentLength
+        $physicalDestination=[IO.Path]::Combine($physicalParent,$leaf)
+        Assert-BootstrapDestinationAbsent $parent $leaf
+        if(-not(Test-BootstrapIdentityEqual (Get-BootstrapHandleIdentity $VerifiedSource.RootHandle) $VerifiedSource.RootIdentity)){Throw-BootstrapExecutionFailure SOURCE_ALIAS 'Retained SourceRoot identity is no longer stable.'}
+        if(Test-BootstrapIdentityEqual $VerifiedSource.RootIdentity $parentRecord.Identity){Throw-BootstrapExecutionFailure DESTINATION_OVERLAP 'Destination parent is the physical SourceRoot.'}
+        if(Test-BootstrapPathOverlap $VerifiedSource.PhysicalRootPath $physicalDestination){Throw-BootstrapExecutionFailure DESTINATION_OVERLAP 'Physical source and destination path sets overlap.'}
+        return [pscustomobject][ordered]@{Path=$destination;PhysicalPath=$physicalDestination;ParentPath=$parent;PhysicalParentPath=$physicalParent;Leaf=$leaf;ParentHandle=$parentRecord.Handle;ParentIdentity=$parentRecord.Identity;MaximumComponentLength=$volume.MaximumComponentLength;VolumeFileSystem=$volume.FileSystemName}
+    }catch{$parentRecord.Handle.Dispose();throw}
+}
+
+function Assert-BootstrapParentIdentity {
+    param([Parameter(Mandatory)]$DestinationSafety)
+    $retained=Get-BootstrapHandleIdentity $DestinationSafety.ParentHandle
+    if(-not(Test-BootstrapIdentityEqual $retained $DestinationSafety.ParentIdentity)){Throw-BootstrapExecutionFailure PARENT_IDENTITY 'Retained parent identity changed.'}
+    $check=Open-BootstrapDirectoryHandle $DestinationSafety.ParentPath -AllowDeleteShare
+    try{if(-not(Test-BootstrapIdentityEqual $check.Identity $DestinationSafety.ParentIdentity)){Throw-BootstrapExecutionFailure PARENT_IDENTITY 'Destination parent path now denotes a different directory.'};if(-not(Get-BootstrapFinalHandlePath $check.Handle).Equals($DestinationSafety.PhysicalParentPath,[StringComparison]::OrdinalIgnoreCase)){Throw-BootstrapExecutionFailure PARENT_IDENTITY 'Destination parent physical path changed.'}}finally{$check.Handle.Dispose()}
+}
+
+function New-BootstrapOwnedStaging {
+    param([Parameter(Mandatory)]$DestinationSafety,[Parameter(Mandatory)]$VerifiedSource)
+    Initialize-BootstrapWindowsNative
+    $name='.specops-staging-'+[guid]::NewGuid().ToString('N')
+    $path=[IO.Path]::Combine($DestinationSafety.ParentPath,$name)
+    Assert-BootstrapVolumeComponentRepresentable $name $DestinationSafety.MaximumComponentLength
+    if(Test-BootstrapPathOverlap $VerifiedSource.PhysicalRootPath ([IO.Path]::Combine($DestinationSafety.PhysicalParentPath,$name))-or(Test-BootstrapPathOverlap $DestinationSafety.PhysicalPath ([IO.Path]::Combine($DestinationSafety.PhysicalParentPath,$name)))){Throw-BootstrapExecutionFailure STAGING_OVERLAP 'Staging overlaps source or destination.'}
+    if(-not[SpecOpsBootstrapNative.NativeMethods]::CreateDirectoryW($path,[IntPtr]::Zero)){$errorCode=[Runtime.InteropServices.Marshal]::GetLastWin32Error();Throw-BootstrapExecutionFailure STAGING_CREATE "Atomic staging creation failed: $(Get-BootstrapWin32Message $errorCode)"}
+    $opened=$null
+    try{
+        Invoke-BootstrapExecutionFault AfterAtomicStagingCreation ([pscustomobject]@{Path=$path;Name=$name;Destination=$DestinationSafety})
+        $opened=Open-BootstrapDirectoryHandle $path -DeleteAccess
+        $physicalPath=Get-BootstrapFinalHandlePath $opened.Handle
+        if($opened.Identity.VolumeSerial-ne$DestinationSafety.ParentIdentity.VolumeSerial){Throw-BootstrapExecutionFailure STAGING_VOLUME 'Staging and parent are not on the same volume.'}
+        if(-not[IO.Path]::GetDirectoryName($physicalPath).Equals($DestinationSafety.PhysicalParentPath,[StringComparison]::OrdinalIgnoreCase)){Throw-BootstrapExecutionFailure STAGING_OWNERSHIP 'Staging is not a physical direct child of the verified parent.'}
+        return [pscustomobject][ordered]@{Path=$path;PhysicalPath=$physicalPath;Name=$name;CreatedByInvocation=$true;ParentPath=$DestinationSafety.ParentPath;ParentIdentity=$DestinationSafety.ParentIdentity;Handle=$opened.Handle;Identity=$opened.Identity;Published=$false}
+    }catch{
+        if($null-ne$opened-and$null-ne$opened.Handle-and-not$opened.Handle.IsClosed){$opened.Handle.Dispose()}
+        $_.Exception.Data['UncertainStagingPath']=$path
+        throw
+    }
+}
+
+function Assert-BootstrapStagingOwnership {
+    param([Parameter(Mandatory)]$Staging,[Parameter(Mandatory)]$DestinationSafety)
+    if(-not$Staging.CreatedByInvocation-or$null-eq$Staging.Handle-or$Staging.Handle.IsClosed-or$Staging.Handle.IsInvalid){Throw-BootstrapExecutionFailure STAGING_OWNERSHIP 'No live current-invocation staging creation record exists.'}
+    Assert-BootstrapParentIdentity $DestinationSafety
+    if(-not(Test-BootstrapIdentityEqual (Get-BootstrapHandleIdentity $Staging.Handle) $Staging.Identity)){Throw-BootstrapExecutionFailure STAGING_OWNERSHIP 'Live staging identity changed.'}
+    if([IO.Path]::GetDirectoryName($Staging.Path)-cne$DestinationSafety.ParentPath){Throw-BootstrapExecutionFailure STAGING_OWNERSHIP 'Staging is not a direct child of the recorded parent.'}
+    $check=Open-BootstrapDirectoryHandle $Staging.Path -AllowDeleteShare
+    try{if(-not(Test-BootstrapIdentityEqual $check.Identity $Staging.Identity)){Throw-BootstrapExecutionFailure STAGING_OWNERSHIP 'Staging path no longer denotes the created identity.'};if(-not(Get-BootstrapFinalHandlePath $check.Handle).Equals($Staging.PhysicalPath,[StringComparison]::OrdinalIgnoreCase)){Throw-BootstrapExecutionFailure STAGING_OWNERSHIP 'Staging physical path no longer denotes the created object.'}}finally{$check.Handle.Dispose()}
+}
+
+function Get-BootstrapOutputDirectories {
+    param([string[]]$Paths)
+    $set=[Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+    foreach($path in $Paths){$directory=[IO.Path]::GetDirectoryName($path.Replace('/',[IO.Path]::DirectorySeparatorChar));while(-not[string]::IsNullOrEmpty($directory)){[void]$set.Add($directory.Replace('\','/'));$directory=[IO.Path]::GetDirectoryName($directory)}}
+    return @($set|Sort-Object @{Expression={$_.Split('/').Count}},@{Expression={$_}})
+}
+
+function Write-BootstrapOwnedStaging {
+    param([Parameter(Mandatory)]$Staging,[Parameter(Mandatory)]$DestinationSafety,[Parameter(Mandatory)]$ProspectiveOutput)
+    Assert-BootstrapStagingOwnership $Staging $DestinationSafety
+    foreach($directory in Get-BootstrapOutputDirectories @($ProspectiveOutput.Bytes.Keys)){
+        $full=[IO.Path]::Combine($Staging.Path,$directory.Replace('/',[IO.Path]::DirectorySeparatorChar))
+        if(-not[SpecOpsBootstrapNative.NativeMethods]::CreateDirectoryW($full,[IntPtr]::Zero)){$errorCode=[Runtime.InteropServices.Marshal]::GetLastWin32Error();Throw-BootstrapExecutionFailure OUTPUT_DIRECTORY "Create-new output directory failed for '$directory': $(Get-BootstrapWin32Message $errorCode)"}
+    }
+    foreach($path in @($ProspectiveOutput.Bytes.Keys|Sort-Object)){
+        $full=[IO.Path]::Combine($Staging.Path,$path.Replace('/',[IO.Path]::DirectorySeparatorChar));$bytes=$ProspectiveOutput.Bytes[$path]
+        try{$stream=[IO.FileStream]::new($full,[IO.FileMode]::CreateNew,[IO.FileAccess]::Write,[IO.FileShare]::None);try{$stream.Write($bytes,0,$bytes.Length);$stream.Flush($true)}finally{$stream.Dispose()}}catch{Throw-BootstrapExecutionFailure OUTPUT_WRITE "Create-new output write failed for '$path': $($_.Exception.Message)"}
+    }
+}
+
+function Get-BootstrapCandidateInventory {
+    param([Parameter(Mandatory)][string]$Root)
+    $pending=[Collections.Generic.Stack[string]]::new();$pending.Push($Root);$files=[Collections.Generic.List[string]]::new();$directories=[Collections.Generic.List[string]]::new()
+    while($pending.Count-gt0){$directory=$pending.Pop();try{$entries=[string[]][IO.Directory]::EnumerateFileSystemEntries($directory)}catch{Throw-BootstrapExecutionFailure CANDIDATE_ENUMERATION "Cannot enumerate candidate directory '$directory'."};[Array]::Sort($entries,[StringComparer]::Ordinal)
+        for($index=$entries.Length-1;$index-ge0;$index--){$entry=$entries[$index];$relative=[IO.Path]::GetRelativePath($Root,$entry).Replace('\','/');try{$attributes=[IO.File]::GetAttributes($entry)}catch{Throw-BootstrapExecutionFailure CANDIDATE_ENTRY "Cannot inspect candidate entry '$relative'."};if(($attributes-band[IO.FileAttributes]::ReparsePoint)-ne0){Throw-BootstrapExecutionFailure CANDIDATE_REPARSE "Candidate contains a reparse entry: $relative"};if(($attributes-band[IO.FileAttributes]::Directory)-ne0){$directories.Add($relative);$pending.Push($entry)}else{$stream=$null;try{$stream=[IO.FileStream]::new($entry,[IO.FileMode]::Open,[IO.FileAccess]::Read,[IO.FileShare]::Read);if([SpecOpsBootstrapNative.NativeMethods]::GetFileType($stream.SafeFileHandle)-ne[SpecOpsBootstrapNative.NativeMethods]::FILE_TYPE_DISK){Throw-BootstrapExecutionFailure CANDIDATE_SPECIAL "Candidate contains a special entry: $relative"}}finally{if($null-ne$stream){$stream.Dispose()}};$files.Add($relative)}}}
+    $result=[string[]]$files.ToArray();[Array]::Sort($result,[StringComparer]::Ordinal);return [pscustomobject]@{Files=$result;Directories=@($directories)}
+}
+
+function Test-BootstrapCandidateStatic {
+    param([Parameter(Mandatory)][string]$Root,[Parameter(Mandatory)]$ProspectiveOutput)
+    $static=Test-BootstrapByteMapStatic $ProspectiveOutput
+    if(-not$static.Pass){Throw-BootstrapExecutionFailure STATIC_EXPECTATION ($static.Findings-join'; ')}
+    $inventory=Get-BootstrapCandidateInventory $Root;$expected=[string[]]@($ProspectiveOutput.Bytes.Keys);[Array]::Sort($expected,[StringComparer]::Ordinal)
+    if($inventory.Files.Count-ne$expected.Count){Throw-BootstrapExecutionFailure STATIC_FILE_SET 'Candidate relative file count differs from the expected Output Inventory.'}
+    for($index=0;$index-lt$expected.Count;$index++){if($inventory.Files[$index]-cne$expected[$index]){Throw-BootstrapExecutionFailure STATIC_FILE_SET "Candidate file set differs at '$($expected[$index])'."}}
+    foreach($path in $expected){$full=[IO.Path]::Combine($Root,$path.Replace('/',[IO.Path]::DirectorySeparatorChar));$actual=[IO.File]::ReadAllBytes($full);if(-not(Test-BootstrapBytesEqual $actual $ProspectiveOutput.Bytes[$path])){Throw-BootstrapExecutionFailure STATIC_BYTES "Candidate bytes differ: $path"}}
+    foreach($path in $inventory.Files){if($path.Equals('.git',[StringComparison]::OrdinalIgnoreCase)-or$path.StartsWith('.git/',[StringComparison]::OrdinalIgnoreCase)-or$path.StartsWith('.specops/evidence/',[StringComparison]::OrdinalIgnoreCase)){Throw-BootstrapExecutionFailure STATIC_PROHIBITED "Prohibited candidate path: $path"}}
+    $featureStates=@($inventory.Files|Where-Object{$_.EndsWith('/SPECOPS_STATE.json',[StringComparison]::OrdinalIgnoreCase)-and-not$_.StartsWith('Assets/Project/Docs/Specifications/_templates/',[StringComparison]::Ordinal)})
+    if($featureStates.Count-ne0){Throw-BootstrapExecutionFailure STATIC_FEATURE_STATE 'Candidate contains an instantiated feature state.'}
+    $specops=$script:Utf8.GetString($ProspectiveOutput.Bytes['.specops/specops.json'])|ConvertFrom-Json -Depth 100
+    if($specops.repository.id-cne$ProspectiveOutput.Inputs.ProjectId-or$specops.repository.type-cne'unity-game-project'-or$specops.repository.purpose-cne'SpecOps v2 governed Unity game project'-or$null-ne$specops.repository.PSObject.Properties['migrationStatus']-or$null-ne$specops.repository.releasedVersion-or$specops.initialization.releaseEvidencePresent-ne$false-or$specops.initialization.bootstrapPresent-ne$true){Throw-BootstrapExecutionFailure STATIC_FRESH_STATE 'Candidate fresh repository state invariant failed.'}
+    $required=@('.specops/specops.json','.specops/permissions.json','.specops/bootstrap.json','.specops/contracts/bootstrap-v1.md','Assets/Project/Docs/Architecture/ARCHITECTURE.md','Assets/Project/Docs/Specifications/_templates/feature/SPECOPS_STATE.json')
+    foreach($path in $required){if(-not$ProspectiveOutput.Bytes.ContainsKey($path)){Throw-BootstrapExecutionFailure STATIC_TOPOLOGY "Required output is absent: $path"}}
+    return [pscustomobject][ordered]@{Pass=$true;OutputCount=$expected.Count;Files=$expected;UnityExecuted=$false}
+}
+
+function Test-BootstrapCleanupTreeSafety {
+    param([Parameter(Mandatory)][string]$Root)
+    try{[void](Get-BootstrapCandidateInventory $Root);return $true}catch{return $false}
+}
+
+function Remove-BootstrapOwnedStaging {
+    param([Parameter(Mandatory)]$Staging,[Parameter(Mandatory)]$DestinationSafety)
+    Invoke-BootstrapExecutionFault BeforeCleanup $Staging
+    Assert-BootstrapStagingOwnership $Staging $DestinationSafety
+    if(-not(Test-BootstrapCleanupTreeSafety $Staging.Path)){Throw-BootstrapExecutionFailure CLEANUP_REFUSED 'Staging cleanup refused because reparse/special safety was not established.'}
+    Throw-BootstrapExecutionFailure CLEANUP_RETAINED 'Automatic recursive cleanup is refused because object-bound ownership is not recorded for every descendant; owned staging is retained.'
+}
+
+function Publish-BootstrapOwnedStaging {
+    param([Parameter(Mandatory)]$Staging,[Parameter(Mandatory)]$DestinationSafety)
+    Assert-BootstrapStagingOwnership $Staging $DestinationSafety
+    Assert-BootstrapDestinationAbsent $DestinationSafety.ParentPath $DestinationSafety.Leaf
+    Invoke-BootstrapExecutionFault BeforeOwnedHandlePublication ([pscustomobject]@{Staging=$Staging;Destination=$DestinationSafety})
+    Assert-BootstrapStagingOwnership $Staging $DestinationSafety
+    Assert-BootstrapDestinationAbsent $DestinationSafety.ParentPath $DestinationSafety.Leaf
+    [int]$errorCode=0
+    if(-not[SpecOpsBootstrapNative.NativeMethods]::RenameAbsoluteNoReplace($Staging.Handle,$DestinationSafety.PhysicalPath,[ref]$errorCode)){Throw-BootstrapExecutionFailure PUBLICATION_MOVE "Non-replacing same-parent by-handle publication failed: $(Get-BootstrapWin32Message $errorCode)"}
+    $Staging.Published=$true
+    $published=Open-BootstrapDirectoryHandle $DestinationSafety.Path -AllowDeleteShare
+    if(-not(Test-BootstrapIdentityEqual $published.Identity $Staging.Identity)){$published.Handle.Dispose();Throw-BootstrapExecutionFailure PUBLICATION_IDENTITY 'Published destination does not have the recorded staging identity.'}
+    return $published
+}
+
+function ConvertTo-BootstrapExecutionResultBytes {
+    param([Parameter(Mandatory)]$Value)
+    $json=ConvertTo-BootstrapJcs (ConvertTo-BootstrapJsonBytes $Value)
+    return $script:Utf8.GetBytes($json+"`n")
+}
+
+function ConvertFrom-BootstrapRawArguments {
+    param([AllowEmptyCollection()][string[]]$RawArguments)
+    $names=@('DestinationPath','ProjectId','ProductName','CompanyName','ApplicationIdentifier','CodeNamespaceRoot')
+    $lookup=[Collections.Generic.Dictionary[string,string]]::new([StringComparer]::OrdinalIgnoreCase);foreach($name in $names){$lookup.Add('-'+$name,$name)}
+    $values=[Collections.Generic.Dictionary[string,string]]::new([StringComparer]::OrdinalIgnoreCase)
+    $index=0
+    while($index-lt$RawArguments.Count){$token=$RawArguments[$index];if(-not$lookup.ContainsKey($token)){Throw-BootstrapExecutionFailure INVOCATION_SYNTAX "Unknown or noncanonical argument name '$token'."};$name=$lookup[$token];if($values.ContainsKey($name)){Throw-BootstrapExecutionFailure INVOCATION_SYNTAX "Argument '$token' occurs more than once."};if($index+1-ge$RawArguments.Count){Throw-BootstrapExecutionFailure INVOCATION_SYNTAX "Argument '$token' must have exactly one value."};$values.Add($name,$RawArguments[$index+1]);$index+=2}
+    $missing=@($names|Where-Object{-not$values.ContainsKey($_)});if($missing.Count-ne0){Throw-BootstrapExecutionFailure MISSING_INPUTS ('Missing required inputs in canonical order: '+($missing-join', '))}
+    $ordered=[ordered]@{};foreach($name in $names){$ordered[$name]=$values[$name]};return $ordered
+}
+
+function Get-BootstrapFailureClass {
+    param($Exception)
+    if($null-ne$Exception.Data['BootstrapExecutionFailureClass']){return [string]$Exception.Data['BootstrapExecutionFailureClass']}
+    if($null-ne$Exception.Data['BootstrapFailureCode']){return [string]$Exception.Data['BootstrapFailureCode']}
+    return 'INTERNAL_INVARIANT'
+}
+
+function Invoke-SpecOpsBootstrapExecution {
+    [CmdletBinding()]param([AllowEmptyCollection()][string[]]$RawArguments,[Parameter(Mandatory)][string]$ImplementationScriptPath)
+    $phase='invocation';$exitCode=2;$verifiedSource=$null;$destinationSafety=$null;$staging=$null;$published=$null;$publishedSuccessfully=$false;$diagnostic=$null
+    try {
+        if(-not[OperatingSystem]::IsWindows()-or$PSVersionTable.PSEdition-cne'Core'-or$PSVersionTable.PSVersion.Major-lt7-or-not[Environment]::Is64BitProcess){Throw-BootstrapExecutionFailure UNSUPPORTED_PLATFORM 'Bootstrap requires 64-bit PowerShell 7 or later on Windows.'}
+        $raw=ConvertFrom-BootstrapRawArguments $RawArguments
+        $phase='input';$exitCode=2
+        $inputs=Assert-BootstrapInvocationValues @raw
+        $phase='source';$exitCode=3
+        $locator=Resolve-BootstrapImplementationSource $ImplementationScriptPath
+        $verifiedSource=Open-BootstrapImmutableSource $locator
+        if($verifiedSource.SourceIdentity-cne'e4549e9cab8e380c4f8664f0f6ec422092a5c76f520193940942993b83141f09'){Throw-BootstrapExecutionFailure SOURCE_IDENTITY 'The currently approved Source Identity is not present.'}
+        Invoke-BootstrapExecutionFault AfterSourceAcquisition $verifiedSource
+        Assert-BootstrapSourceConsistency $verifiedSource
+        $phase='destination';$exitCode=4
+        $destinationSafety=Get-BootstrapDestinationSafety $inputs.DestinationPath $verifiedSource
+        $phase='staging';$exitCode=5
+        Invoke-BootstrapExecutionFault BeforeStagingCreation $destinationSafety
+        $staging=New-BootstrapOwnedStaging $destinationSafety $verifiedSource
+        Invoke-BootstrapExecutionFault AfterStagingCreated $staging
+        $phase='projection';$exitCode=6
+        $prospective=New-BootstrapProspectiveOutputMap $verifiedSource $inputs $verifiedSource.ImplementationVersion
+        if($prospective.Count-ne312){Throw-BootstrapExecutionFailure OUTPUT_COUNT 'Prospective output count must remain 312.'}
+        $phase='generated-output';$exitCode=7
+        if(-not$prospective.Bytes.ContainsKey('.specops/bootstrap.json')){Throw-BootstrapExecutionFailure GENERATED_OUTPUT 'Final generated Bootstrap provenance is absent.'}
+        Write-BootstrapOwnedStaging $staging $destinationSafety $prospective
+        $phase='staged-verification';$exitCode=8
+        Invoke-BootstrapExecutionFault BeforeStagedVerification $staging
+        $stagedVerification=Test-BootstrapCandidateStatic $staging.Path $prospective
+        Assert-BootstrapSourceConsistency $verifiedSource
+        $phase='publication';$exitCode=9
+        Assert-BootstrapParentIdentity $destinationSafety
+        Assert-BootstrapDestinationAbsent $destinationSafety.ParentPath $destinationSafety.Leaf
+        Invoke-BootstrapExecutionFault BeforePublication ([pscustomobject]@{Staging=$staging;Destination=$destinationSafety})
+        Assert-BootstrapParentIdentity $destinationSafety
+        Assert-BootstrapDestinationAbsent $destinationSafety.ParentPath $destinationSafety.Leaf
+        Assert-BootstrapSourceConsistency $verifiedSource
+        $published=Publish-BootstrapOwnedStaging $staging $destinationSafety
+        $publishedSuccessfully=$true
+        Invoke-BootstrapExecutionFault AfterPublication ([pscustomobject]@{Published=$published;Destination=$destinationSafety})
+        $phase='post-publication-verification';$exitCode=10
+        Invoke-BootstrapExecutionFault BeforePostPublicationVerification ([pscustomobject]@{Published=$published;Destination=$destinationSafety})
+        $publishedVerification=Test-BootstrapCandidateStatic $destinationSafety.Path $prospective
+        Assert-BootstrapSourceConsistency $verifiedSource
+        $success=[ordered]@{bootstrapContractVersion=[string]$verifiedSource.ManifestRecord.Manifest.bootstrapContractVersion;bootstrapImplementationVersion=$verifiedSource.ImplementationVersion;exitCode=0;goldenBaseline=[ordered]@{id=[string]$verifiedSource.ManifestRecord.Manifest.goldenBaseline.id;version=[string]$verifiedSource.ManifestRecord.Manifest.goldenBaseline.version};sourceIdentity=[ordered]@{digest=$verifiedSource.SourceIdentity;profile=[string]$verifiedSource.ManifestRecord.Manifest.sourceIdentity.profile};status='SUCCESS'}
+        return [pscustomobject][ordered]@{ExitCode=0;StdoutBytes=(ConvertTo-BootstrapExecutionResultBytes $success);Diagnostic='';StagedVerification=$stagedVerification;PublishedVerification=$publishedVerification;RegularLeafCount=$verifiedSource.RegularLeafCount;AuthoredCount=$verifiedSource.Bytes.Count;ImplementationSupportCount=$verifiedSource.ImplementationSupportPaths.Count;OutputCount=$prospective.Count}
+    }
+    catch {
+        $primary=$_;$failureClass=Get-BootstrapFailureClass $primary.Exception
+        if($failureClass-ceq'INTERNAL_INVARIANT'){$phase='internal';$exitCode=70}
+        $diagnostic=$primary.Exception.Message
+        if($null-ne$staging-and-not$publishedSuccessfully-and-not$staging.Published){
+            if($null-ne$staging.Handle-and-not$staging.Handle.IsClosed){try{Remove-BootstrapOwnedStaging $staging $destinationSafety}catch{$diagnostic+="`nRetained staging path: $($staging.Path)`nCleanup refusal/failure: $($_.Exception.Message)"}}
+            else{$diagnostic+="`nRetained staging path without current ownership proof: $($staging.Path)"}
+        }
+        elseif($null-ne$primary.Exception.Data['UncertainStagingPath']){$diagnostic+="`nUncertain staging path retained without cleanup: $($primary.Exception.Data['UncertainStagingPath'])"}
+        elseif($publishedSuccessfully-or($null-ne$staging-and$staging.Published)){$diagnostic+="`nPublished destination retained for Human inspection: $($destinationSafety.Path)"}
+        $failure=[ordered]@{exitCode=$exitCode;failureClass=$failureClass;phase=$phase;status='FAILURE'}
+        return [pscustomobject][ordered]@{ExitCode=$exitCode;StdoutBytes=(ConvertTo-BootstrapExecutionResultBytes $failure);Diagnostic=$diagnostic}
+    }
+    finally {
+        if($null-ne$published-and$null-ne$published.Handle-and-not$published.Handle.IsClosed){$published.Handle.Dispose()}
+        if($null-ne$staging-and$null-ne$staging.Handle-and-not$staging.Handle.IsClosed){$staging.Handle.Dispose()}
+        if($null-ne$destinationSafety-and$null-ne$destinationSafety.ParentHandle-and-not$destinationSafety.ParentHandle.IsClosed){$destinationSafety.ParentHandle.Dispose()}
+        Close-BootstrapImmutableSource $verifiedSource
+    }
+}
+
 Export-ModuleMember -Function @(
     'Assert-BootstrapInvocationValues','Read-BootstrapStrictJson','ConvertTo-BootstrapJcs','Get-BootstrapJsonIdentity','Get-BootstrapSha256Hex',
     'Get-BootstrapProductGuid','Get-BootstrapSourceIdentity','Read-BootstrapProjectionManifest','Test-BootstrapClosedSourceAccounting',
-    'Get-VerifiedBootstrapSource','Invoke-BootstrapScopedTransforms','New-BootstrapProvenance','New-BootstrapProspectiveOutputMap','Test-BootstrapByteMapStatic'
+    'Get-VerifiedBootstrapSource','Invoke-BootstrapScopedTransforms','New-BootstrapProvenance','New-BootstrapProspectiveOutputMap','Test-BootstrapByteMapStatic',
+    'Invoke-SpecOpsBootstrapExecution'
 )

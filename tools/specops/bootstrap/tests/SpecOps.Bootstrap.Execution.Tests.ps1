@@ -80,10 +80,11 @@ try {
     Assert-Equal CLI 'syntax precedes semantic input validation' (($precedence.StdoutText|ConvertFrom-Json).failureClass) 'INVOCATION_SYNTAX'
 
     $mirror=New-CleanMirror (Join-Path $tempRoot 'clean-source')
-    Assert-Equal Source 'clean mirror governed leaves' $mirror.Paths.Count 401
-    Assert-Equal Source 'implementation support files' $mirror.Support.Count 5
+    Assert-Equal Source 'clean mirror governed leaves' $mirror.Paths.Count 402
+    Assert-Equal Source 'implementation support files' $mirror.Support.Count 6
     Assert-True Source 'entry classified as implementation support' ($mirror.Support-ccontains'tools/specops/bootstrap/Invoke-SpecOpsBootstrap.ps1')
     Assert-True Source 'execution tests classified as implementation support' ($mirror.Support-ccontains'tools/specops/bootstrap/tests/SpecOps.Bootstrap.Execution.Tests.ps1')
+    Assert-True Source 'conformance tests classified as implementation support' ($mirror.Support-ccontains'tools/specops/bootstrap/tests/SpecOps.Bootstrap.Conformance.Tests.ps1')
     [void][IO.Directory]::CreateDirectory((Join-Path $mirror.Root '.git'));[IO.File]::WriteAllText((Join-Path $mirror.Root '.git/config'),'ambient git data',$utf8)
 
     # Successful production CLI path, including order/case variation and exact framing.
@@ -99,7 +100,7 @@ try {
     Assert-Equal CLI 'success Golden Baseline id' $successJson.goldenBaseline.id 'specops-unity-clean-architecture-golden-baseline'
     Assert-Equal CLI 'success Golden Baseline version' $successJson.goldenBaseline.version '2.0.0'
     Assert-Equal CLI 'success Source Identity profile' $successJson.sourceIdentity.profile 'specops-bootstrap-source-jcs-sha256-v1'
-    Assert-Equal CLI 'success Source Identity' $successJson.sourceIdentity.digest 'e4549e9cab8e380c4f8664f0f6ec422092a5c76f520193940942993b83141f09'
+    Assert-Equal CLI 'success Source Identity' $successJson.sourceIdentity.digest '43d7762a9cc5d9971d8061246e4be0747fd42a9be0c703c259bec1ba61fb69b7'
     Assert-Equal CLI 'success implementation version' $successJson.bootstrapImplementationVersion '1.0.0'
     Assert-True CLI 'success stderr empty' ([string]::IsNullOrEmpty($success.StderrText))
     Assert-True CLI 'success exact one LF' ($success.Stdout[-1]-eq10-and$success.Stdout[-2]-ne10)
@@ -225,15 +226,28 @@ try {
     Assert-True Cleanup 'owned cleanup retention reported diagnostically' ($r.Diagnostic.Contains('CLEANUP_RETAINED:',[StringComparison]::Ordinal)-and$r.Diagnostic.Contains($ownedCleanup.Path,[StringComparison]::OrdinalIgnoreCase))
 
     # Cleanup authority loss refuses deletion and reports retained staging only on stderr/diagnostic.
-    $cleanupFixture=[ordered]@{SetupSucceeded=$false;OriginalPath=$null;RetainedPath=$null;OwnedIdentity=$null;RetainedIdentity=$null;ReplacementIdentity=$null}
+    $cleanupFixture=[ordered]@{SetupSucceeded=$false;OriginalPath=$null;RetainedPath=$null;OwnedIdentity=$null;RetainedIdentity=$null;ReplacementIdentity=$null;RenameAttempts=0;RenameErrors=[Collections.Generic.List[int]]::new()}
     Set-Fault BeforeStagedVerification {param($context);throw (New-HookFailure STATIC_BYTES 'Injected pre-publication failure.')}
     Set-Fault BeforeCleanup {
         param($context)
         $script:cleanupFixture.OriginalPath=$context.Path
         $script:cleanupFixture.RetainedPath=$context.Path+'-owned'
         $script:cleanupFixture.OwnedIdentity=$context.Identity
-        [int]$renameError=0
-        if(-not[SpecOpsBootstrapNative.NativeMethods]::RenameAbsoluteNoReplace($context.Handle,$script:cleanupFixture.RetainedPath,[ref]$renameError)){throw (New-HookFailure FIXTURE_SETUP "By-handle adversarial rename failed with Win32 error $renameError.")}
+        $renamed=$false
+        foreach($attempt in 1..8){
+            $script:cleanupFixture.RenameAttempts=$attempt
+            [int]$renameError=0
+            if([SpecOpsBootstrapNative.NativeMethods]::RenameAbsoluteNoReplace($context.Handle,$script:cleanupFixture.RetainedPath,[ref]$renameError)){$renamed=$true;break}
+            $script:cleanupFixture.RenameErrors.Add($renameError)
+            if(Test-Path -LiteralPath $script:cleanupFixture.RetainedPath -PathType Container){
+                $resolved=Get-DirectoryIdentity $script:cleanupFixture.RetainedPath
+                if($resolved.Key-ceq$script:cleanupFixture.OwnedIdentity.Key){$renamed=$true;break}
+                throw (New-HookFailure FIXTURE_SETUP 'Failed rename left the retained path bound to an unexpected identity.')
+            }
+            $original=Get-DirectoryIdentity $script:cleanupFixture.OriginalPath
+            if($original.Key-cne$script:cleanupFixture.OwnedIdentity.Key){throw (New-HookFailure FIXTURE_SETUP 'Failed rename no longer leaves the original path bound to the owned identity.')}
+        }
+        if(-not$renamed){throw (New-HookFailure FIXTURE_SETUP "By-handle adversarial rename did not complete after $($script:cleanupFixture.RenameAttempts) identity-proven attempts; Win32 errors: $($script:cleanupFixture.RenameErrors -join ',').")}
         $script:cleanupFixture.RetainedIdentity=Get-DirectoryIdentity $script:cleanupFixture.RetainedPath
         if($script:cleanupFixture.RetainedIdentity.Key-cne$script:cleanupFixture.OwnedIdentity.Key){throw (New-HookFailure FIXTURE_SETUP 'Retained path does not denote the invocation-owned staging identity.')}
         [void][IO.Directory]::CreateDirectory($script:cleanupFixture.OriginalPath)
@@ -243,18 +257,20 @@ try {
     }
     $ownershipDestination=Join-Path $parent 'OwnershipLoss';$r=Invoke-Direct $mirror.Entry $ownershipDestination;Clear-Faults
     $retainedOriginal=$cleanupFixture.RetainedPath
-    $finalRetainedIdentity=Get-DirectoryIdentity $retainedOriginal
-    $finalReplacementIdentity=Get-DirectoryIdentity $cleanupFixture.OriginalPath
     Assert-True Cleanup 'ownership-loss adversarial setup succeeded' $cleanupFixture.SetupSucceeded
-    Assert-Equal Cleanup 'ownership-loss retained identity proven before cleanup' $cleanupFixture.RetainedIdentity.Key $cleanupFixture.OwnedIdentity.Key
-    Assert-True Cleanup 'ownership-loss replacement identity differs before cleanup' ($cleanupFixture.ReplacementIdentity.Key-cne$cleanupFixture.OwnedIdentity.Key)
-    Assert-Equal Cleanup 'ownership-loss preserves primary staged verification exit' $r.ExitCode 8
-    Assert-True Cleanup 'ownership-loss requested destination absent' (-not(Test-Path -LiteralPath $ownershipDestination))
-    Assert-True Cleanup 'ownership-loss original staging retained' (Test-Path -LiteralPath $retainedOriginal -PathType Container)
-    Assert-Equal Cleanup 'ownership-loss retained identity preserved after cleanup refusal' $finalRetainedIdentity.Key $cleanupFixture.OwnedIdentity.Key
-    Assert-Equal Cleanup 'ownership-loss replacement preserved after cleanup refusal' $finalReplacementIdentity.Key $cleanupFixture.ReplacementIdentity.Key
-    Assert-True Cleanup 'retained staging path excluded from stdout' (-not$utf8.GetString($r.StdoutBytes).Contains($retainedOriginal,[StringComparison]::OrdinalIgnoreCase))
-    Assert-True Cleanup 'retained staging reported diagnostically' ($r.Diagnostic.Contains('Retained staging path:',[StringComparison]::Ordinal)-and$r.Diagnostic.Contains('Cleanup refusal/failure:',[StringComparison]::Ordinal))
+    if($cleanupFixture.SetupSucceeded){
+        $finalRetainedIdentity=Get-DirectoryIdentity $retainedOriginal
+        $finalReplacementIdentity=Get-DirectoryIdentity $cleanupFixture.OriginalPath
+        Assert-Equal Cleanup 'ownership-loss retained identity proven before cleanup' $cleanupFixture.RetainedIdentity.Key $cleanupFixture.OwnedIdentity.Key
+        Assert-True Cleanup 'ownership-loss replacement identity differs before cleanup' ($cleanupFixture.ReplacementIdentity.Key-cne$cleanupFixture.OwnedIdentity.Key)
+        Assert-Equal Cleanup 'ownership-loss preserves primary staged verification exit' $r.ExitCode 8
+        Assert-True Cleanup 'ownership-loss requested destination absent' (-not(Test-Path -LiteralPath $ownershipDestination))
+        Assert-True Cleanup 'ownership-loss original staging retained' (Test-Path -LiteralPath $retainedOriginal -PathType Container)
+        Assert-Equal Cleanup 'ownership-loss retained identity preserved after cleanup refusal' $finalRetainedIdentity.Key $cleanupFixture.OwnedIdentity.Key
+        Assert-Equal Cleanup 'ownership-loss replacement preserved after cleanup refusal' $finalReplacementIdentity.Key $cleanupFixture.ReplacementIdentity.Key
+        Assert-True Cleanup 'retained staging path excluded from stdout' (-not$utf8.GetString($r.StdoutBytes).Contains($retainedOriginal,[StringComparison]::OrdinalIgnoreCase))
+        Assert-True Cleanup 'retained staging reported diagnostically' ($r.Diagnostic.Contains('Retained staging path:',[StringComparison]::Ordinal)-and$r.Diagnostic.Contains('Cleanup refusal/failure:',[StringComparison]::Ordinal))
+    }
 
     if($linkSupported){
         $cleanupTarget=Join-Path $tempRoot 'cleanup-link-target';[void][IO.Directory]::CreateDirectory($cleanupTarget)
@@ -287,6 +303,6 @@ finally {
     if(Test-Path -LiteralPath $tempRoot){Remove-Item -LiteralPath $tempRoot -Recurse -Force}
 }
 
-$result=[ordered]@{Result=$(if($script:Failures.Count){'FAIL'}else{'PASS'});Tests=$script:Tests;Categories=$script:Categories;Failures=@($script:Failures);RegularLeafCount=401;AuthoredFiles=394;ImplementationSupportFiles=5;OutputCount=312;SourceIdentity='e4549e9cab8e380c4f8664f0f6ec422092a5c76f520193940942993b83141f09';ImplementationVersion='1.0.0';UnityExecuted=$false;RealHumanDestinationUsed=$false;GitRequired=$false}
+$result=[ordered]@{Result=$(if($script:Failures.Count){'FAIL'}else{'PASS'});Tests=$script:Tests;Categories=$script:Categories;Failures=@($script:Failures);RegularLeafCount=402;AuthoredFiles=394;ImplementationSupportFiles=6;OutputCount=312;SourceIdentity='43d7762a9cc5d9971d8061246e4be0747fd42a9be0c703c259bec1ba61fb69b7';ImplementationVersion='1.0.0';UnityExecuted=$false;RealHumanDestinationUsed=$false;GitRequired=$false}
 $result|ConvertTo-Json -Depth 20
 if($script:Failures.Count){exit 1}

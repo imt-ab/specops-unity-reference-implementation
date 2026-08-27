@@ -754,6 +754,8 @@ Test-Assertion 'transform source preconditions and exact counts' $transformPreco
 
 $inventoryByPath = @{}
 foreach ($entry in $manifest.authoredSourceInventory) { $inventoryByPath[$entry.sourcePath] = $entry }
+$implementationSupportPathSet = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
+foreach ($path in $implementationSupportPaths) { [void] $implementationSupportPathSet.Add($path) }
 $referenceCouplingAccounted = $true
 foreach ($term in @('reference-architecture-example', 'ReferenceMessage', 'ReferenceLifetimeScope', 'FixedReferenceTextSource', 'ReferenceCompositionTests')) {
     foreach ($rawPath in @(rg -l --hidden --glob '!.git/**' --fixed-strings -- $term $repositoryRoot)) {
@@ -764,7 +766,8 @@ foreach ($term in @('reference-architecture-example', 'ReferenceMessage', 'Refer
             'tools/specops/tests/SpecOps.BootstrapProjection.Tests.ps1'
         )) { continue }
         $entry = $inventoryByPath[$path]
-        if ($null -eq $entry) { $referenceCouplingAccounted = $false }
+        if ($implementationSupportPathSet.Contains($path)) { }
+        elseif ($null -eq $entry) { $referenceCouplingAccounted = $false }
         elseif ($entry.disposition -eq 'EXCLUDE') { }
         elseif ($path -ceq '.specops/contracts/bootstrap-v1.md') { }
         elseif ($entry.disposition -eq 'TRANSFORM_SCOPED') { }

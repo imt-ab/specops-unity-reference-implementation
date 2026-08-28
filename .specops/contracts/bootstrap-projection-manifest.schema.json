@@ -8,6 +8,7 @@
   "additionalProperties": false,
   "required": [
     "$schema",
+    "contractVersion",
     "manifestVersion",
     "bootstrapContractVersion",
     "classification",
@@ -24,6 +25,9 @@
   "properties": {
     "$schema": {
       "const": "../contracts/bootstrap-projection-manifest.schema.json"
+    },
+    "contractVersion": {
+      "const": "1.0.0"
     },
     "manifestVersion": {
       "const": "1.0.0"

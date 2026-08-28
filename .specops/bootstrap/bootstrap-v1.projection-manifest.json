@@ -1,5 +1,6 @@
 {
   "$schema": "../contracts/bootstrap-projection-manifest.schema.json",
+  "contractVersion": "1.0.0",
   "manifestVersion": "1.0.0",
   "bootstrapContractVersion": "1.0.0",
   "classification": "DERIVED_BOOTSTRAP_PROJECTION_CONTRACT",
@@ -10,7 +11,7 @@
   },
   "sourceIdentity": {
     "profile": "specops-bootstrap-source-jcs-sha256-v1",
-    "digest": "84d90b31522b96876b3ed8afe01ede1f5273e138cffb94adfdd25b32387cde80"
+    "digest": "a92b31752e46b3f801f32400f4f6808d7a888a27d4f865486763896689225adc"
   },
   "canonicalOrdering": {
     "bootstrapSourceMetadata": "path-ordinal-ascending",
@@ -37,8 +38,8 @@
       "role": "PROJECTION_MANIFEST_SCHEMA",
       "identityBinding": "EXACT_BYTE_SHA256",
       "byteIdentity": {
-        "byteLength": 21254,
-        "sha256": "3ebf087e05dc9079e48fb1de89450e6da82350ac54639eab3cac1fa0db0e22a4"
+        "byteLength": 21332,
+        "sha256": "1dbb218aa53b0f67b4f84900e07ffc0f9809d226571dc95448bf71741874fb43"
       }
     }
   ],

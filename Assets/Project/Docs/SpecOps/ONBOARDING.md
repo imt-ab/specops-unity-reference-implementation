@@ -1,6 +1,6 @@
 # Public Reference Repository Onboarding
 
-Status: Derived contributor guidance for the `specops-v2` migration branch. SpecOps v2.0.0 is not claimed as released.
+Status: Derived contributor guidance for the `specops-v2` release candidate. SpecOps v2.0.0 is not claimed as released.
 
 This repository is a public reference implementation and Golden Baseline candidate showing one concrete combination of SpecOps AI v2 and a selected Unity Clean Architecture. It is not the generic SpecOps Core repository, a finished game, or a claim that this architecture is mandatory for every Unity project.
 
@@ -25,7 +25,7 @@ The selected architecture contains Domain, Application, AI, Infrastructure, Pres
 
 Use the derived [`WORKFLOW.md`](WORKFLOW.md) to navigate intent, specification, governance, risk, approval, planning, scoped permission, implementation, validation, traceability, global-impact review, and human-controlled publication.
 
-The specification root is [`Assets/Project/Docs/Specifications`](../Specifications/README.md). The sole canonical feature-template location is [`../Specifications/_templates/feature/`](../Specifications/_templates/feature/), containing the authority triplet plus derived `SPECOPS_STATE.json`. The state template conforms to [the feature-state schema](../../../../.specops/contracts/feature-state.schema.json). Templates are unapproved scaffolding only; no feature or feature-state instance is installed by E3.
+The specification root is [`Assets/Project/Docs/Specifications`](../Specifications/README.md). The sole canonical feature-template location is [`../Specifications/_templates/feature/`](../Specifications/_templates/feature/), containing the authority triplet plus derived `SPECOPS_STATE.json`. The state template conforms to [the feature-state schema](../../../../.specops/contracts/feature-state.schema.json). Templates are unapproved scaffolding only. The approved and implemented [`reference-architecture-example`](../Specifications/reference-architecture-example/SPEC.md) is an actual feature instance with derived state; it is not inherited by fresh Bootstrap children.
 
 ## Git and GitHub
 
@@ -35,7 +35,7 @@ Do not modify `Packages/*`, `ProjectSettings/*`, Git configuration, history, bra
 
 ## Default Developer Path
 
-JetBrains Rider is the Golden Baseline default IDE target for this repository. It is a deployment default, not a SpecOps framework requirement. Existing Rider templates and agent adapters are legacy artifacts preserved during E1; do not assume they are already v2-conformant.
+JetBrains Rider is the Golden Baseline default IDE target for this repository. It is a deployment default, not a SpecOps framework requirement. Existing Rider templates and product-specific tooling guidance are retained as subordinate legacy compatibility material; they do not define SpecOps v2 authority.
 
 Open or execute Unity only when the current task explicitly authorizes it. Do not allow tools to silently modify user-global IDE or agent configuration.
 
@@ -49,4 +49,4 @@ Before handing work back:
 - confirm only authorized paths changed;
 - confirm protected areas and Unity metadata remain safe;
 - report executed validation, omitted validation, unexpected observations, and remaining approval boundaries;
-- stop without beginning the next migration slice.
+- stop without beginning an unapproved next slice or release action.

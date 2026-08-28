@@ -10,7 +10,7 @@
   },
   "sourceIdentity": {
     "profile": "specops-bootstrap-source-jcs-sha256-v1",
-    "digest": "041eed9afc2b673f2297cffcb8c1f860eecf3ba5db93b0721839d350f0650eaf"
+    "digest": "84d90b31522b96876b3ed8afe01ede1f5273e138cffb94adfdd25b32387cde80"
   },
   "canonicalOrdering": {
     "bootstrapSourceMetadata": "path-ordinal-ascending",
@@ -666,8 +666,8 @@
     {
       "sourcePath": ".specops/specops.json",
       "byteIdentity": {
-        "byteLength": 3655,
-        "sha256": "99f76b242ae9b4055c0bb1aa55c2c4497c1eea0e8a399d0c405bf7092cd767ca"
+        "byteLength": 3682,
+        "sha256": "53faf2b2563b933a5c01982ffc157c44e53613527a26032f932b3d7d46d8a127"
       },
       "disposition": "TRANSFORM_SCOPED",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -702,7 +702,7 @@
           "id": "deployment-legacy-status-remove",
           "selectorClass": "JSON_POINTER_MEMBER",
           "selector": "/deployment/legacyIntegrationStatus",
-          "expectedSourceValue": "not-yet-modernized-for-v2",
+          "expectedSourceValue": "retained-as-non-authoritative-compatibility-guidance",
           "expectedMatchCount": 1,
           "replacement": {
             "kind": "REMOVE_SELECTED_SPAN"
@@ -718,7 +718,7 @@
             "selector": "/deployment/legacyIntegrationStatus"
           },
           "forbiddenResidualValues": [
-            "not-yet-modernized-for-v2"
+            "retained-as-non-authoritative-compatibility-guidance"
           ]
         },
         {
@@ -966,8 +966,8 @@
     {
       "sourcePath": "AI_RULES.md",
       "byteIdentity": {
-        "byteLength": 2185,
-        "sha256": "4b6e13626595f02c28a40580a5437368929d82365e1554f437180b5ca415295b"
+        "byteLength": 2087,
+        "sha256": "fb6b676dd53af1a0166098f10898d199822161c6ba9aa1faf21972dcc8b22cd1"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "LEGACY_MIGRATION_OR_DEVELOPMENT"
@@ -4412,8 +4412,8 @@
     {
       "sourcePath": "Assets/Project/Docs/SpecOps/DEPLOYMENT.md",
       "byteIdentity": {
-        "byteLength": 3820,
-        "sha256": "d346f6c1ab847b1afdb05fee68a1220420f9b014460b406f32dd90046fc9c21f"
+        "byteLength": 3945,
+        "sha256": "baa9ffc718c993b25a36fa1359fc7903b6e41f8486dde3fe8659b5d40c8c9b66"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "PUBLIC_REPOSITORY_INSTANCE"
@@ -4430,8 +4430,8 @@
     {
       "sourcePath": "Assets/Project/Docs/SpecOps/ONBOARDING.md",
       "byteIdentity": {
-        "byteLength": 4180,
-        "sha256": "f6d2741306e4c2d81ef6d69603bd091f669c3d9bdcd90a06e25a5bb0acd44ae5"
+        "byteLength": 4394,
+        "sha256": "cd72239eb66a183f848400b7595aff3fe8d1e3ffdf1d5d9e68ff98abbdddc37c"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "PUBLIC_REPOSITORY_INSTANCE"
@@ -4809,8 +4809,8 @@
     {
       "sourcePath": "Assets/Project/Docs/Specifications/reference-architecture-example/ACCEPTANCE.md",
       "byteIdentity": {
-        "byteLength": 9768,
-        "sha256": "29f21dda1fa3cde94802cffd1bc72baafa7c397f71e4d7774fa4c333196b0096"
+        "byteLength": 9765,
+        "sha256": "ee9729fab395a31ecd2768010ebb2ed3e9a1c48d267cd4e33e11a8db8558278f"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "REFERENCE_FEATURE_INSTANCE"
@@ -4827,8 +4827,8 @@
     {
       "sourcePath": "Assets/Project/Docs/Specifications/reference-architecture-example/CONSTRAINTS.md",
       "byteIdentity": {
-        "byteLength": 5513,
-        "sha256": "d0a3350419c3a5b4da9421a36112aee4a3502b26a7bac6986d2fa64dcf11fcfa"
+        "byteLength": 5501,
+        "sha256": "56aa5909cc99893d673cb35acb246a6d0455fe5d292c870fc4e8730c1deec232"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "REFERENCE_FEATURE_INSTANCE"
@@ -4845,8 +4845,8 @@
     {
       "sourcePath": "Assets/Project/Docs/Specifications/reference-architecture-example/SPEC.md",
       "byteIdentity": {
-        "byteLength": 10428,
-        "sha256": "bb42260c0b18750fe68c95b9259631923f07f34306de10aed59ee7265aa26095"
+        "byteLength": 10415,
+        "sha256": "3e64fd547789d1d2a4ff554469098a387435f2e5d2f76bd24e2146bc07353ebc"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "REFERENCE_FEATURE_INSTANCE"
@@ -4881,8 +4881,8 @@
     {
       "sourcePath": "Assets/Project/Docs/TEAM_MEMBER_ONBOARDING.md",
       "byteIdentity": {
-        "byteLength": 24534,
-        "sha256": "e80b5e90fb6c37ff3f6837d810ca04974445b830c7d9f4efcc32b16e5b1c96d0"
+        "byteLength": 24988,
+        "sha256": "b68f131d5e5bac3ef257d378cc8ad8e86bec0252b339c4f7bfc0b3e5574fa768"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "PUBLIC_REPOSITORY_INSTANCE"
@@ -5257,8 +5257,8 @@
     {
       "sourcePath": "CHANGELOG.md",
       "byteIdentity": {
-        "byteLength": 1417,
-        "sha256": "330fddedd02a4b0cecaa6225bd15ebf9883ff71e6812b02a73242c7e0fde586f"
+        "byteLength": 1522,
+        "sha256": "3fcc43af077b0cea922b9ff5f3715927869f802bb3717460189240a66a14a848"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "PUBLIC_REPOSITORY_INSTANCE"
@@ -5266,8 +5266,8 @@
     {
       "sourcePath": "CONTRIBUTING.md",
       "byteIdentity": {
-        "byteLength": 5316,
-        "sha256": "aeda03b15e51500e45d92a14a9edbd29072107978e7c606f1d4ce913d9cbf8c2"
+        "byteLength": 5459,
+        "sha256": "f9b93bbfcd87778eb4f09534f6070e38ac576fc990d80dfaa771984b15ec50e4"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "PUBLIC_REPOSITORY_INSTANCE"
@@ -6009,8 +6009,8 @@
     {
       "sourcePath": "README.md",
       "byteIdentity": {
-        "byteLength": 8750,
-        "sha256": "1af2e4d2b893e776d510d912d234c86680fa3c8ddb44df8cb77d27edb457132a"
+        "byteLength": 9813,
+        "sha256": "2a356cd8e6d6029f08aa14b7ee288f7a3329e439108ed580a2cc16ab3039d2ad"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "PUBLIC_REPOSITORY_INSTANCE"
@@ -6018,8 +6018,8 @@
     {
       "sourcePath": "TOOLING_RULES.md",
       "byteIdentity": {
-        "byteLength": 4210,
-        "sha256": "4a19c3097674bdc2daa28adc9994a2c9d2b9ac9423a82020684778ad4b30e091"
+        "byteLength": 4596,
+        "sha256": "6aa24f227ee1217e4fb85a53a454032d9fa94055e8b5e5a21b46890ed760364a"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "LEGACY_MIGRATION_OR_DEVELOPMENT"

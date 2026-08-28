@@ -94,7 +94,7 @@
         ]
       }
     ],
-    "legacyIntegrationStatus": "not-yet-modernized-for-v2"
+    "legacyIntegrationStatus": "retained-as-non-authoritative-compatibility-guidance"
   },
   "protectedConsequentialAreas": [
     "Packages/*",

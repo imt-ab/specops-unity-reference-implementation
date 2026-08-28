@@ -6,13 +6,13 @@ It is being developed as a Golden Baseline candidate for bootstrapping new Unity
 
 ## Current Status
 
-This repository is on the `specops-v2` migration branch and is migrating toward the first verified SpecOps v2 Golden Baseline.
+This repository is a release candidate for the first verified SpecOps v2 Golden Baseline.
 
 - `v1.0.0` is the immutable final pre-SpecOps-v2 public baseline.
 - `v2.0.0` is the intended first SpecOps v2 + Unity Clean Architecture Golden Baseline release.
 - `v2.0.0` has **not** been released.
-- The current repository still contains intentionally retained legacy governance and tooling artifacts pending later migration slices.
-- Some runtime and test areas remain scaffolded. Documentation or package presence is not evidence that compilation, tests, bootstrap, or final release validation has passed.
+- Retained legacy compatibility guidance is subordinate to the current authority listed below.
+- The production Bootstrap implementation and fresh-project validation are complete. Final release evidence, lifecycle transition, tag, and publication remain pending Human Authority-controlled work.
 
 See the [changelog](CHANGELOG.md) for public migration history.
 
@@ -62,16 +62,16 @@ Domain and Application assemblies retain `noEngineReferences = true`. The archit
 
 The repository uses `InfiniteMonkey.*` assembly names. VContainer is present for composition and Moq is present for test isolation where appropriate. Neither dependency is mandatory ceremony for every implementation or test.
 
-## Current Migration Baseline
+## Current Release-Candidate Baseline
 
-The values below are the observed repository state during migration, not a promise of the final `v2.0.0` baseline:
+The values below are the committed release-candidate state, not a claim that `v2.0.0` has been released:
 
 - Unity editor: `6000.5.8f1` (revision `5cb7df797b7d`), from `ProjectSettings/ProjectVersion.txt`.
 - Unity package declarations: current values in `Packages/manifest.json`.
 - Default IDE target: JetBrains Rider.
 - Repository VCS and hosting: Git and GitHub.
 
-The E6 migration established the current Unity and package baseline. Reference implementation completeness, eval and release-evidence foundation, verified default toolchain modernization, bootstrap, fresh-project validation, final public release audit, and human-controlled release remain pending.
+The reference implementation, production Bootstrap, and fresh-project Unity validation are complete. Final release evidence, lifecycle transition, tag, and publication remain pending Human Authority-controlled work.
 
 Rider is the verified/default Golden Baseline IDE direction for this repository deployment. It is not a SpecOps framework requirement, and user-global Rider or tool settings must never be silently changed. Codex, Junie, and deterministic tools may be deployment executors; they do not define SpecOps logical roles. See [deployment guidance](Assets/Project/Docs/SpecOps/DEPLOYMENT.md).
 
@@ -94,6 +94,21 @@ See [`Assets/Project/README.md`](Assets/Project/README.md) for the detailed Unit
 4. Inspect the project structure and `InfiniteMonkey.*` assembly definitions under `Assets/Project/Code`.
 5. Open Unity or allow package resolution only when appropriate for your task and environment; report those actions and their results as evidence.
 6. Run only the validation relevant to the change. Distinguish static inspection, compilation, EditMode tests, PlayMode tests, and manual Unity checks.
+
+## Production Bootstrap Workflow
+
+The public construction path is: canonical LF source → production Bootstrap → fresh Unity child → Unity `6000.5.8f1` validation. Source bytes are bound by the committed projection manifest, and repository policy uses canonical LF bytes. Obtain the current approved Source Identity from [the committed projection manifest](.specops/bootstrap/bootstrap-v1.projection-manifest.json) and governed Bootstrap metadata rather than copying a digest into authored documentation.
+
+Invoke [`tools/specops/bootstrap/Invoke-SpecOpsBootstrap.ps1`](tools/specops/bootstrap/Invoke-SpecOpsBootstrap.ps1) from a conforming physical source with these six required inputs:
+
+- `DestinationPath`
+- `ProjectId`
+- `ProductName`
+- `CompanyName`
+- `ApplicationIdentifier`
+- `CodeNamespaceRoot`
+
+The destination must satisfy the freshness and safety requirements in [the Bootstrap contract](.specops/contracts/bootstrap-v1.md). Bootstrap provenance records construction lineage only: the generated child inherits no release evidence or approval. Unity version and support requirements come from committed authority and project bindings, including `ProjectSettings/ProjectVersion.txt`.
 
 ## Feature Specifications
 

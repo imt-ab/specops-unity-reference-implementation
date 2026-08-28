@@ -1,8 +1,8 @@
 # TOOLING_RULES.md
 
-> **Status — E9 tooling migration source; NOT SpecOps or repository governance authority.**
+> **Status — retained legacy tooling compatibility guidance; NOT SpecOps or repository governance authority.**
 >
-> This file is retained temporarily for concrete PowerShell, UTF-8/encoding, command-safety, and related tooling information needed by E9. Normative governance comes only from the current authority domains routed through [`AGENTS.md`](AGENTS.md). `AGENTS.md` is a derived operational router. [`.specops/specops.json`](.specops/specops.json) and [`.specops/permissions.json`](.specops/permissions.json) provide instance and permission configuration; they do not define independent authority. Any conflicting legacy VCS, role, product, permission, or authority statement below is superseded and must not be treated as operative policy.
+> This file retains concrete PowerShell, UTF-8/encoding, command-safety, and related tooling guidance. Normative governance comes only from the current authority domains routed through [`AGENTS.md`](AGENTS.md): [`SPECOPS_V2.md`](Assets/Project/Docs/SpecOps/SPECOPS_V2.md), [`ARCHITECTURE.md`](Assets/Project/Docs/Architecture/ARCHITECTURE.md), and [`GLOBAL_CONSTRAINTS.md`](Assets/Project/Docs/Governance/GLOBAL_CONSTRAINTS.md), plus applicable approved feature authority. `AGENTS.md` is a derived operational router. [`.specops/specops.json`](.specops/specops.json) and [`.specops/permissions.json`](.specops/permissions.json) provide instance and permission configuration; they do not define independent authority. The action lists below are compatibility examples and do not grant permission. Any conflicting legacy VCS, role, product, permission, or authority statement below is superseded and must not be treated as operative policy.
 
 ## Allowed Actions
 
@@ -33,7 +33,7 @@
 
 ------------------------------------------------------------------------
 
-## CLI / Environment Constraints (E9 Migration Source)
+## CLI / Environment Compatibility Guidance
 
 ### Environment
 
@@ -44,6 +44,7 @@
 
 ### Version Control
 
+-   SpecOps Core is VCS-neutral; Git and GitHub are choices of this public repository instance
 -   This repository uses Git and is hosted on GitHub
 -   Use `git` commands when needed for normal repository inspection and commits
 -   Avoid destructive `git` commands unless explicitly requested
@@ -56,7 +57,7 @@
 -   Do NOT assume a Unix-like shell environment
 -   Assume PowerShell environment only
 
-### Text Encoding (E9 Migration Source)
+### Text Encoding
 
 - Do NOT assume Windows PowerShell 5.1 default encoding is UTF-8.
 - Treat all repository text files as UTF-8.

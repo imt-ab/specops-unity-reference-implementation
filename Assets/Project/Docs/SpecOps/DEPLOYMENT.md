@@ -40,8 +40,8 @@ These are deployment mappings only. Codex and Junie do not define or own logical
 
 ## Current Integration Status
 
-Legacy Rider templates, DotSettings artifacts, agent adapters, and ignore files predate the v2 consolidation. E1 preserves them unchanged and does not claim that they are already v2-conformant. Their later treatment requires separately authorized migration work.
+Legacy Rider templates, DotSettings artifacts, agent adapters, and product-specific tooling guidance predate the v2 consolidation. They are retained as subordinate compatibility material and do not define SpecOps v2 authority or Core requirements.
 
-The derived `.specops/specops.json` manifest now records public-repository deployment defaults. Exactly seven logical Skills, five permission profiles, and ten structured contracts are installed beneath current authority. They do not make legacy Rider or agent integrations v2-conformant.
+The derived `.specops/specops.json` manifest records public-repository deployment defaults. Exactly seven logical Skills, five permission profiles, and twelve JSON Schema contracts are installed beneath current authority. They do not elevate legacy Rider or agent integrations into framework authority.
 
-Four eval definitions are installed under `.specops/evals/`, and `reference-architecture-example` has an instantiated derived feature state. The canonical Unity evaluation path is implemented. No bootstrap or release evidence exists.
+Four eval definitions are installed under `.specops/evals/`, and `reference-architecture-example` has an instantiated derived feature state. The production Bootstrap and fresh-project Unity validation are complete. No committed release evidence exists; final release evidence, lifecycle transition, tag, and publication remain Human Authority-controlled work.

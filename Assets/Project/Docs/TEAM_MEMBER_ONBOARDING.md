@@ -1,8 +1,8 @@
 # Team Member Onboarding Guide
 
-> **Status — legacy E9 environment/tooling migration source; NOT current onboarding or governance authority.**
+> **Status — retained legacy product and tooling compatibility guidance; NOT current onboarding or governance authority.**
 >
-> Current onboarding is [`SpecOps/ONBOARDING.md`](SpecOps/ONBOARDING.md). Current governance uses the four-domain authority model routed by the root [`AGENTS.md`](../../../AGENTS.md). The body below is retained temporarily for environment, Rider, and PowerShell migration evidence. Legacy Plastic SCM guidance and product-bound Claude, Codex, or Junie role assignments are non-operative. Do not execute or rely on retained instructions where they conflict with current authority, Git/GitHub instance policy, or scoped permission.
+> Current onboarding is [`SpecOps/ONBOARDING.md`](SpecOps/ONBOARDING.md). Current authority is [`SPECOPS_V2.md`](SpecOps/SPECOPS_V2.md), [`ARCHITECTURE.md`](Architecture/ARCHITECTURE.md), [`GLOBAL_CONSTRAINTS.md`](Governance/GLOBAL_CONSTRAINTS.md), and applicable approved feature authority, routed by the root [`AGENTS.md`](../../../AGENTS.md). The body below retains useful product-specific environment, Rider, PowerShell, and Plastic SCM guidance. SpecOps Core is VCS-neutral; this public repository uses Git and GitHub. Plastic SCM guidance and product-bound Claude, Codex, or Junie role assignments are non-operative for this repository and do not define framework requirements. Do not execute or rely on retained instructions where they conflict with current authority, repository-instance policy, or scoped permission.
 
 ---
 
@@ -28,7 +28,7 @@
 - **Unity Version:** Unity 6000.5.8f1 (revision `5cb7df797b7d`)
 - **Language:** C# 9.0 (net471)
 - **Version Control (current instance):** Git/GitHub
-- **Legacy VCS material retained for E9:** Plastic SCM (Unity Version Control), non-operative
+- **Legacy product-specific VCS guidance:** Plastic SCM (Unity Version Control), retained but non-operative for this Git/GitHub repository
 - **Dependency Injection:** VContainer
 - **Testing Frameworks:** MOQ (mocking), VContainer
 - **IDE:** JetBrains Rider (with Live Templates)
@@ -37,10 +37,11 @@
 
 This repository uses **SpecOps AI** as the operating model and
 **Unity Clean Architecture** as the selected structural model. Current
-authority and retained explanation are routed through:
+authority is routed through:
 
 - [`SpecOps/SPECOPS_V2.md`](SpecOps/SPECOPS_V2.md) for framework authority
-- [`UnityCleanArchitecture.md`](UnityCleanArchitecture.md) for layers and dependencies
+- [`Architecture/ARCHITECTURE.md`](Architecture/ARCHITECTURE.md) for layers and dependencies
+- [`Governance/GLOBAL_CONSTRAINTS.md`](Governance/GLOBAL_CONSTRAINTS.md) for repository-wide constraints
 - [`SpecOps/WORKFLOW.md`](SpecOps/WORKFLOW.md) for the current derived workflow
 
 ---
@@ -58,7 +59,7 @@ authority and retained explanation are routed through:
    - Import the provided Live Templates for consistency
 
 3. **Legacy Plastic SCM setup material (non-operative)**
-   - Retained only as E9 migration evidence
+   - Retained as product-specific compatibility guidance
    - Current repository instance policy is Git/GitHub; do not follow the Plastic setup steps as current guidance
 
 ### PowerShell 7+ (Recommended)
@@ -103,7 +104,7 @@ Use pwsh instead of powershell when running commands manually.
 
 AI agents should prefer PowerShell 7+ when available.
 
-Concrete UTF-8 handling remains recorded in the non-authoritative E9 migration source `TOOLING_RULES.md`; current governance and permission come from the v2 authority model.
+Concrete UTF-8 handling remains recorded in the non-authoritative legacy compatibility guide `TOOLING_RULES.md`; current governance and permission come from the v2 authority model.
 
 #### Set pwsh as Default Shell in Rider’s Integrated Terminal
 
@@ -642,7 +643,7 @@ junie (understand impact) → codex (fix) → edittest/pmtest (regression test)
 ### Core Documentation
 
 - **Operational Router:** `AGENTS.md` (repository root)
-- **Legacy Tooling Migration Source:** `TOOLING_RULES.md` (repository root; non-authoritative)
+- **Legacy Tooling Compatibility Guidance:** `TOOLING_RULES.md` (repository root; non-authoritative)
 - **Junie Guidelines:** `.junie/guidelines.md`
 - **Architecture:** `Assets/Project/Docs/Architecture/ARCHITECTURE.md`
 - **SpecOps v2 Framework:** `Assets/Project/Docs/SpecOps/SPECOPS_V2.md`
@@ -690,13 +691,10 @@ Tests are not optional. Every acceptance criterion must have corresponding test 
 
 If you have questions or encounter issues:
 
-1. **Review this onboarding guide** first
-2. **Check the relevant documentation** in `Assets/Project/Docs/`
+1. **Review the current [SpecOps onboarding guide](SpecOps/ONBOARDING.md)** first
+2. **Check the applicable current authority** in `Assets/Project/Docs/`
 3. **Consult with team members** or tech leads
-4. **Use AI agents appropriately:**
-   - Claude for specification clarification
-   - Junie for architectural questions
-   - Codex for implementation guidance
+4. **Use a suitable authorized executor** without assigning framework roles or authority to a product
 
 ---
 

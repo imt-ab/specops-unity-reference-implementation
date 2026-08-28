@@ -2,7 +2,7 @@
 
 Thank you for helping improve `specops-unity-reference-implementation`. Contributions should strengthen its purpose as a public SpecOps AI v2 + Unity Clean Architecture reference and Golden Baseline candidate without turning it into a generic framework or finished game.
 
-The repository is currently migrating on `specops-v2` toward an eventual `v2.0.0` baseline. That version is not yet released.
+The repository is a `v2.0.0` release candidate on `specops-v2`. Production Bootstrap and fresh-project validation are complete, but `v2.0.0` is not yet released; final release evidence, lifecycle transition, tag, and publication remain Human Authority-controlled work.
 
 ## Start With Authority
 

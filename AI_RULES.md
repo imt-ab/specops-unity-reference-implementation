@@ -1,6 +1,6 @@
 # Legacy AI Rules Compatibility Router
 
-Status: **NOT current authority.** This file is retained only as a legacy compatibility path during the SpecOps v2 migration.
+Status: **NOT current authority.** This file is retained as legacy compatibility guidance.
 
 [`AGENTS.md`](AGENTS.md) is a derived operational router. Current authority consists of the following four authority domains:
 
@@ -11,12 +11,12 @@ Status: **NOT current authority.** This file is retained only as a legacy compat
 
 This compatibility router contains no independent normative rules. If any historical reference, retained tooling artifact, or prior version of this file conflicts with current authority, current authority wins.
 
-## E5 Migration Traceability
+## Legacy Compatibility Traceability
 
 - Mandatory XML documentation on every test was intentionally dropped. Meaningful XML documentation and comments remain allowed when they explain non-obvious intent, rationale, constraints, regressions, or setup.
-- `<TargetClass>Tests.cs` naming for tests with one clear target type is deferred to E9 as a default tooling/style convention. It is not current repository-wide authority and is not mandatory for integration, architecture, acceptance, cross-cutting, multi-type, or similar tests.
+- `<TargetClass>Tests.cs` naming for tests with one clear target type is a retained tooling/style convention. It is not current repository-wide authority and is not mandatory for integration, architecture, acceptance, cross-cutting, multi-type, or similar tests.
 - Test directory placement is governed by the `Testing and Validation` section of [`GLOBAL_CONSTRAINTS.md`](Assets/Project/Docs/Governance/GLOBAL_CONSTRAINTS.md).
 - Production API visibility for testing is governed by the `Testing and Validation` section of [`GLOBAL_CONSTRAINTS.md`](Assets/Project/Docs/Governance/GLOBAL_CONSTRAINTS.md).
-- PascalCase for applicable C# identifiers is deferred to E9 coding-style and tooling reconciliation. It is not established here as governance authority.
+- PascalCase for applicable C# identifiers is retained compatibility guidance. It is not established here as governance authority.
 
-Concrete legacy PowerShell, encoding, command-safety, and Rider migration information remains temporarily available in [`TOOLING_RULES.md`](TOOLING_RULES.md), which is an E9 tooling migration source and not governance authority.
+Concrete legacy PowerShell, encoding, command-safety, and Rider information remains available in [`TOOLING_RULES.md`](TOOLING_RULES.md) as retained compatibility guidance, not governance authority.

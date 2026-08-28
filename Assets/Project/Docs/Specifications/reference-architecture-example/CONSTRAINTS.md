@@ -1,12 +1,12 @@
 # Reference Architecture Example — Feature Constraints
 
-Status: APPROVED — CURRENT FEATURE AUTHORITY — IMPLEMENTATION NOT STARTED
+Status: APPROVED — CURRENT FEATURE AUTHORITY — IMPLEMENTATION COMPLETE
 
 These feature-specific constraints cannot override:
 
-- [SpecOps framework authority](../../../SpecOps/SPECOPS_V2.md)
-- [Structural authority](../../../Architecture/ARCHITECTURE.md)
-- [Repository-wide engineering constraints](../../../Governance/GLOBAL_CONSTRAINTS.md)
+- [SpecOps framework authority](../../SpecOps/SPECOPS_V2.md)
+- [Structural authority](../../Architecture/ARCHITECTURE.md)
+- [Repository-wide engineering constraints](../../Governance/GLOBAL_CONSTRAINTS.md)
 
 A conflict stops work for clarification by Human Authority. A proposed change to current authority is separate R3 work.
 

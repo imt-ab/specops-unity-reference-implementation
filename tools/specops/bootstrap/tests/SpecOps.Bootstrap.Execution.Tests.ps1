@@ -100,7 +100,7 @@ try {
     Assert-Equal CLI 'success Golden Baseline id' $successJson.goldenBaseline.id 'specops-unity-clean-architecture-golden-baseline'
     Assert-Equal CLI 'success Golden Baseline version' $successJson.goldenBaseline.version '2.0.0'
     Assert-Equal CLI 'success Source Identity profile' $successJson.sourceIdentity.profile 'specops-bootstrap-source-jcs-sha256-v1'
-    Assert-Equal CLI 'success Source Identity' $successJson.sourceIdentity.digest '93fd1d378c47b24265eafe35130ddb1879aa4c3470ac77aba41ffda4313603ed'
+    Assert-Equal CLI 'success Source Identity' $successJson.sourceIdentity.digest 'd166f89d1921c8960e1067233a7c59fc27fd338a8fc0c684978f33ddfbefc06a'
     Assert-Equal CLI 'success implementation version' $successJson.bootstrapImplementationVersion '1.0.0'
     Assert-True CLI 'success stderr empty' ([string]::IsNullOrEmpty($success.StderrText))
     Assert-True CLI 'success exact one LF' ($success.Stdout[-1]-eq10-and$success.Stdout[-2]-ne10)
@@ -320,6 +320,6 @@ finally {
     if(Test-Path -LiteralPath $tempRoot){Remove-Item -LiteralPath $tempRoot -Recurse -Force}
 }
 
-$result=[ordered]@{Result=$(if($script:Failures.Count){'FAIL'}else{'PASS'});Tests=$script:Tests;Categories=$script:Categories;Failures=@($script:Failures);RegularLeafCount=402;AuthoredFiles=394;ImplementationSupportFiles=6;OutputCount=312;SourceIdentity='93fd1d378c47b24265eafe35130ddb1879aa4c3470ac77aba41ffda4313603ed';ImplementationVersion='1.0.0';UnityExecuted=$false;RealHumanDestinationUsed=$false;GitRequired=$false}
+$result=[ordered]@{Result=$(if($script:Failures.Count){'FAIL'}else{'PASS'});Tests=$script:Tests;Categories=$script:Categories;Failures=@($script:Failures);RegularLeafCount=402;AuthoredFiles=394;ImplementationSupportFiles=6;OutputCount=312;SourceIdentity='d166f89d1921c8960e1067233a7c59fc27fd338a8fc0c684978f33ddfbefc06a';ImplementationVersion='1.0.0';UnityExecuted=$false;RealHumanDestinationUsed=$false;GitRequired=$false}
 $result|ConvertTo-Json -Depth 20
 if($script:Failures.Count){exit 1}

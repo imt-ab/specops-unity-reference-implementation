@@ -205,7 +205,7 @@ try{
     $output=New-BootstrapProspectiveOutputMap $source $inputs '1.0.0'
     Assert-True Provenance 'filesystem schema mutation after materialization is neutral' $output.Bytes.ContainsKey('.specops/bootstrap.json')
 $static=Test-BootstrapByteMapStatic $output
-Assert-Equal Integration 'Source Identity reproduced' $record.SourceIdentity.digest '93fd1d378c47b24265eafe35130ddb1879aa4c3470ac77aba41ffda4313603ed'
+Assert-Equal Integration 'Source Identity reproduced' $record.SourceIdentity.digest 'd166f89d1921c8960e1067233a7c59fc27fd338a8fc0c684978f33ddfbefc06a'
 Assert-Equal Integration 'all authored files verified' $source.Bytes.Count 394
 Assert-True Integration 'implementation module recognized as support' ($source.ImplementationSupportPaths-ccontains'tools/specops/bootstrap/SpecOps.Bootstrap.psm1')
 Assert-True Integration 'core tests recognized as support' ($source.ImplementationSupportPaths-ccontains'tools/specops/bootstrap/tests/SpecOps.Bootstrap.Core.Tests.ps1')
@@ -216,6 +216,40 @@ Assert-Equal Integration 'implementation support topology count' $source.Impleme
 Assert-Equal Integration 'prospective output count' $output.Count 312
 Assert-True Integration 'generated provenance present' $output.Bytes.ContainsKey('.specops/bootstrap.json')
 Assert-True Integration 'static byte-map verification' $static.Pass ($static.Findings-join'; ')
+$agentsText=S $output.Bytes['AGENTS.md']
+$globalConstraintsText=S $output.Bytes['Assets/Project/Docs/Governance/GLOBAL_CONSTRAINTS.md']
+$producerGlobalConstraintsText=Get-Content -Raw -LiteralPath (Join-Path $repositoryRoot 'Assets/Project/Docs/Governance/GLOBAL_CONSTRAINTS.md')
+Assert-True RMD 'RMD-AC-001 child global constraints omit producer repository identity' (-not$globalConstraintsText.Contains('specops-unity-reference-implementation',[StringComparison]::Ordinal))
+Assert-True RMD 'RMD-AC-002 child global constraints omit public-reference classifications' (
+    -not$globalConstraintsText.Contains('this public Unity reference repository',[StringComparison]::Ordinal)-and
+    -not$globalConstraintsText.Contains('public reference implementation',[StringComparison]::Ordinal)-and
+    -not$globalConstraintsText.Contains('Golden Baseline candidate',[StringComparison]::Ordinal)
+)
+Assert-True RMD 'RMD-AC-003 child global constraints retain generic current authority and applicability' (
+    $globalConstraintsText.Contains('Status: Current repository-wide engineering constraint authority for this repository.',[StringComparison]::Ordinal)-and
+    $globalConstraintsText.Contains('These constraints apply to work across this governed Unity game project.',[StringComparison]::Ordinal)
+)
+Assert-True RMD 'RMD-AC-004 producer global constraints remain producer-specific' (
+    $producerGlobalConstraintsText.Contains('Status: Current repository-wide engineering constraint authority for `specops-unity-reference-implementation`.',[StringComparison]::Ordinal)-and
+    $producerGlobalConstraintsText.Contains('These constraints apply to work across this public Unity reference repository.',[StringComparison]::Ordinal)-and
+    $producerGlobalConstraintsText.Contains('public reference implementation and Golden Baseline candidate',[StringComparison]::Ordinal)
+)
+Assert-True RMD 'RMD-AC-005 child AGENTS omits excluded ONBOARDING route' (-not$agentsText.Contains('ONBOARDING.md',[StringComparison]::Ordinal))
+Assert-True RMD 'RMD-AC-006 child AGENTS omits excluded DEPLOYMENT route' (-not$agentsText.Contains('DEPLOYMENT.md',[StringComparison]::Ordinal))
+$requiredAgentRoutes=@(
+    'Assets/Project/Docs/SpecOps/SPECOPS_V2.md','Assets/Project/Docs/Architecture/ARCHITECTURE.md',
+    'Assets/Project/Docs/Governance/GLOBAL_CONSTRAINTS.md','Assets/Project/Docs/SpecOps/WORKFLOW.md',
+    'ADRs','plans','reviews','validation results','context exports','.specops/permissions.json',
+    'specops-spec','specops-review','specops-plan','specops-implement','specops-validate','specops-sync','specops-audit'
+)
+$agentsRoutesValid=$agentsText.Contains('explicit authorization',[StringComparison]::Ordinal)-and
+    $agentsText.Contains('human-controlled under repository policy',[StringComparison]::Ordinal)
+foreach($route in $requiredAgentRoutes){$agentsRoutesValid=$agentsRoutesValid-and$agentsText.Contains($route,[StringComparison]::Ordinal)}
+Assert-True RMD 'RMD-AC-007 child AGENTS retains authority workflow decision evidence permission and seven-skill routes' $agentsRoutesValid
+Assert-True RMD 'RMD-AC-008 zero-feature child remains intact' (
+    -not(@($output.Bytes.Keys|Where-Object{$_-like'Assets/Project/Docs/Specifications/*/SPECOPS_STATE.json'-and$_-notlike'Assets/Project/Docs/Specifications/_templates/*'}).Count)-and
+    -not(@($output.Bytes.Keys|Where-Object{$_.Contains('reference-architecture-example',[StringComparison]::OrdinalIgnoreCase)}).Count)
+)
 $specops=S $output.Bytes['.specops/specops.json']|ConvertFrom-Json -Depth 100
 Assert-Equal Derivation 'repository id member derivation' $specops.repository.id $valid.ProjectId
 Assert-True Derivation 'legacy repository identity member removed' ($null-eq$specops.repository.PSObject.Properties['identity'])

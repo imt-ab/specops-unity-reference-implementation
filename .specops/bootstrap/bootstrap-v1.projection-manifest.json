@@ -11,7 +11,7 @@
   },
   "sourceIdentity": {
     "profile": "specops-bootstrap-source-jcs-sha256-v1",
-    "digest": "93fd1d378c47b24265eafe35130ddb1879aa4c3470ac77aba41ffda4313603ed"
+    "digest": "d166f89d1921c8960e1067233a7c59fc27fd338a8fc0c684978f33ddfbefc06a"
   },
   "canonicalOrdering": {
     "bootstrapSourceMetadata": "path-ordinal-ascending",
@@ -960,6 +960,30 @@
         "path": "AGENTS.md"
       },
       "transforms": [
+        {
+          "id": "derived-routing-retained-only",
+          "selectorClass": "TEXT_UTF8_EXACT_SPAN",
+          "selector": "exact excluded documentation route span",
+          "expectedSourceValue": "`DEPLOYMENT.md`, `ONBOARDING.md`, ",
+          "expectedMatchCount": 1,
+          "replacement": {
+            "kind": "REMOVE_SELECTED_SPAN"
+          },
+          "encodingAndEscaping": {
+            "sourceEncoding": "UTF-8_NO_BOM",
+            "replacementEncoding": "UTF-8_NO_BOM",
+            "escaping": "EXACT_UTF8",
+            "preserveNonSelectedBytes": true
+          },
+          "postcondition": {
+            "kind": "TOKEN_ABSENT",
+            "selector": "exact excluded documentation route span"
+          },
+          "forbiddenResidualValues": [
+            "DEPLOYMENT.md",
+            "ONBOARDING.md"
+          ]
+        },
         {
           "id": "repository-vcs-neutral",
           "selectorClass": "TEXT_UTF8_EXACT_SPAN",
@@ -4277,6 +4301,56 @@
         "path": "Assets/Project/Docs/Governance/GLOBAL_CONSTRAINTS.md"
       },
       "transforms": [
+        {
+          "id": "child-applicability",
+          "selectorClass": "TEXT_UTF8_EXACT_SPAN",
+          "selector": "exact repository applicability sentence",
+          "expectedSourceValue": "These constraints apply to work across this public Unity reference repository.",
+          "expectedMatchCount": 1,
+          "replacement": {
+            "kind": "APPROVED_CONSTANT",
+            "name": "SPECOPS_CHILD_GLOBAL_CONSTRAINT_TEXT",
+            "value": "These constraints apply to work across this governed Unity game project."
+          },
+          "encodingAndEscaping": {
+            "sourceEncoding": "UTF-8_NO_BOM",
+            "replacementEncoding": "UTF-8_NO_BOM",
+            "escaping": "EXACT_UTF8",
+            "preserveNonSelectedBytes": true
+          },
+          "postcondition": {
+            "kind": "SELECTOR_EQUALS_REPLACEMENT",
+            "selector": "exact repository applicability sentence"
+          },
+          "forbiddenResidualValues": [
+            "this public Unity reference repository"
+          ]
+        },
+        {
+          "id": "child-authority-status",
+          "selectorClass": "TEXT_UTF8_EXACT_SPAN",
+          "selector": "exact repository-wide authority status line",
+          "expectedSourceValue": "Status: Current repository-wide engineering constraint authority for `specops-unity-reference-implementation`.",
+          "expectedMatchCount": 1,
+          "replacement": {
+            "kind": "APPROVED_CONSTANT",
+            "name": "SPECOPS_CHILD_GLOBAL_CONSTRAINT_TEXT",
+            "value": "Status: Current repository-wide engineering constraint authority for this repository."
+          },
+          "encodingAndEscaping": {
+            "sourceEncoding": "UTF-8_NO_BOM",
+            "replacementEncoding": "UTF-8_NO_BOM",
+            "escaping": "EXACT_UTF8",
+            "preserveNonSelectedBytes": true
+          },
+          "postcondition": {
+            "kind": "SELECTOR_EQUALS_REPLACEMENT",
+            "selector": "exact repository-wide authority status line"
+          },
+          "forbiddenResidualValues": [
+            "specops-unity-reference-implementation"
+          ]
+        },
         {
           "id": "child-global-description",
           "selectorClass": "TEXT_UTF8_EXACT_SPAN",

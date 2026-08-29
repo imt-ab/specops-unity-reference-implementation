@@ -29,6 +29,37 @@ function Get-OrdinalSortedStrings {
     return $result
 }
 
+function Find-FixedStringWorkspacePath {
+    param(
+        [Parameter(Mandatory)] [string] $RepositoryRoot,
+        [AllowEmptyCollection()] [string[]] $WorkspacePaths,
+        [Parameter(Mandatory)] [string] $Term
+    )
+
+    $needle = [Text.Encoding]::UTF8.GetBytes($Term)
+    if ($needle.Length -eq 0) { throw 'Fixed-string workspace search requires a non-empty term.' }
+
+    $matchingPaths = [Collections.Generic.List[string]]::new()
+    foreach ($path in (Get-OrdinalSortedStrings $WorkspacePaths)) {
+        $bytes = [IO.File]::ReadAllBytes((Join-Path $RepositoryRoot $path))
+        if ($bytes -contains [byte] 0) { continue }
+
+        $matched = $false
+        for ($offset = 0; $offset -le $bytes.Length - $needle.Length; $offset++) {
+            $matched = $true
+            for ($index = 0; $index -lt $needle.Length; $index++) {
+                if ($bytes[$offset + $index] -ne $needle[$index]) {
+                    $matched = $false
+                    break
+                }
+            }
+            if ($matched) { break }
+        }
+        if ($matched) { $matchingPaths.Add($path) }
+    }
+    return [string[]] $matchingPaths.ToArray()
+}
+
 function Test-OrdinalOrder {
     param([AllowEmptyCollection()] [string[]] $Values)
 
@@ -359,6 +390,62 @@ $workspacePaths = [string[]] @(
         Where-Object { Test-Path -LiteralPath (Join-Path $repositoryRoot $_) -PathType Leaf }
 )
 $workspacePaths = Get-OrdinalSortedStrings $workspacePaths
+$searchFixtureRoot = Join-Path ([IO.Path]::GetTempPath()) ('specops-bootstrap-projection-search-' + [Guid]::NewGuid().ToString('N'))
+[IO.Directory]::CreateDirectory($searchFixtureRoot) | Out-Null
+try {
+    $utf8 = [Text.UTF8Encoding]::new($false)
+    $searchFixtureContent = @(
+        [pscustomobject] @{ Path = 'z-order.txt'; Content = 'ReferenceMessage' }
+        [pscustomobject] @{ Path = 'A-order.txt'; Content = 'prefix ReferenceMessage suffix' }
+        [pscustomobject] @{ Path = 'a-order.txt'; Content = 'ReferenceMessage' }
+        [pscustomobject] @{ Path = 'case.txt'; Content = 'referencemessage' }
+        [pscustomobject] @{ Path = 'literal.txt'; Content = 'a.b[0]' }
+        [pscustomobject] @{ Path = 'nonmatch.txt'; Content = 'axb0 unrelated content' }
+        [pscustomobject] @{ Path = 'outside-workspace.txt'; Content = 'ReferenceMessage' }
+    )
+    foreach ($fixture in $searchFixtureContent) {
+        [IO.File]::WriteAllBytes(
+            (Join-Path $searchFixtureRoot $fixture.Path),
+            $utf8.GetBytes([string] $fixture.Content)
+        )
+    }
+    [IO.File]::WriteAllBytes(
+        (Join-Path $searchFixtureRoot 'binary.bin'),
+        [byte[]] @($utf8.GetBytes('ReferenceMessage') + [byte] 0 + $utf8.GetBytes('retained'))
+    )
+    $searchFixturePaths = [string[]] @(
+        'z-order.txt',
+        'nonmatch.txt',
+        'literal.txt',
+        'case.txt',
+        'binary.bin',
+        'a-order.txt',
+        'A-order.txt'
+    )
+    $positiveMatches = [string[]] @(
+        Find-FixedStringWorkspacePath -RepositoryRoot $searchFixtureRoot -WorkspacePaths $searchFixturePaths -Term 'ReferenceMessage'
+    )
+    Test-Assertion 'fixed-string workspace search finds positive matches' ($positiveMatches -ccontains 'A-order.txt')
+    Test-Assertion 'fixed-string workspace search reports non-match' (
+        @(Find-FixedStringWorkspacePath -RepositoryRoot $searchFixtureRoot -WorkspacePaths $searchFixturePaths -Term 'missing-token').Count -eq 0
+    )
+    Test-Assertion 'fixed-string workspace search is case-sensitive' (-not ($positiveMatches -ccontains 'case.txt'))
+    Test-Assertion 'fixed-string workspace search treats regex-looking characters literally' (
+        [string]::Join("`0", @(
+            Find-FixedStringWorkspacePath -RepositoryRoot $searchFixtureRoot -WorkspacePaths $searchFixturePaths -Term 'a.b[0]'
+        )) -ceq 'literal.txt'
+    )
+    Test-Assertion 'fixed-string workspace search skips NUL-containing files' (-not ($positiveMatches -ccontains 'binary.bin'))
+    Test-Assertion 'fixed-string workspace search is constrained to supplied workspace paths' (
+        -not ($positiveMatches -ccontains 'outside-workspace.txt')
+    )
+    Test-Assertion 'fixed-string workspace search returns ordinal deterministic paths' (
+        [string]::Join("`0", $positiveMatches) -ceq [string]::Join("`0", @('A-order.txt', 'a-order.txt', 'z-order.txt'))
+    )
+}
+finally {
+    Remove-Item -LiteralPath $searchFixtureRoot -Recurse -Force
+}
 $metadataPaths = [string[]] @($manifest.bootstrapSourceMetadata.path)
 $authoredPaths = [string[]] @($manifest.authoredSourceInventory.sourcePath)
 $implementationSupportRoot = [string] $manifest.bootstrapImplementationSupport.root
@@ -756,22 +843,41 @@ $inventoryByPath = @{}
 foreach ($entry in $manifest.authoredSourceInventory) { $inventoryByPath[$entry.sourcePath] = $entry }
 $implementationSupportPathSet = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
 foreach ($path in $implementationSupportPaths) { [void] $implementationSupportPathSet.Add($path) }
+$testReferenceCouplingPathAccounted = {
+    param(
+        [Parameter(Mandatory)] [string] $Path,
+        [Parameter(Mandatory)] $InventoryByPath,
+        [Parameter(Mandatory)] $ImplementationSupportPathSet
+    )
+
+    if ($Path -in @(
+        '.specops/bootstrap/bootstrap-v1.projection-manifest.json',
+        '.specops/contracts/bootstrap-projection-manifest.schema.json',
+        'tools/specops/tests/SpecOps.BootstrapProjection.Tests.ps1'
+    )) { return $true }
+    $entry = $InventoryByPath[$Path]
+    if ($ImplementationSupportPathSet.Contains($Path)) { return $true }
+    elseif ($null -eq $entry) { return $false }
+    elseif ($entry.disposition -eq 'EXCLUDE') { return $true }
+    elseif ($Path -ceq '.specops/contracts/bootstrap-v1.md') { return $true }
+    elseif ($entry.disposition -eq 'TRANSFORM_SCOPED') { return $true }
+    else { return $false }
+}
+$retainedCouplingFixturePath = 'retained-reference-coupling-fixture.txt'
+$retainedCouplingFixtureInventory = @{
+    $retainedCouplingFixturePath = [pscustomobject] @{ disposition = 'COPY_EXACT' }
+}
+Test-Assertion 'unaccounted retained reference coupling is rejected' (-not (
+    & $testReferenceCouplingPathAccounted $retainedCouplingFixturePath $retainedCouplingFixtureInventory $implementationSupportPathSet
+))
 $referenceCouplingAccounted = $true
 foreach ($term in @('reference-architecture-example', 'ReferenceMessage', 'ReferenceLifetimeScope', 'FixedReferenceTextSource', 'ReferenceCompositionTests')) {
-    foreach ($rawPath in @(rg -l --hidden --glob '!.git/**' --fixed-strings -- $term $repositoryRoot)) {
-        $path = [IO.Path]::GetRelativePath($repositoryRoot, $rawPath).Replace('\', '/')
-        if ($path -in @(
-            '.specops/bootstrap/bootstrap-v1.projection-manifest.json',
-            '.specops/contracts/bootstrap-projection-manifest.schema.json',
-            'tools/specops/tests/SpecOps.BootstrapProjection.Tests.ps1'
-        )) { continue }
-        $entry = $inventoryByPath[$path]
-        if ($implementationSupportPathSet.Contains($path)) { }
-        elseif ($null -eq $entry) { $referenceCouplingAccounted = $false }
-        elseif ($entry.disposition -eq 'EXCLUDE') { }
-        elseif ($path -ceq '.specops/contracts/bootstrap-v1.md') { }
-        elseif ($entry.disposition -eq 'TRANSFORM_SCOPED') { }
-        else { $referenceCouplingAccounted = $false }
+    foreach ($path in @(
+        Find-FixedStringWorkspacePath -RepositoryRoot $repositoryRoot -WorkspacePaths $workspacePaths -Term $term
+    )) {
+        if (-not (& $testReferenceCouplingPathAccounted $path $inventoryByPath $implementationSupportPathSet)) {
+            $referenceCouplingAccounted = $false
+        }
     }
 }
 Test-Assertion 'reference feature coupling is excluded or explicitly transformed' $referenceCouplingAccounted

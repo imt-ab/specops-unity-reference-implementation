@@ -205,7 +205,7 @@ try{
     $output=New-BootstrapProspectiveOutputMap $source $inputs '1.0.0'
     Assert-True Provenance 'filesystem schema mutation after materialization is neutral' $output.Bytes.ContainsKey('.specops/bootstrap.json')
 $static=Test-BootstrapByteMapStatic $output
-Assert-Equal Integration 'Source Identity reproduced' $record.SourceIdentity.digest 'a92b31752e46b3f801f32400f4f6808d7a888a27d4f865486763896689225adc'
+Assert-Equal Integration 'Source Identity reproduced' $record.SourceIdentity.digest '93fd1d378c47b24265eafe35130ddb1879aa4c3470ac77aba41ffda4313603ed'
 Assert-Equal Integration 'all authored files verified' $source.Bytes.Count 394
 Assert-True Integration 'implementation module recognized as support' ($source.ImplementationSupportPaths-ccontains'tools/specops/bootstrap/SpecOps.Bootstrap.psm1')
 Assert-True Integration 'core tests recognized as support' ($source.ImplementationSupportPaths-ccontains'tools/specops/bootstrap/tests/SpecOps.Bootstrap.Core.Tests.ps1')
@@ -219,6 +219,15 @@ Assert-True Integration 'static byte-map verification' $static.Pass ($static.Fin
 $specops=S $output.Bytes['.specops/specops.json']|ConvertFrom-Json -Depth 100
 Assert-Equal Derivation 'repository id member derivation' $specops.repository.id $valid.ProjectId
 Assert-True Derivation 'legacy repository identity member removed' ($null-eq$specops.repository.PSObject.Properties['identity'])
+$specopsEntry=$record.Manifest.authoredSourceInventory|Where-Object sourcePath -CEQ '.specops/specops.json'
+$releaseEvidenceReset=@($specopsEntry.transforms|Where-Object id -CEQ 'initialization-release-evidence-present-reset')
+$releasedVersionReset=@($specopsEntry.transforms|Where-Object id -CEQ 'repository-released-version-reset')
+Assert-Equal Derivation 'releaseEvidencePresent reset transform count' $releaseEvidenceReset.Count 1
+Assert-Equal Derivation 'releaseEvidencePresent reset approved constant' $releaseEvidenceReset[0].replacement.name 'RELEASE_EVIDENCE_PRESENT_FALSE'
+Assert-Equal Derivation 'releasedVersion reset transform count' $releasedVersionReset.Count 1
+Assert-Equal Derivation 'releasedVersion reset approved constant' $releasedVersionReset[0].replacement.name 'RELEASED_VERSION_NULL'
+Assert-True Derivation 'fresh releasedVersion null' ($null-eq$specops.repository.releasedVersion)
+Assert-True Derivation 'fresh releaseEvidencePresent false' ($specops.initialization.releaseEvidencePresent-eq$false)
 foreach($evalPath in @('.specops/evals/unity-clean-architecture-static.eval.json','.specops/evals/unity-editmode-validation.eval.json')){$eval=S $output.Bytes[$evalPath]|ConvertFrom-Json -Depth 100;$identity=Get-BootstrapJsonIdentity $output.Bytes[$evalPath] EVAL_DEFINITION;Assert-Equal Derivation "eval identity $evalPath" $eval.contentIdentity.value $identity.value}
 
 $provenanceA=New-BootstrapProvenance $inputs $record.Manifest '1.0.0' $verifiedProvenanceSchema

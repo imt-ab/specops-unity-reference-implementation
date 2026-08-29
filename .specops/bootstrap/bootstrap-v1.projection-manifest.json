@@ -11,7 +11,7 @@
   },
   "sourceIdentity": {
     "profile": "specops-bootstrap-source-jcs-sha256-v1",
-    "digest": "a92b31752e46b3f801f32400f4f6808d7a888a27d4f865486763896689225adc"
+    "digest": "93fd1d378c47b24265eafe35130ddb1879aa4c3470ac77aba41ffda4313603ed"
   },
   "canonicalOrdering": {
     "bootstrapSourceMetadata": "path-ordinal-ascending",
@@ -38,8 +38,8 @@
       "role": "PROJECTION_MANIFEST_SCHEMA",
       "identityBinding": "EXACT_BYTE_SHA256",
       "byteIdentity": {
-        "byteLength": 21332,
-        "sha256": "1dbb218aa53b0f67b4f84900e07ffc0f9809d226571dc95448bf71741874fb43"
+        "byteLength": 21423,
+        "sha256": "ae52967e29b5483d351dab7a348a8a21f6e7a2b5111232efc410f080f47637c7"
       }
     }
   ],
@@ -667,8 +667,8 @@
     {
       "sourcePath": ".specops/specops.json",
       "byteIdentity": {
-        "byteLength": 3682,
-        "sha256": "53faf2b2563b933a5c01982ffc157c44e53613527a26032f932b3d7d46d8a127"
+        "byteLength": 3684,
+        "sha256": "2303b6af2196a8fdb60d701cdb283607487a00a2180654f0b8eb5602fc03dede"
       },
       "disposition": "TRANSFORM_SCOPED",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -795,6 +795,29 @@
           ]
         },
         {
+          "id": "initialization-release-evidence-present-reset",
+          "selectorClass": "JSON_POINTER_VALUE",
+          "selector": "/initialization/releaseEvidencePresent",
+          "expectedSourceValue": true,
+          "expectedMatchCount": 1,
+          "replacement": {
+            "kind": "APPROVED_CONSTANT",
+            "name": "RELEASE_EVIDENCE_PRESENT_FALSE",
+            "value": false
+          },
+          "encodingAndEscaping": {
+            "sourceEncoding": "UTF-8_NO_BOM",
+            "replacementEncoding": "UTF-8_NO_BOM",
+            "escaping": "JSON_RFC8259",
+            "preserveNonSelectedBytes": true
+          },
+          "postcondition": {
+            "kind": "SELECTOR_EQUALS_REPLACEMENT",
+            "selector": "/initialization/releaseEvidencePresent"
+          },
+          "forbiddenResidualValues": []
+        },
+        {
           "id": "repository-id-member",
           "selectorClass": "JSON_POINTER_MEMBER",
           "selector": "/repository/identity",
@@ -871,6 +894,31 @@
           "forbiddenResidualValues": [
             "Golden Baseline candidate for new Unity game projects",
             "SpecOps AI v2 Unity reference implementation"
+          ]
+        },
+        {
+          "id": "repository-released-version-reset",
+          "selectorClass": "JSON_POINTER_VALUE",
+          "selector": "/repository/releasedVersion",
+          "expectedSourceValue": "2.0.0",
+          "expectedMatchCount": 1,
+          "replacement": {
+            "kind": "APPROVED_CONSTANT",
+            "name": "RELEASED_VERSION_NULL",
+            "value": null
+          },
+          "encodingAndEscaping": {
+            "sourceEncoding": "UTF-8_NO_BOM",
+            "replacementEncoding": "UTF-8_NO_BOM",
+            "escaping": "JSON_RFC8259",
+            "preserveNonSelectedBytes": true
+          },
+          "postcondition": {
+            "kind": "SELECTOR_EQUALS_REPLACEMENT",
+            "selector": "/repository/releasedVersion"
+          },
+          "forbiddenResidualValues": [
+            "2.0.0"
           ]
         },
         {
@@ -4413,8 +4461,8 @@
     {
       "sourcePath": "Assets/Project/Docs/SpecOps/DEPLOYMENT.md",
       "byteIdentity": {
-        "byteLength": 3945,
-        "sha256": "baa9ffc718c993b25a36fa1359fc7903b6e41f8486dde3fe8659b5d40c8c9b66"
+        "byteLength": 4211,
+        "sha256": "ae14cd979f3696d5d6b60b10ded07de499befcb095f679a89cd19c15541fbc4d"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "PUBLIC_REPOSITORY_INSTANCE"
@@ -4431,8 +4479,8 @@
     {
       "sourcePath": "Assets/Project/Docs/SpecOps/ONBOARDING.md",
       "byteIdentity": {
-        "byteLength": 4394,
-        "sha256": "cd72239eb66a183f848400b7595aff3fe8d1e3ffdf1d5d9e68ff98abbdddc37c"
+        "byteLength": 4840,
+        "sha256": "c247574098f1131cbce1c57d850f4b36a5a5607264f1dbebcf78a085ae644ee0"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "PUBLIC_REPOSITORY_INSTANCE"
@@ -5258,8 +5306,8 @@
     {
       "sourcePath": "CHANGELOG.md",
       "byteIdentity": {
-        "byteLength": 1522,
-        "sha256": "3fcc43af077b0cea922b9ff5f3715927869f802bb3717460189240a66a14a848"
+        "byteLength": 1700,
+        "sha256": "b0093a05140d96b74ae531e1db1691791277829ec67892bdf7b83e2de016a23d"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "PUBLIC_REPOSITORY_INSTANCE"
@@ -5267,8 +5315,8 @@
     {
       "sourcePath": "CONTRIBUTING.md",
       "byteIdentity": {
-        "byteLength": 5459,
-        "sha256": "f9b93bbfcd87778eb4f09534f6070e38ac576fc990d80dfaa771984b15ec50e4"
+        "byteLength": 5690,
+        "sha256": "c9448012fed6f0648c04275134428b2ad0e60df6109ec02ce0d4be9cdf9ca357"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "PUBLIC_REPOSITORY_INSTANCE"
@@ -6010,8 +6058,8 @@
     {
       "sourcePath": "README.md",
       "byteIdentity": {
-        "byteLength": 9813,
-        "sha256": "2a356cd8e6d6029f08aa14b7ee288f7a3329e439108ed580a2cc16ab3039d2ad"
+        "byteLength": 10443,
+        "sha256": "ab4df03ba3eb90aec437bdfe53dbaa8d28bc13bf8851ccdb5f3fe8bd5ae7eed3"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "PUBLIC_REPOSITORY_INSTANCE"

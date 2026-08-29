@@ -1,8 +1,12 @@
 # Changelog
 
-All notable public changes to this repository are recorded here. The structure follows Semantic Versioning conventions; unreleased migration work remains under `Unreleased` until Human Authority approves a release.
+All notable public changes to this repository are recorded here. The structure follows Semantic Versioning conventions; work not assigned to a release remains under `Unreleased`.
 
 ## [Unreleased]
+
+No changes recorded.
+
+## [2.0.0] - 2026-08-29
 
 ### Changed
 
@@ -12,13 +16,14 @@ All notable public changes to this repository are recorded here. The structure f
 - Modernized public repository, contribution, and pull-request documentation for the ongoing SpecOps v2 migration.
 - Migrated the Unity baseline to `6000.5.8f1` and aligned the package and required Unity settings baseline with the accepted E6 target for the SpecOps v2 Golden Baseline.
 - Completed the production Bootstrap implementation and canonical-LF source binding.
-- Completed fresh-project Bootstrap, Unity import and compilation, and the required EditMode validation for the release candidate.
+- Completed fresh-project Bootstrap, Unity import and compilation, and the required EditMode validation for the Golden Baseline.
 
-### Migration status
+### Release state
 
-- Target version: `v2.0.0`, intended to become the first verified SpecOps v2 + Unity Clean Architecture Golden Baseline.
-- `v2.0.0` is not released.
-- Final release evidence, lifecycle transition, tag, and publication remain pending Human Authority-controlled work.
+- Container B is the `2.0.0` SpecOps v2 + Unity Clean Architecture Golden Baseline release container.
+- The qualified evidence subject remains A2 at `adddb2c91f7adae6133b384440d2c3f2020f1574`.
+- Durable external release evidence is staged at `release-evidence/v2.0.0-staging` commit `deb92a9b89624ea21d05bbac6ad6c4b34ad213b0`.
+- The annotated `v2.0.0` tag and GitHub Release publication remain pending Human Authority-controlled actions.
 
 ## [1.0.0]
 

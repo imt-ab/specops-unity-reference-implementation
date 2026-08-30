@@ -1,8 +1,8 @@
 # Public Reference Repository Onboarding
 
-Status: Derived contributor guidance for the `specops-v2` v2.0.0 Golden Baseline release container. The annotated tag and GitHub Release publication remain pending Human Authority actions.
+Status: Derived contributor guidance for the `specops-v2` v2.0.1 Golden Baseline release container. The tag, GitHub Release publication, and promotion to `main` remain future Human Authority actions.
 
-This repository is a public reference implementation and `v2.0.0` Golden Baseline showing one concrete combination of SpecOps AI v2 and a selected Unity Clean Architecture. Its qualified evidence subject remains A2 at `adddb2c91f7adae6133b384440d2c3f2020f1574`; durable evidence is staged at `release-evidence/v2.0.0-staging` commit `deb92a9b89624ea21d05bbac6ad6c4b34ad213b0`. Container B records the release lifecycle state, while the future annotated `v2.0.0` tag and GitHub Release publication remain separate Human Authority actions. This repository is not the generic SpecOps Core repository, a finished game, or a claim that this architecture is mandatory for every Unity project.
+This repository is a public reference implementation and `v2.0.1` Golden Baseline showing one concrete combination of SpecOps AI v2 and a selected Unity Clean Architecture. Its qualified evidence subject remains A at `53595414f559d884d6d34ecafa7d350c1da96955`; durable pre-Container evidence is staged at `release-evidence/v2.0.1-staging` commit `68760e6f177c443214efac465de8bcfb708cec33`. Container B records the release lifecycle state, while the future `v2.0.1` tag, GitHub Release publication, and promotion to `main` remain separate Human Authority actions. This repository is not the generic SpecOps Core repository, a finished game, or a claim that this architecture is mandatory for every Unity project.
 
 ## Start With Current Authority
 

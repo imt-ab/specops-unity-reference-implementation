@@ -736,7 +736,7 @@ $sampleProvenance = [ordered]@{
     evidenceStatus = 'NON_RELEASE_EVIDENCE'
     sourceBaseline = [ordered]@{
         id = 'specops-unity-clean-architecture-golden-baseline'
-        version = '2.0.0'
+        version = '2.0.1'
         sourceIdentity = [ordered]@{ profile = 'specops-bootstrap-source-jcs-sha256-v1'; digest = ('a' * 64) }
     }
     bootstrap = [ordered]@{ contractVersion = '1.0.0'; implementationVersion = '1.0.0' }

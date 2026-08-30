@@ -2,18 +2,19 @@
 
 `specops-unity-reference-implementation` is a public reference repository demonstrating one concrete combination of SpecOps AI v2 and a selected Unity Clean Architecture.
 
-It is the `v2.0.0` Golden Baseline release container for bootstrapping new Unity game projects: a reviewable starting point with explicit authority, bounded workflows, stable assembly boundaries, and evidence-driven validation.
+It is the `v2.0.1` Golden Baseline release container for bootstrapping new Unity game projects: a reviewable starting point with explicit authority, bounded workflows, stable assembly boundaries, and evidence-driven validation.
 
 ## Current Status
 
-This repository materializes Container B for the first verified SpecOps v2 Golden Baseline release.
+This repository materializes Container B for the verified SpecOps v2.0.1 Golden Baseline release lifecycle.
 
 - `v1.0.0` is the immutable final pre-SpecOps-v2 public baseline.
 - `v2.0.0` is the first SpecOps v2 + Unity Clean Architecture Golden Baseline release container.
-- The qualified evidence subject remains A2 at `adddb2c91f7adae6133b384440d2c3f2020f1574`.
-- Durable external release evidence is staged at `release-evidence/v2.0.0-staging` commit `deb92a9b89624ea21d05bbac6ad6c4b34ad213b0`.
+- `v2.0.1` is the current Container B release lifecycle state.
+- The qualified evidence subject remains A at `53595414f559d884d6d34ecafa7d350c1da96955`.
+- Durable pre-Container release evidence is staged at `release-evidence/v2.0.1-staging` commit `68760e6f177c443214efac465de8bcfb708cec33`.
 - Retained legacy compatibility guidance is subordinate to the current authority listed below.
-- The production Bootstrap implementation, fresh-project validation, evidence staging, and Container B lifecycle transition are complete in this working state. The annotated `v2.0.0` tag and GitHub Release publication remain pending Human Authority-controlled actions.
+- The production Bootstrap implementation, fresh-project validation, evidence staging, and Container B lifecycle transition are complete in this working state. The `v2.0.1` tag, GitHub Release publication, and promotion to `main` remain future Human Authority-controlled actions.
 
 See the [changelog](CHANGELOG.md) for public migration history.
 
@@ -21,7 +22,7 @@ See the [changelog](CHANGELOG.md) for public migration history.
 
 - A public reference implementation of SpecOps AI v2 applied to a Unity repository.
 - A concrete example of a selected layered Unity Clean Architecture.
-- The `v2.0.0` Golden Baseline release container for teams that want to evaluate or bootstrap a disciplined Unity project structure.
+- The `v2.0.1` Golden Baseline release container for teams that want to evaluate or bootstrap a disciplined Unity project structure.
 - A place to examine how specifications, authority, permissions, implementation boundaries, and validation evidence fit together.
 
 ## What This Repository Is Not
@@ -30,7 +31,7 @@ See the [changelog](CHANGELOG.md) for public migration history.
 - Project Reclaimer.
 - A finished game.
 - A claim that this architecture is mandatory for every Unity project.
-- Evidence that the annotated `v2.0.0` tag or GitHub Release publication already exists.
+- Evidence that the `v2.0.1` tag or GitHub Release publication already exists.
 
 ## Current Authority
 
@@ -63,16 +64,16 @@ Domain and Application assemblies retain `noEngineReferences = true`. The archit
 
 The repository uses `InfiniteMonkey.*` assembly names. VContainer is present for composition and Moq is present for test isolation where appropriate. Neither dependency is mandatory ceremony for every implementation or test.
 
-## Current v2.0.0 Container Baseline
+## Current v2.0.1 Container Baseline
 
-The values below describe the Container B release state. The qualified evidence subject is A2 at `adddb2c91f7adae6133b384440d2c3f2020f1574`, and its durable evidence is bound to `release-evidence/v2.0.0-staging` commit `deb92a9b89624ea21d05bbac6ad6c4b34ad213b0`. This does not claim that the future annotated `v2.0.0` tag or GitHub Release publication already exists:
+The values below describe the v2.0.1 Container B release lifecycle state. The qualified evidence subject is A at `53595414f559d884d6d34ecafa7d350c1da96955`, and its durable pre-Container evidence is bound to `release-evidence/v2.0.1-staging` commit `68760e6f177c443214efac465de8bcfb708cec33`. This does not claim that the future `v2.0.1` tag or GitHub Release publication already exists:
 
 - Unity editor: `6000.5.8f1` (revision `5cb7df797b7d`), from `ProjectSettings/ProjectVersion.txt`.
 - Unity package declarations: current values in `Packages/manifest.json`.
 - Default IDE target: JetBrains Rider.
 - Repository VCS and hosting: Git and GitHub.
 
-The reference implementation, production Bootstrap, fresh-project Unity validation, durable evidence staging, and Container B lifecycle state are complete. Annotated tag creation and GitHub Release publication remain separate Human Authority-controlled actions.
+The reference implementation, production Bootstrap, fresh-project Unity validation, durable evidence staging, and Container B lifecycle state are complete. Tag creation, GitHub Release publication, and promotion to `main` remain separate future Human Authority-controlled actions.
 
 Rider is the verified/default Golden Baseline IDE direction for this repository deployment. It is not a SpecOps framework requirement, and user-global Rider or tool settings must never be silently changed. Codex, Junie, and deterministic tools may be deployment executors; they do not define SpecOps logical roles. See [deployment guidance](Assets/Project/Docs/SpecOps/DEPLOYMENT.md).
 

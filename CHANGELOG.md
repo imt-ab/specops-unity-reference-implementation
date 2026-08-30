@@ -6,6 +6,19 @@ All notable public changes to this repository are recorded here. The structure f
 
 No changes recorded.
 
+## [2.0.1] - 2026-08-30
+
+### Changed
+
+- Materialized the reviewed v2.0.1 Container B release-lifecycle transition without architecture or runtime changes.
+
+### Release state
+
+- Container B is the `2.0.1` SpecOps v2 + Unity Clean Architecture Golden Baseline release container.
+- The qualified evidence subject remains A at `53595414f559d884d6d34ecafa7d350c1da96955`.
+- Durable pre-Container release evidence is staged at `release-evidence/v2.0.1-staging` commit `68760e6f177c443214efac465de8bcfb708cec33`.
+- The `v2.0.1` tag, GitHub Release publication, and promotion to `main` remain future Human Authority-controlled actions.
+
 ## [2.0.0] - 2026-08-29
 
 ### Changed

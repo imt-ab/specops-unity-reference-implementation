@@ -2,7 +2,7 @@
 
 Thank you for helping improve `specops-unity-reference-implementation`. Contributions should strengthen its purpose as a public SpecOps AI v2 + Unity Clean Architecture reference and Golden Baseline without turning it into a generic framework or finished game.
 
-The repository is the `v2.0.0` Container B working state on `specops-v2`. The qualified evidence subject remains A2 at `adddb2c91f7adae6133b384440d2c3f2020f1574`, with durable evidence staged at `release-evidence/v2.0.0-staging` commit `deb92a9b89624ea21d05bbac6ad6c4b34ad213b0`. Production Bootstrap, fresh-project validation, and the Container B lifecycle transition are complete; the annotated `v2.0.0` tag and GitHub Release publication remain Human Authority-controlled actions and have not yet occurred.
+The repository is the `v2.0.1` Container B working state on `specops-v2`. The qualified evidence subject remains A at `53595414f559d884d6d34ecafa7d350c1da96955`, with durable pre-Container evidence staged at `release-evidence/v2.0.1-staging` commit `68760e6f177c443214efac465de8bcfb708cec33`. Production Bootstrap, fresh-project validation, and the Container B lifecycle transition are complete; the `v2.0.1` tag, GitHub Release publication, and promotion to `main` remain future Human Authority-controlled actions and have not yet occurred.
 
 ## Start With Authority
 

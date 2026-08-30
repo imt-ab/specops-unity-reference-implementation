@@ -11,7 +11,7 @@
       "Golden Baseline candidate for new Unity game projects"
     ],
     "migrationStatus": "specops-v2-migration-in-progress",
-    "releasedVersion": "2.0.0"
+    "releasedVersion": "2.0.1"
   },
   "paths": {
     "authority": {

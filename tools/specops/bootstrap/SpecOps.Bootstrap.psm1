@@ -1461,7 +1461,7 @@ function Invoke-SpecOpsBootstrapExecution {
         $phase='source';$exitCode=3
         $locator=Resolve-BootstrapImplementationSource $ImplementationScriptPath
         $verifiedSource=Open-BootstrapImmutableSource $locator
-        if($verifiedSource.SourceIdentity-cne'82df3aed63dc2ab32d5e641db7c8fac81b6924236e146bf0be59deb213c8abe9'){Throw-BootstrapExecutionFailure SOURCE_IDENTITY 'The currently approved Source Identity is not present.'}
+        if($verifiedSource.SourceIdentity-cne'e131f5db9415d8c479cf7472f8e09b1530499cec7f67bd4520f52989e10dc1db'){Throw-BootstrapExecutionFailure SOURCE_IDENTITY 'The currently approved Source Identity is not present.'}
         Invoke-BootstrapExecutionFault AfterSourceAcquisition $verifiedSource
         Assert-BootstrapSourceConsistency $verifiedSource
         $phase='destination';$exitCode=4

@@ -1,0 +1,134 @@
+{
+  "authorityStatus": "NOT_REPOSITORY_AUTHORITY",
+  "bindings": {
+    "containerBRevision": {
+      "identifier": "3f3c2fc02cdee581748866174a7a6468b8820d1a",
+      "scheme": "git-commit-sha1"
+    },
+    "containerBSourceIdentity": {
+      "digest": "e131f5db9415d8c479cf7472f8e09b1530499cec7f67bd4520f52989e10dc1db",
+      "profile": "specops-bootstrap-source-jcs-sha256-v1"
+    },
+    "durableInitialEvidenceCommit": {
+      "identifier": "68760e6f177c443214efac465de8bcfb708cec33",
+      "scheme": "git-commit-sha1"
+    },
+    "qualifiedARevision": {
+      "identifier": "53595414f559d884d6d34ecafa7d350c1da96955",
+      "scheme": "git-commit-sha1"
+    },
+    "qualifiedASourceIdentity": {
+      "digest": "82df3aed63dc2ab32d5e641db7c8fac81b6924236e146bf0be59deb213c8abe9",
+      "profile": "specops-bootstrap-source-jcs-sha256-v1"
+    },
+    "releaseIdentity": {
+      "identifier": "2.0.1",
+      "scheme": "semver"
+    }
+  },
+  "classification": "EXTERNAL_RELEASE_BUNDLE_PROCEDURE",
+  "id": "specops-v2-container-b-binding-audit",
+  "limitations": [
+    "This external procedure is release-bundle support material and is not repository authority.",
+    "This bounded read-only audit consumes accepted R5 validation and projected-equivalence results; it does not rerun production evals, Bootstrap Projection, Bootstrap Core, Bootstrap Execution, Bootstrap Conformance, producer Unity, consumer Bootstrap, or consumer Unity.",
+    "This procedure does not authorize an evidence commit or push, manifest publication, tag creation, GitHub Release publication, main promotion, or any other Git lifecycle mutation."
+  ],
+  "purpose": "Perform a bounded read-only audit proving that committed Container B 3f3c2fc02cdee581748866174a7a6468b8820d1a is the reviewed v2.0.1 release container around qualified technical subject A 53595414f559d884d6d34ecafa7d350c1da96955 and durable initial evidence root 68760e6f177c443214efac465de8bcfb708cec33, without requalifying technical evidence or claiming publication.",
+  "reference": "procedures/specops-v2-container-b-binding-audit.v1.json",
+  "requirements": [
+    {
+      "description": "Container B has exactly one parent and that direct parent is qualified technical subject A.",
+      "id": "container-b-direct-child-of-qualified-a"
+    },
+    {
+      "description": "The A to Container B range contains exactly one commit.",
+      "id": "single-commit-container-transition"
+    },
+    {
+      "description": "The A to Container B changed-path set contains exactly the fourteen Human Authority-accepted paths and no others.",
+      "id": "exact-fourteen-path-container-delta"
+    },
+    {
+      "description": "Container B records repository.releasedVersion as 2.0.1.",
+      "id": "released-version-materialized"
+    },
+    {
+      "description": "Container B records initialization.releaseEvidencePresent as true.",
+      "id": "release-evidence-state-materialized"
+    },
+    {
+      "description": "The committed projection declaration resets fresh-child repository.releasedVersion from 2.0.1 to null.",
+      "id": "fresh-child-released-version-reset-preserved"
+    },
+    {
+      "description": "The committed projection declaration resets fresh-child initialization.releaseEvidencePresent from true to false.",
+      "id": "fresh-child-release-evidence-reset-preserved"
+    },
+    {
+      "description": "The qualified-A active frozen Source Identity binding count is zero.",
+      "id": "qualified-a-active-bindings-cleared"
+    },
+    {
+      "description": "The Container B Source Identity has exactly eight active frozen bindings in topology 1+1+1+2+3.",
+      "id": "container-b-source-identity-binding-topology"
+    },
+    {
+      "description": "Accepted final R5 validation records Projection 40/40, Core 238/238, Execution 143/143, and Conformance 302/302 PASS.",
+      "id": "r5-validation-accepted"
+    },
+    {
+      "description": "Accepted final R5 projected equivalence records A 312 outputs, B 312 outputs, path-set equality 312/312, exactly two changed outputs, 310 unchanged exact outputs, and 310/311 non-provenance exact outputs.",
+      "id": "r5-projected-equivalence-accepted"
+    },
+    {
+      "description": "The only changed projected paths are .specops/bootstrap.json and .specops/contracts/bootstrap-provenance.schema.json.",
+      "id": "projected-changed-paths-bounded"
+    },
+    {
+      "description": ".specops/bootstrap.json contains only the accepted sourceBaseline.version 2.0.0 to 2.0.1 transition and Source Identity A to Container B digest transition.",
+      "id": "bootstrap-provenance-delta-bounded"
+    },
+    {
+      "description": ".specops/contracts/bootstrap-provenance.schema.json contains only the accepted sourceBaseline version const transition from 2.0.0 to 2.0.1.",
+      "id": "provenance-schema-delta-bounded"
+    },
+    {
+      "description": "Accepted R5 evidence records UnitySemanticDelta as zero, UnityValidation as NOT_REQUIRED, and UnityExecuted as false.",
+      "id": "unity-semantics-unchanged"
+    },
+    {
+      "description": "R5-F01 and R5-R1-F02 are resolved in the accepted fourteen-path Container B transition.",
+      "id": "r5-planning-defects-resolved"
+    },
+    {
+      "description": "The accepted R5-R2 closure result is FOURTEENTH_PATH_ONLY.",
+      "id": "r5-r2-closure-accepted"
+    },
+    {
+      "description": "The immutable initial durable evidence root remains exactly commit 68760e6f177c443214efac465de8bcfb708cec33.",
+      "id": "durable-evidence-root-bound"
+    },
+    {
+      "description": "Production technical evidence and the release-manifest qualified subject remain A, not Container B.",
+      "id": "qualified-subject-remains-a"
+    },
+    {
+      "description": "The bounded Container B delta does not change SpecOps v2 framework authority, Unity architecture authority, or repository-wide constraint authority.",
+      "id": "authority-unchanged"
+    },
+    {
+      "description": "The v2.0.1 tag remains absent locally and remotely.",
+      "id": "tag-absent"
+    },
+    {
+      "description": "A GitHub Release for v2.0.1 is not published or claimed by this audit and remains pending Human Authority action.",
+      "id": "github-release-pending"
+    },
+    {
+      "description": "origin/main remains fdeb7126237894812c2f7fa77fad24ed4244a58c and promotion remains future Human Authority work.",
+      "id": "main-promotion-pending"
+    }
+  ],
+  "type": "audit-definition",
+  "version": "1.0.0"
+}

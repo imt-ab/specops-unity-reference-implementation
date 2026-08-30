@@ -1,0 +1,202 @@
+{
+  "contractVersion": "1.0.0",
+  "findings": [
+    {
+      "disposition": "RESOLVED",
+      "id": "R6A-CONTAINER-B-BINDING",
+      "observations": [
+        "Container B is exactly 3f3c2fc02cdee581748866174a7a6468b8820d1a and its only parent is qualified subject A 53595414f559d884d6d34ecafa7d350c1da96955.",
+        "The A to Container B range contains exactly one commit and exactly the fourteen accepted changed paths.",
+        "Container B records repository.releasedVersion as 2.0.1 and initialization.releaseEvidencePresent as true while preserving migrationStatus.",
+        "The committed projection declarations reset fresh-child releasedVersion to null and releaseEvidencePresent to false.",
+        "The committed Container B Bootstrap Source Identity is e131f5db9415d8c479cf7472f8e09b1530499cec7f67bd4520f52989e10dc1db.",
+        "Active frozen Source Identity bindings are qualified A 0 and Container B 8 in topology 1+1+1+2+3."
+      ],
+      "severity": "INFO",
+      "summary": "Committed Container B is bound as the reviewed v2.0.1 release container."
+    },
+    {
+      "disposition": "RESOLVED",
+      "id": "R6A-QUALIFIED-SUBJECT-CONTINUITY",
+      "observations": [
+        "All six existing production evidence members remain qualified to A 53595414f559d884d6d34ecafa7d350c1da96955.",
+        "Production eval and validation evidence was neither rerun nor re-subjected to Container B.",
+        "The release manifest qualifiedSubject remains A; Container B is the reviewed release container around it."
+      ],
+      "severity": "INFO",
+      "summary": "The qualified production-evidence subject remains A."
+    },
+    {
+      "disposition": "RESOLVED",
+      "id": "R6A-R5-VALIDATION-AND-EQUIVALENCE",
+      "observations": [
+        "Accepted final R5 validation records Projection 40/40 PASS, Core 238/238 PASS, Execution 143/143 PASS, and Conformance 302/302 PASS.",
+        "Accepted R5 projected inventories are A 312 and B 312 with path-set equality 312/312, exactly two changed paths, and 310 unchanged exact outputs.",
+        "Accepted R5 non-provenance equivalence is 310/311 exact; the only permitted non-provenance difference is .specops/contracts/bootstrap-provenance.schema.json.",
+        "The only changed projected paths are .specops/bootstrap.json and .specops/contracts/bootstrap-provenance.schema.json.",
+        ".specops/bootstrap.json changes only sourceBaseline.version from 2.0.0 to 2.0.1 and sourceIdentity.digest from 82df3aed63dc2ab32d5e641db7c8fac81b6924236e146bf0be59deb213c8abe9 to e131f5db9415d8c479cf7472f8e09b1530499cec7f67bd4520f52989e10dc1db.",
+        ".specops/contracts/bootstrap-provenance.schema.json changes only the sourceBaseline version const from 2.0.0 to 2.0.1."
+      ],
+      "severity": "INFO",
+      "summary": "Accepted final R5 validation and projected-equivalence evidence is bound without rerun."
+    },
+    {
+      "disposition": "RESOLVED",
+      "id": "R5-F01",
+      "observations": [
+        "The release-bound Bootstrap provenance schema omission was corrected within the accepted Container B transition.",
+        "The provenance schema remains COPY_EXACT and its only semantic change is the approved 2.0.0 to 2.0.1 baseline const transition."
+      ],
+      "severity": "INFO",
+      "summary": "R5-F01 is resolved."
+    },
+    {
+      "disposition": "RESOLVED",
+      "id": "R5-R1-F02",
+      "observations": [
+        "The release-bound Bootstrap Projection test fixture omission was corrected within the accepted fourteen-path Container B transition.",
+        "The fixture remains EXCLUDE with role SOURCE_VALIDATION_TEST, emits no projected child output, and changes only its current-release baseline scalar from 2.0.0 to 2.0.1."
+      ],
+      "severity": "INFO",
+      "summary": "R5-R1-F02 is resolved."
+    },
+    {
+      "disposition": "RESOLVED",
+      "id": "R6A-R5-R2-CLOSURE",
+      "observations": [
+        "Human Authority accepted the R5-R2 closure audit as PASS.",
+        "The accepted closure result is FOURTEENTH_PATH_ONLY, and the final Container B contains exactly the resulting fourteen paths."
+      ],
+      "severity": "INFO",
+      "summary": "The R5-R2 dependency-closure result is accepted and closed."
+    },
+    {
+      "disposition": "RESOLVED",
+      "id": "R6A-DURABLE-EVIDENCE-CONTINUITY",
+      "observations": [
+        "The durable initial evidence commit remains exactly 68760e6f177c443214efac465de8bcfb708cec33.",
+        "All nine durable evidence files were reproduced from Git object bytes and verified against their original blob identities.",
+        "All eight inherited non-manifest files remain exact-byte identical to the durable initial evidence commit.",
+        "The six DRAFT-manifest evidence members independently reproduce their recorded specops-json-jcs-sha256-v1 identities."
+      ],
+      "severity": "INFO",
+      "summary": "The immutable initial durable evidence root and six-member DRAFT continuity are established."
+    },
+    {
+      "disposition": "RESOLVED",
+      "id": "R6A-AUTHORITY-UNCHANGED",
+      "observations": [
+        "Container B does not change Assets/Project/Docs/SpecOps/SPECOPS_V2.md.",
+        "Container B does not change Assets/Project/Docs/Architecture/ARCHITECTURE.md.",
+        "Container B does not change Assets/Project/Docs/Governance/GLOBAL_CONSTRAINTS.md.",
+        "The procedure, audit result, manifest, validation evidence, and release evidence remain derived and do not acquire repository authority."
+      ],
+      "severity": "INFO",
+      "summary": "Framework, architecture, and repository-wide constraint authority are unchanged."
+    },
+    {
+      "disposition": "RESOLVED",
+      "id": "R6A-UNITY-SEMANTICS-UNCHANGED",
+      "observations": [
+        "Accepted R5 evidence records UnitySemanticDelta as zero.",
+        "UnityValidation was classified NOT_REQUIRED and UnityExecuted was false.",
+        "R6A did not run producer Unity or consumer Unity."
+      ],
+      "severity": "INFO",
+      "summary": "Container B does not change Unity-semantic state."
+    },
+    {
+      "disposition": "UNRESOLVED",
+      "id": "R6A-PENDING-TAG",
+      "observations": [
+        "The v2.0.1 tag is absent locally and remotely.",
+        "Tag creation remains pending separate Human Authority action and is not authorized by this audit."
+      ],
+      "severity": "INFO",
+      "summary": "The v2.0.1 tag remains pending."
+    },
+    {
+      "disposition": "UNRESOLVED",
+      "id": "R6A-PENDING-GITHUB-RELEASE",
+      "observations": [
+        "The public repository has no GitHub Release for tag v2.0.1 at audit execution time.",
+        "GitHub Release publication remains pending separate Human Authority action and is not authorized or claimed by this audit."
+      ],
+      "severity": "INFO",
+      "summary": "GitHub Release v2.0.1 remains pending."
+    },
+    {
+      "disposition": "UNRESOLVED",
+      "id": "R6A-PENDING-MAIN-PROMOTION",
+      "observations": [
+        "origin/main remains fdeb7126237894812c2f7fa77fad24ed4244a58c.",
+        "Main promotion remains future Human Authority work and is not authorized by this audit."
+      ],
+      "severity": "INFO",
+      "summary": "Main promotion remains pending."
+    }
+  ],
+  "overallResult": "PASS",
+  "provenance": {
+    "contractVersion": "1.0.0",
+    "executedAtUtc": "2026-08-30T08:43:09.099Z",
+    "executedDefinition": {
+      "id": "specops-v2-container-b-binding-audit",
+      "reference": "procedures/specops-v2-container-b-binding-audit.v1.json",
+      "type": "audit-definition",
+      "version": "1.0.0"
+    },
+    "executionId": "4bc3b908-8d1e-4e3a-bebe-9385c70156d6",
+    "governingContracts": [
+      {
+        "id": "audit-result.schema.json",
+        "reference": ".specops/contracts/audit-result.schema.json",
+        "version": "1.0.0"
+      },
+      {
+        "id": "evidence-provenance.schema.json",
+        "reference": ".specops/contracts/evidence-provenance.schema.json",
+        "version": "1.0.0"
+      }
+    ],
+    "limitations": [
+      "This bounded read-only audit consumes accepted final R5 validation and projected-equivalence results; it does not rerun production evals, Bootstrap validation suites, producer Unity, consumer Bootstrap, or consumer Unity.",
+      "This audit produces an external Human-reviewable evidence candidate only and does not authorize or perform a Git commit, push, ref mutation, tag, GitHub Release publication, manifest publication, or main promotion."
+    ],
+    "producer": {
+      "id": "specops-v2-release-evidence-materialization-process",
+      "version": "1.0.0"
+    },
+    "subject": {
+      "id": "specops-unity-reference-implementation",
+      "revision": {
+        "identifier": "3f3c2fc02cdee581748866174a7a6468b8820d1a",
+        "scheme": "git-commit-sha1"
+      },
+      "type": "repository"
+    },
+    "targetScope": [
+      {
+        "id": "semver:2.0.1",
+        "reference": "git-commit-sha1:3f3c2fc02cdee581748866174a7a6468b8820d1a",
+        "type": "release-container-binding"
+      },
+      {
+        "id": "specops-unity-reference-implementation",
+        "reference": "git-commit-sha1:53595414f559d884d6d34ecafa7d350c1da96955",
+        "type": "qualified-technical-subject"
+      },
+      {
+        "id": "container-b",
+        "reference": "specops-bootstrap-source-jcs-sha256-v1:e131f5db9415d8c479cf7472f8e09b1530499cec7f67bd4520f52989e10dc1db",
+        "type": "bootstrap-source-identity"
+      },
+      {
+        "id": "release-evidence/v2.0.1-staging",
+        "reference": "git-commit-sha1:68760e6f177c443214efac465de8bcfb708cec33",
+        "type": "durable-evidence-root"
+      }
+    ],
+    "unresolvedUnknowns": []
+  }
+}

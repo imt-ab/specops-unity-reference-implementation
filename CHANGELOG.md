@@ -4,7 +4,20 @@ All notable public changes to this repository are recorded here. The structure f
 
 ## [Unreleased]
 
-No changes recorded.
+### Added
+
+- Added a step-by-step `INSTALL.md` guide for creating new Unity projects from
+  the published Golden Baseline.
+
+### Changed
+
+- Linked the installation guide from the root README.
+- Synchronized current repository-instance documentation with the published
+  `v2.0.1` release state and clarified the distinction between development on
+  `main` and immutable published releases.
+- Reduced duplication of mutable release-lifecycle state in current
+  documentation so release records remain the source of truth for publication
+  state and identity.
 
 ## [2.0.1] - 2026-08-30
 
@@ -18,6 +31,11 @@ No changes recorded.
 - The qualified evidence subject remains A at `53595414f559d884d6d34ecafa7d350c1da96955`.
 - Durable pre-Container release evidence is staged at `release-evidence/v2.0.1-staging` commit `68760e6f177c443214efac465de8bcfb708cec33`.
 - The `v2.0.1` tag, GitHub Release publication, and promotion to `main` remain future Human Authority-controlled actions.
+
+> Historical note: this release-state section records the state at Container B
+> materialization. The annotated `v2.0.1` tag and immutable GitHub Release were
+> published subsequently on 2026-08-30. The released source snapshot was not
+> rewritten after publication.
 
 ## [2.0.0] - 2026-08-29
 

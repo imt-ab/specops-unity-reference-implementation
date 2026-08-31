@@ -540,10 +540,10 @@ Test-Assertion 'implementation descriptor rejects ambient-state fields' (-not (
 $dispositionGroups = @{}
 $manifest.authoredSourceInventory | Group-Object disposition | ForEach-Object { $dispositionGroups[$_.Name] = $_.Count }
 Test-Assertion 'one disposition per authored source' (
-    $manifest.authoredSourceInventory.Count -eq 394 -and
+    $manifest.authoredSourceInventory.Count -eq 395 -and
     $dispositionGroups.COPY_EXACT -eq 276 -and
     $dispositionGroups.TRANSFORM_SCOPED -eq 35 -and
-    $dispositionGroups.EXCLUDE -eq 83
+    $dispositionGroups.EXCLUDE -eq 84
 )
 
 $inventoryByPath = @{}

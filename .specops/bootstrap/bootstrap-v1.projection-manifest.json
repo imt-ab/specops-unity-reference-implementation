@@ -11,7 +11,7 @@
   },
   "sourceIdentity": {
     "profile": "specops-bootstrap-source-jcs-sha256-v1",
-    "digest": "e131f5db9415d8c479cf7472f8e09b1530499cec7f67bd4520f52989e10dc1db"
+    "digest": "0eea65fb7e8b94d1011f0228de8804be246877aea423c00b19dade587762c3b5"
   },
   "canonicalOrdering": {
     "bootstrapSourceMetadata": "path-ordinal-ascending",
@@ -4535,8 +4535,8 @@
     {
       "sourcePath": "Assets/Project/Docs/SpecOps/DEPLOYMENT.md",
       "byteIdentity": {
-        "byteLength": 4234,
-        "sha256": "da7a0d1cb72f4dcfd5869939b6fd3308249919a3bfa0010098812f859df672a3"
+        "byteLength": 4040,
+        "sha256": "da90c3e9cd484b1ad44c3076e73822fd94f0f92f0471c0f79e4206fc48a081ec"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "PUBLIC_REPOSITORY_INSTANCE"
@@ -4553,8 +4553,8 @@
     {
       "sourcePath": "Assets/Project/Docs/SpecOps/ONBOARDING.md",
       "byteIdentity": {
-        "byteLength": 4876,
-        "sha256": "931d8dffa50d57a71bb0c70fad5dde3b9fbe0624ddabfdfae7a31310d2f08711"
+        "byteLength": 5329,
+        "sha256": "cca905d7d5aeb5b4f0bf807dc1a7942129e34d58a857b8c056742903ca5fe80a"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "PUBLIC_REPOSITORY_INSTANCE"
@@ -5380,8 +5380,8 @@
     {
       "sourcePath": "CHANGELOG.md",
       "byteIdentity": {
-        "byteLength": 2329,
-        "sha256": "2753de672e29210c05001a3646c3652fbc03233797e62282ddea0a72a600ff1e"
+        "byteLength": 3132,
+        "sha256": "d2a85bc0b14e909aa5c031a0c42c7e6b1ebf72b74240ffa5d80d55be56c04f12"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "PUBLIC_REPOSITORY_INSTANCE"
@@ -5391,6 +5391,15 @@
       "byteIdentity": {
         "byteLength": 5722,
         "sha256": "36a1aee70df82376994a73792b9bf835a11a08516d523d2beeb76503fd4127e6"
+      },
+      "disposition": "EXCLUDE",
+      "projectionRole": "PUBLIC_REPOSITORY_INSTANCE"
+    },
+    {
+      "sourcePath": "INSTALL.md",
+      "byteIdentity": {
+        "byteLength": 12969,
+        "sha256": "45546f18eeedfeba32df92fbcca38b97b0fff3b62de40473e2fb64c9bc51051c"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "PUBLIC_REPOSITORY_INSTANCE"
@@ -6132,8 +6141,8 @@
     {
       "sourcePath": "README.md",
       "byteIdentity": {
-        "byteLength": 10558,
-        "sha256": "c42057c0c5c72d0d30cf0cbe687ed78f23bd1bb855abdb4ffb260f94163b485b"
+        "byteLength": 10290,
+        "sha256": "e9a538ef725b2d30270e0e89f1d1ac7e1c46b692a0225a0c01f6027b2853efe1"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "PUBLIC_REPOSITORY_INSTANCE"
@@ -6208,7 +6217,7 @@
       "sourcePath": "tools/specops/tests/SpecOps.BootstrapProjection.Tests.ps1",
       "byteIdentity": {
         "byteLength": 46363,
-        "sha256": "7e752a59d61562310ffccdcec48d63bf8b0a3b947c0bc9b97f280dc14216c39c"
+        "sha256": "3a0ff18f1df57e0a817e06e3fc0ce1824ca28dbb048f6fa64086073ee2cd5a87"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "SOURCE_VALIDATION_TEST"

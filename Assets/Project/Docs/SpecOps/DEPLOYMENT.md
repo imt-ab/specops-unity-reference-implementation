@@ -40,8 +40,23 @@ These are deployment mappings only. Codex and Junie do not define or own logical
 
 ## Current Integration Status
 
-Legacy Rider templates, DotSettings artifacts, agent adapters, and product-specific tooling guidance predate the v2 consolidation. They are retained as subordinate compatibility material and do not define SpecOps v2 authority or Core requirements.
+Legacy Rider templates, DotSettings artifacts, agent adapters, and
+product-specific tooling guidance predate the v2 consolidation. They are
+retained as subordinate compatibility material and do not define SpecOps v2
+authority or Core requirements.
 
-The derived `.specops/specops.json` manifest records public-repository deployment defaults. Exactly seven logical Skills, five permission profiles, and twelve JSON Schema contracts are installed beneath current authority. They do not elevate legacy Rider or agent integrations into framework authority.
+Current deployment configuration is represented by the repository's derived
+artifacts, including `.specops/specops.json`, permission profiles, contracts,
+eval definitions, and installed Skills. Inspect those artifacts directly when
+their current contents or counts matter rather than relying on duplicated
+numbers in this guide.
 
-Four eval definitions are installed under `.specops/evals/`, and `reference-architecture-example` has an instantiated derived feature state. The production Bootstrap and fresh-project Unity validation are complete. The qualified evidence subject remains A at `53595414f559d884d6d34ecafa7d350c1da96955`, and durable pre-Container evidence is staged at `release-evidence/v2.0.1-staging` commit `68760e6f177c443214efac465de8bcfb708cec33`. Container B records the `v2.0.1` release lifecycle state; the `v2.0.1` tag, GitHub Release publication, and promotion to `main` remain separate future Human Authority-controlled actions and have not yet occurred.
+The production Bootstrap is the supported construction path for generating a
+fresh project from a published Golden Baseline.
+
+Release publication state is intentionally not duplicated in this deployment
+guide. Use the repository's GitHub Releases, annotated tags, and release-bound
+evidence when release state or identity matters.
+
+The `main` branch is development state and may differ from the latest published
+Golden Baseline.

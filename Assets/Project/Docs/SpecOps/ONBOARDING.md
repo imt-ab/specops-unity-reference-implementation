@@ -1,8 +1,34 @@
 # Public Reference Repository Onboarding
 
-Status: Derived contributor guidance for the `specops-v2` v2.0.1 Golden Baseline release container. The tag, GitHub Release publication, and promotion to `main` remain future Human Authority actions.
+Status: Derived contributor guidance for the current development state of
+`specops-unity-reference-implementation`. This document is not release,
+framework, structural, or feature authority.
 
-This repository is a public reference implementation and `v2.0.1` Golden Baseline showing one concrete combination of SpecOps AI v2 and a selected Unity Clean Architecture. Its qualified evidence subject remains A at `53595414f559d884d6d34ecafa7d350c1da96955`; durable pre-Container evidence is staged at `release-evidence/v2.0.1-staging` commit `68760e6f177c443214efac465de8bcfb708cec33`. Container B records the release lifecycle state, while the future `v2.0.1` tag, GitHub Release publication, and promotion to `main` remain separate Human Authority actions. This repository is not the generic SpecOps Core repository, a finished game, or a claim that this architecture is mandatory for every Unity project.
+This repository is a public reference implementation showing one concrete
+combination of SpecOps AI v2 and a selected Unity Clean Architecture.
+
+For contribution and reference-repository development, work from the
+human-selected current development state and applicable current authority.
+
+For a new stable Unity project, do not treat `main` as the released Golden
+Baseline. Follow the root [INSTALL.md](../../../../INSTALL.md) and use the latest
+published GitHub Release.
+
+Release tags, publication state, release identities, and immutable release
+evidence are defined by their release-bound records and are intentionally not
+duplicated as mutable status in this contributor guide.
+
+## Choose the Correct Starting Point
+
+**Contributing to or developing this reference repository:** use the
+human-selected development branch and inspect current repository authority and
+state before work begins.
+
+**Starting a new stable Unity project:** use the latest published Golden
+Baseline and follow [INSTALL.md](../../../../INSTALL.md).
+
+Development state and released state are deliberately distinct. Do not infer
+that `main` and the latest published Golden Baseline are identical.
 
 ## Start With Current Authority
 

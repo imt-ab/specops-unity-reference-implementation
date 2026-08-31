@@ -90,6 +90,9 @@ See [`Assets/Project/README.md`](Assets/Project/README.md) for the detailed Unit
 
 ## Getting Started
 
+For a step-by-step guide to creating a new Unity project from the published
+Golden Baseline, see [INSTALL.md](INSTALL.md).
+
 1. Read the [onboarding guide](Assets/Project/Docs/SpecOps/ONBOARDING.md).
 2. Read the applicable current authority listed above.
 3. Confirm the editor version in `ProjectSettings/ProjectVersion.txt` and review current package declarations in `Packages/manifest.json`.

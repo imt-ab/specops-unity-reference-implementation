@@ -18,6 +18,18 @@ All notable public changes to this repository are recorded here. The structure f
 - Reduced duplication of mutable release-lifecycle state in current
   documentation so release records remain the source of truth for publication
   state and identity.
+- Removed the direct `com.unity.collab-proxy` dependency from the development
+  Golden Baseline without changing another package or ProjectSettings.
+- Aligned the reusable architecture test allowlist with every optional Utility
+  dependency direction already permitted by structural authority.
+- Added a clearly retrospective traceability reconstruction for the completed
+  reference feature, corrected its stale planning wording, and retained the
+  unavailable original provenance trail as an explicit limitation.
+- Clarified Bootstrap schema prerequisites, destination-parent requirements,
+  source-versus-child documentation, canonical first-feature workflow routing,
+  recovery, and source/child/qualification/evidence separation.
+- Rebound the active Bootstrap authored-source inventory and Source Identity to
+  the completed v2.0.2 remediation bytes.
 
 ## [2.0.1] - 2026-08-30
 

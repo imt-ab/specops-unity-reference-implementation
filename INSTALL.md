@@ -56,6 +56,10 @@ Before starting, you need:
 
 - Windows 11 or another supported 64-bit Windows environment.
 - 64-bit PowerShell 7 or later (`pwsh`).
+- A PowerShell environment that provides the `Test-Json` cmdlet with the
+  in-memory `Schema` parameter and the Draft 2020-12 behavior required by
+  Bootstrap. Bootstrap verifies this capability with deterministic probes and
+  fails closed when it is unavailable.
 - Unity Hub.
 - The exact Unity Editor version required by the Golden Baseline release.
 - Enough local disk space for a normal Unity project and its generated
@@ -160,6 +164,7 @@ Bootstrap requires exactly six explicit values.
 `DestinationPath`:
 
 - must be an absolute Windows path;
+- must have an immediate parent directory that already exists;
 - must point to a fresh destination;
 - should not already contain another project.
 
@@ -399,30 +404,29 @@ ACCEPTANCE.md
 
 ## 13. Start Your First Feature
 
-A typical SpecOps development flow is:
+Use the generated project's canonical current workflow:
 
 ```text
-DISCOVER
--> AUDIT
--> SPECIFY
--> PLAN
--> HUMAN AUTHORITY
--> IMPLEMENT
--> VALIDATE
--> REVIEW
--> RELEASE / SYNC
+Assets/Project/Docs/SpecOps/WORKFLOW.md
 ```
 
-Do not start by asking an AI coding agent to implement an undefined feature.
+That derived guide routes the complete lifecycle through intent and authority,
+stable specification and acceptance, governance review, risk classification,
+Human Authority when required, a bounded plan, scoped permission,
+implementation, validation, traceability, synchronization/global-impact
+review, and human-controlled check-in or publication.
 
-Start by establishing:
+To orient the first feature, begin by establishing:
 
 - feature intent;
 - constraints;
 - acceptance criteria;
 - architectural placement.
 
-Then use the appropriate SpecOps responsibility for the bounded task.
+Do not treat this short orientation as a competing lifecycle. Follow
+`WORKFLOW.md`, stop on missing authority or approval, and do not advance from
+implementation to validation, synchronization, check-in, or publication
+without the separately required evidence and permission.
 
 ## 14. What Bootstrap Does Not Mean
 
@@ -439,6 +443,15 @@ It does not mean:
   repository.
 
 Your generated project becomes its own engineering lifecycle after Bootstrap.
+
+Keep these subjects distinct:
+
+| Subject | Meaning |
+| --- | --- |
+| Release source | The immutable published Golden Baseline source used as Bootstrap input. |
+| Bootstrap-generated child | The new projected Unity project with its own identity and lifecycle. |
+| Qualified technical subject | The exact source or child state for which the stated technical checks actually ran. |
+| Release evidence | Separate release-bound records; it is not installation source and is not inherited by the child. |
 
 ## Troubleshooting
 
@@ -512,19 +525,21 @@ Do not modify the frozen release to rewrite that history.
 
 ## Further Reading
 
-After installation, start with:
+Document availability differs between the release/source repository and the
+Bootstrap-generated child:
 
-- `README.md`
-- `Assets/Project/Docs/SpecOps/ONBOARDING.md`
-- `Assets/Project/Docs/SpecOps/SPECOPS_V2.md`
-- `Assets/Project/Docs/SpecOps/WORKFLOW.md`
-- `Assets/Project/Docs/Architecture/ARCHITECTURE.md`
-- `Assets/Project/Docs/Governance/GLOBAL_CONSTRAINTS.md`
+| Document | Availability |
+| --- | --- |
+| `README.md` | Release/source repository only |
+| `INSTALL.md` | Release/source repository only |
+| `Assets/Project/Docs/SpecOps/ONBOARDING.md` | Release/source repository only |
+| `Assets/Project/Docs/SpecOps/SPECOPS_V2.md` | Both; projected with bounded child wording |
+| `Assets/Project/Docs/SpecOps/WORKFLOW.md` | Both |
+| `Assets/Project/Docs/Architecture/ARCHITECTURE.md` | Both; projected with the child's namespace root |
+| `Assets/Project/Docs/Governance/GLOBAL_CONSTRAINTS.md` | Both; projected with bounded child wording and namespace root |
+| `.specops/contracts/bootstrap-v1.md` | Both; normative Bootstrap behavior |
 
-For Bootstrap's normative behavior, see:
-
-```text
-.specops/contracts/bootstrap-v1.md
-```
+After installation, begin with the four generated-child documents listed in
+[Understand the Authority Before Developing](#12-understand-the-authority-before-developing).
 
 For current defects and limitations, see the repository's open GitHub issues.

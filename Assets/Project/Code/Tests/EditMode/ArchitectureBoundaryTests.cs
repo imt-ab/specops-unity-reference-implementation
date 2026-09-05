@@ -22,28 +22,33 @@ namespace InfiniteMonkey.EditModeTests
             new RuntimeAssemblyDescriptor(
                 "InfiniteMonkey.Application",
                 "Assets/Project/Code/Runtime/Application/InfiniteMonkey.Application.asmdef",
-                "InfiniteMonkey.Domain"),
+                "InfiniteMonkey.Domain",
+                "InfiniteMonkey.Utility"),
             new RuntimeAssemblyDescriptor(
                 "InfiniteMonkey.AI",
                 "Assets/Project/Code/Runtime/AI/InfiniteMonkey.AI.asmdef",
                 "InfiniteMonkey.Application",
-                "InfiniteMonkey.Domain"),
+                "InfiniteMonkey.Domain",
+                "InfiniteMonkey.Utility"),
             new RuntimeAssemblyDescriptor(
                 "InfiniteMonkey.Infrastructure",
                 "Assets/Project/Code/Runtime/Infrastructure/InfiniteMonkey.Infrastructure.asmdef",
                 "InfiniteMonkey.Application",
-                "InfiniteMonkey.Domain"),
+                "InfiniteMonkey.Domain",
+                "InfiniteMonkey.Utility"),
             new RuntimeAssemblyDescriptor(
                 "InfiniteMonkey.Presentation",
                 "Assets/Project/Code/Runtime/Presentation/InfiniteMonkey.Presentation.asmdef",
-                "InfiniteMonkey.Application"),
+                "InfiniteMonkey.Application",
+                "InfiniteMonkey.Utility"),
             new RuntimeAssemblyDescriptor(
                 "InfiniteMonkey.Composition",
                 "Assets/Project/Code/Runtime/Composition/InfiniteMonkey.Composition.asmdef",
                 "InfiniteMonkey.Application",
                 "InfiniteMonkey.Domain",
                 "InfiniteMonkey.Infrastructure",
-                "InfiniteMonkey.Presentation"),
+                "InfiniteMonkey.Presentation",
+                "InfiniteMonkey.Utility"),
             new RuntimeAssemblyDescriptor(
                 "InfiniteMonkey.Utility",
                 "Assets/Project/Code/Runtime/Utility/InfiniteMonkey.Utility.asmdef")

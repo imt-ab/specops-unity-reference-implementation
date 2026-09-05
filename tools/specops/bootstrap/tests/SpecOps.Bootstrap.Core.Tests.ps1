@@ -199,14 +199,14 @@ try{
     foreach($path in $currentSourcePaths){$destination=Join-Path $integrationRoot $path;$parent=Split-Path -Parent $destination;[void](New-Item -ItemType Directory -Path $parent -Force);[IO.File]::WriteAllBytes($destination,[IO.File]::ReadAllBytes((Join-Path $repositoryRoot $path)))}
     $source=Get-VerifiedBootstrapSource $integrationRoot $record
     Assert-Equal Integration 'current source uses filesystem enumeration' $source.EnumerationMode 'FILESYSTEM'
-    Assert-Equal Integration 'actual enumerated regular-leaf count' $source.RegularLeafCount 402
+    Assert-Equal Integration 'actual enumerated regular-leaf count' $source.RegularLeafCount 405
     $verifiedProvenanceSchema=$source.Bytes['.specops/contracts/bootstrap-provenance.schema.json']
     [IO.File]::WriteAllBytes((Join-Path $integrationRoot '.specops/contracts/bootstrap-provenance.schema.json'),(B '{"tampered":true}'))
     $output=New-BootstrapProspectiveOutputMap $source $inputs '1.0.0'
     Assert-True Provenance 'filesystem schema mutation after materialization is neutral' $output.Bytes.ContainsKey('.specops/bootstrap.json')
 $static=Test-BootstrapByteMapStatic $output
-Assert-Equal Integration 'Source Identity reproduced' $record.SourceIdentity.digest 'e131f5db9415d8c479cf7472f8e09b1530499cec7f67bd4520f52989e10dc1db'
-Assert-Equal Integration 'all authored files verified' $source.Bytes.Count 394
+Assert-Equal Integration 'Source Identity reproduced' $record.SourceIdentity.digest 'f15e40d81f5612c1d31ab6f6fd52a97a3f35e508c6c2a5ef1eecdee17f4688c5'
+Assert-Equal Integration 'all authored files verified' $source.Bytes.Count 397
 Assert-True Integration 'implementation module recognized as support' ($source.ImplementationSupportPaths-ccontains'tools/specops/bootstrap/SpecOps.Bootstrap.psm1')
 Assert-True Integration 'core tests recognized as support' ($source.ImplementationSupportPaths-ccontains'tools/specops/bootstrap/tests/SpecOps.Bootstrap.Core.Tests.ps1')
 Assert-True Integration 'execution entry point recognized as support' ($source.ImplementationSupportPaths-ccontains'tools/specops/bootstrap/Invoke-SpecOpsBootstrap.ps1')

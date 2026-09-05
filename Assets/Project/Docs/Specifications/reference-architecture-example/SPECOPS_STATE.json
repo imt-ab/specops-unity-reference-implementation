@@ -16,22 +16,22 @@
   ],
   "review": {
     "status": "PASS",
-    "reference": null
+    "reference": "Assets/Project/Docs/Specifications/reference-architecture-example/PROVENANCE_RECONSTRUCTION.md"
   },
   "approval": {
     "status": "APPROVED",
     "references": [
-      "Human Authority decision recorded in E7B.2: E7B FEATURE AUTHORITY: APPROVED"
+      "Assets/Project/Docs/Specifications/reference-architecture-example/PROVENANCE_RECONSTRUCTION.md"
     ]
   },
   "implementationPlan": {
     "status": "APPROVED",
-    "reference": null
+    "reference": "Assets/Project/Docs/Specifications/reference-architecture-example/PROVENANCE_RECONSTRUCTION.md"
   },
   "implementationState": "COMPLETE",
   "validation": {
     "status": "PASS",
-    "reference": null
+    "reference": "Assets/Project/Docs/Specifications/reference-architecture-example/PROVENANCE_RECONSTRUCTION.md"
   },
   "sync": {
     "status": "NOT_STARTED",

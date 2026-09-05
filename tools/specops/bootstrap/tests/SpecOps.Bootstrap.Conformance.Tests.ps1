@@ -150,11 +150,11 @@ try{
     $cwdA=Join-Path $tempRoot 'cwd-a';$cwdB=Join-Path $tempRoot 'cwd-b';[void][IO.Directory]::CreateDirectory($cwdA);[void][IO.Directory]::CreateDirectory($cwdB)
     $mirror=New-CleanMirror (Join-Path $tempRoot 'verified-source')
     $manifest=$mirror.Record.Manifest
-    Assert-Equal Accounting 'clean mirror regular leaves' $mirror.Paths.Count 402
-    Assert-Equal Accounting 'authored source count' $manifest.authoredSourceInventory.Count 394
+    Assert-Equal Accounting 'clean mirror regular leaves' $mirror.Paths.Count 405
+    Assert-Equal Accounting 'authored source count' $manifest.authoredSourceInventory.Count 397
     Assert-Equal Accounting 'implementation support count' $mirror.Support.Count 6
     Assert-True Accounting 'conformance suite is dynamically accounted support' ($mirror.Support-ccontains'tools/specops/bootstrap/tests/SpecOps.Bootstrap.Conformance.Tests.ps1')
-    Assert-Equal Accounting 'source identity frozen' $mirror.Record.SourceIdentity.digest 'e131f5db9415d8c479cf7472f8e09b1530499cec7f67bd4520f52989e10dc1db'
+    Assert-Equal Accounting 'source identity frozen' $mirror.Record.SourceIdentity.digest 'f15e40d81f5612c1d31ab6f6fd52a97a3f35e508c6c2a5ef1eecdee17f4688c5'
 
     $publishRoot=Join-Path $tempRoot 'published';[void][IO.Directory]::CreateDirectory($publishRoot)
     $destinationA=Join-Path $publishRoot 'DeterminismA'
@@ -231,7 +231,7 @@ try{
     Assert-Equal Provenance 'exact top-level shape' (@($provenance.PSObject.Properties.Name|Sort-Object)-join',') 'authorityStatus,bootstrap,classification,contentInputs,contractVersion,evidenceStatus,sourceBaseline'
     Assert-Equal Provenance 'source baseline id' $provenance.sourceBaseline.id 'specops-unity-clean-architecture-golden-baseline'
     Assert-Equal Provenance 'source baseline version' $provenance.sourceBaseline.version '2.0.1'
-    Assert-Equal Provenance 'source identity' $provenance.sourceBaseline.sourceIdentity.digest 'e131f5db9415d8c479cf7472f8e09b1530499cec7f67bd4520f52989e10dc1db'
+    Assert-Equal Provenance 'source identity' $provenance.sourceBaseline.sourceIdentity.digest 'f15e40d81f5612c1d31ab6f6fd52a97a3f35e508c6c2a5ef1eecdee17f4688c5'
     Assert-Equal Provenance 'contract version' $provenance.bootstrap.contractVersion '1.0.0';Assert-Equal Provenance 'implementation version' $provenance.bootstrap.implementationVersion '1.0.0'
     foreach($term in @('DestinationPath','sourcePath','stagingPath','timestamp','username','machine','git','releaseStatus','validationStatus','PASS','approval')){Assert-True Provenance "prohibited semantic absent: $term" (-not$provenanceText.Contains($term,[StringComparison]::OrdinalIgnoreCase))}
 
@@ -392,9 +392,9 @@ finally{
 
 $result=[ordered]@{
     Result=$(if($script:Failures.Count){'FAIL'}else{'PASS'});Tests=$script:Tests;Categories=$script:Categories;Failures=@($script:Failures)
-    AcceptanceCriteria=@(1..16|ForEach-Object{'AC-F2-{0:D3}'-f$_});RegularLeafCount=402;BootstrapSourceMetadataCount=2
-    AuthoredFiles=394;ImplementationSupportFiles=6;OutputCount=312
-    SourceIdentity='e131f5db9415d8c479cf7472f8e09b1530499cec7f67bd4520f52989e10dc1db'
+    AcceptanceCriteria=@(1..16|ForEach-Object{'AC-F2-{0:D3}'-f$_});RegularLeafCount=405;BootstrapSourceMetadataCount=2
+    AuthoredFiles=397;ImplementationSupportFiles=6;OutputCount=312
+    SourceIdentity='f15e40d81f5612c1d31ab6f6fd52a97a3f35e508c6c2a5ef1eecdee17f4688c5'
     GoldenBaselineId='specops-unity-clean-architecture-golden-baseline';GoldenBaselineVersion='2.0.1'
     BootstrapContractVersion='1.0.0';BootstrapImplementationVersion='1.0.0'
     UnityExecuted=$false;RealHumanDestinationUsed=$false;GitRequired=$false;ExternalRuntimeOrPackageIntroduced=$false

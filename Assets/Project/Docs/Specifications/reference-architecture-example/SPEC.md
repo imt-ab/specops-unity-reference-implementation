@@ -105,8 +105,8 @@ Reference the [repository-wide constraints](../../Governance/GLOBAL_CONSTRAINTS.
 
 ## Manual or External Steps
 
-- Human Authority review and approval of this feature triplet are complete; implementation planning has not started and remains a separate slice.
-- Later assembly-topology mutation requires separate explicit R3 approval. No manual Unity, scene, or external-service step is required by feature acceptance.
+- Implementation and implementation planning are complete in the current repository state. The retained Git sequence and the limitations of the historical review, approval, plan, and validation trail are described in the later-created [`PROVENANCE_RECONSTRUCTION.md`](PROVENANCE_RECONSTRUCTION.md); this current statement is not original lifecycle evidence or a new validation claim.
+- Any future assembly-topology mutation requires separate explicit R3 approval. No manual Unity, scene, or external-service step is required by feature acceptance.
 
 ## Open Questions
 

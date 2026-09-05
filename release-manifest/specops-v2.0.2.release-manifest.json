@@ -1,0 +1,114 @@
+{
+  "contractVersion": "1.0.0",
+  "releaseIdentity": {
+    "scheme": "semver",
+    "identifier": "2.0.2"
+  },
+  "qualifiedSubject": {
+    "type": "repository",
+    "id": "specops-unity-reference-implementation",
+    "revision": {
+      "scheme": "git-commit-sha1",
+      "identifier": "46a16eb725294fa43943c8256dfb36d66b75d4e4"
+    }
+  },
+  "state": "DRAFT",
+  "evidenceMembers": [
+    {
+      "role": "EVAL_RESULT",
+      "artifact": {
+        "id": "eval-result/specops-core-contract-integrity",
+        "reference": "eval-results/specops-core-contract-integrity.eval-result.json"
+      },
+      "contract": {
+        "id": "eval-result.schema.json",
+        "version": "1.0.0",
+        "reference": ".specops/contracts/eval-result.schema.json"
+      },
+      "contentIdentity": {
+        "algorithm": "specops-json-jcs-sha256-v1",
+        "value": "92c0bc2eb28a85664cfe98c91932e8ef091552114355db64f42c5c13de427458"
+      }
+    },
+    {
+      "role": "EVAL_RESULT",
+      "artifact": {
+        "id": "eval-result/specops-derived-state-consistency",
+        "reference": "eval-results/specops-derived-state-consistency.eval-result.json"
+      },
+      "contract": {
+        "id": "eval-result.schema.json",
+        "version": "1.0.0",
+        "reference": ".specops/contracts/eval-result.schema.json"
+      },
+      "contentIdentity": {
+        "algorithm": "specops-json-jcs-sha256-v1",
+        "value": "ab512087ca3e588874aba39c7ef15809aa1b99129b1f8272da29019f820f1c27"
+      }
+    },
+    {
+      "role": "EVAL_RESULT",
+      "artifact": {
+        "id": "eval-result/unity-clean-architecture-static",
+        "reference": "eval-results/unity-clean-architecture-static.eval-result.json"
+      },
+      "contract": {
+        "id": "eval-result.schema.json",
+        "version": "1.0.0",
+        "reference": ".specops/contracts/eval-result.schema.json"
+      },
+      "contentIdentity": {
+        "algorithm": "specops-json-jcs-sha256-v1",
+        "value": "81b67945aca5fb23423ebf489b9d0d036f00796525be44904157ecfa7ab8bd9d"
+      }
+    },
+    {
+      "role": "EVAL_RESULT",
+      "artifact": {
+        "id": "eval-result/unity-editmode-validation",
+        "reference": "eval-results/unity-editmode-validation.eval-result.json"
+      },
+      "contract": {
+        "id": "eval-result.schema.json",
+        "version": "1.0.0",
+        "reference": ".specops/contracts/eval-result.schema.json"
+      },
+      "contentIdentity": {
+        "algorithm": "specops-json-jcs-sha256-v1",
+        "value": "540d628d806e409dadf1dfea8ef510ca9f3bf33f874378e448069dbd1829581f"
+      }
+    },
+    {
+      "role": "VALIDATION_RESULT",
+      "artifact": {
+        "id": "validation-result/specops-v2.0.2-qualified-subject",
+        "reference": "validation-results/specops-v2.0.2-qualified-subject.validation-result.json"
+      },
+      "contract": {
+        "id": "validation-result.schema.json",
+        "version": "2.0.0",
+        "reference": ".specops/contracts/validation-result.schema.json"
+      },
+      "contentIdentity": {
+        "algorithm": "specops-json-jcs-sha256-v1",
+        "value": "f87ac83466f2ba60ab7dee198aa36c8e1b6adf8079eed313caae282f89dc26e0"
+      }
+    },
+    {
+      "role": "AUDIT_RESULT",
+      "artifact": {
+        "id": "audit-result/specops-v2.0.2-release-readiness",
+        "reference": "audit-results/specops-v2.0.2-release-readiness.audit-result.json"
+      },
+      "contract": {
+        "id": "audit-result.schema.json",
+        "version": "1.0.0",
+        "reference": ".specops/contracts/audit-result.schema.json"
+      },
+      "contentIdentity": {
+        "algorithm": "specops-json-jcs-sha256-v1",
+        "value": "b22cec745ea16e66c5ac33b223ebaa32e55f4fd1f53160c9b63b5ea5b1e7973a"
+      }
+    }
+  ]
+}

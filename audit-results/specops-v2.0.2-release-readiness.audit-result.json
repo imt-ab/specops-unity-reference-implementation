@@ -1,0 +1,163 @@
+{
+  "contractVersion": "1.0.0",
+  "provenance": {
+    "contractVersion": "1.0.0",
+    "subject": {
+      "type": "repository",
+      "id": "specops-unity-reference-implementation",
+      "revision": {
+        "scheme": "git-commit-sha1",
+        "identifier": "46a16eb725294fa43943c8256dfb36d66b75d4e4"
+      }
+    },
+    "executionId": "9a94d7ab-46c6-4d0a-ab34-6b8ff4ccaa86",
+    "producer": {
+      "id": "specops-v2.0.2-release-evidence-materialization-process",
+      "version": "1.0.0"
+    },
+    "executedDefinition": {
+      "type": "audit-definition",
+      "id": "specops-v2.0.2-release-readiness-audit",
+      "version": "1.0.0",
+      "reference": "procedures/specops-v2.0.2-release-readiness-audit.v1.json"
+    },
+    "governingContracts": [
+      {
+        "id": "audit-result.schema.json",
+        "version": "1.0.0",
+        "reference": ".specops/contracts/audit-result.schema.json"
+      },
+      {
+        "id": "evidence-provenance.schema.json",
+        "version": "1.0.0",
+        "reference": ".specops/contracts/evidence-provenance.schema.json"
+      }
+    ],
+    "targetScope": [
+      {
+        "type": "release-readiness-review",
+        "id": "semver:2.0.2",
+        "reference": "git-commit-sha1:46a16eb725294fa43943c8256dfb36d66b75d4e4"
+      },
+      {
+        "type": "bootstrap-source-identity",
+        "id": "f15e40d81f5612c1d31ab6f6fd52a97a3f35e508c6c2a5ef1eecdee17f4688c5",
+        "reference": "specops-bootstrap-source-jcs-sha256-v1"
+      }
+    ],
+    "executedAtUtc": "2026-09-05T23:20:51.5520448Z",
+    "limitations": [
+      "This artifact materializes the already completed bounded release-readiness and remediation review; no new broad audit was performed.",
+      "This review is limited to pre-Container evidence readiness and does not claim a Container B, finalized evidence, tag, publication, issue mutation, or release approval."
+    ],
+    "unresolvedUnknowns": []
+  },
+  "overallResult": "PASS",
+  "findings": [
+    {
+      "id": "V202-RELEASE-READINESS",
+      "severity": "INFO",
+      "disposition": "RESOLVED",
+      "summary": "The qualified v2.0.2 subject is ready for bounded pre-Container release-evidence materialization with no release blocker identified.",
+      "observations": [
+        "The accepted review verdict is PASS with status READY WITH NON-BLOCKING LIMITATIONS.",
+        "Release blockers: none.",
+        "The recommendation is AUTHORIZE RELEASE-EVIDENCE MATERIALIZATION, not publication."
+      ],
+      "evidenceReferences": [
+        "validation-results/specops-v2.0.2-qualified-subject.validation-result.json",
+        "procedures/specops-v2.0.2-release-readiness-audit.v1.json"
+      ]
+    },
+    {
+      "id": "V202-SEMVER",
+      "severity": "INFO",
+      "disposition": "RESOLVED",
+      "summary": "The accepted SemVer determination supports release identity 2.0.2.",
+      "observations": [
+        "The separately authorized review concluded that v2.0.2 is appropriate for the qualified remediation scope."
+      ],
+      "evidenceReferences": [
+        "validation-results/specops-v2.0.2-qualified-subject.validation-result.json"
+      ]
+    },
+    {
+      "id": "KI-001",
+      "severity": "LOW",
+      "disposition": "UNRESOLVED",
+      "summary": "SENTIS_ANALYTICS_ENABLED remains an accepted non-blocking known limitation.",
+      "observations": [
+        "SENTIS_ANALYTICS_ENABLED was observed in one isolated candidate first-open.",
+        "KI-001 was not remediated and remains OPEN / KNOWN LIMITATION.",
+        "The accepted release-readiness review classified KI-001 as non-blocking."
+      ],
+      "evidenceReferences": [
+        "validation-results/specops-v2.0.2-qualified-subject.validation-result.json"
+      ]
+    },
+    {
+      "id": "KI-002",
+      "severity": "INFO",
+      "disposition": "RESOLVED",
+      "summary": "The accepted validation supports the bounded KI-002 remediation.",
+      "observations": [
+        "collab-proxy is absent and was not transitively reintroduced.",
+        "No VersionControlSettings mutation was observed."
+      ],
+      "evidenceReferences": [
+        "validation-results/specops-v2.0.2-qualified-subject.validation-result.json"
+      ]
+    },
+    {
+      "id": "ISSUES-9-13",
+      "severity": "INFO",
+      "disposition": "RESOLVED",
+      "summary": "Issues #9-#13 are technically supported by implementation and validation evidence for this release-readiness assessment.",
+      "observations": [
+        "The accepted review found implementation and validation support for issues #9, #10, #11, #12, and #13.",
+        "This finding does not claim that any issue was mutated or closed."
+      ],
+      "evidenceReferences": [
+        "validation-results/specops-v2.0.2-qualified-subject.validation-result.json"
+      ]
+    },
+    {
+      "id": "F-005-ISSUE-14",
+      "severity": "LOW",
+      "disposition": "UNRESOLVED",
+      "summary": "F-005 / issue #14 remains deferred and tracking-only.",
+      "observations": [
+        "The accepted review deferred issue #14 from the v2.0.2 release scope.",
+        "No issue mutation or closure is claimed."
+      ],
+      "evidenceReferences": [
+        "procedures/specops-v2.0.2-release-readiness-audit.v1.json"
+      ]
+    },
+    {
+      "id": "ISSUES-3-8",
+      "severity": "INFO",
+      "disposition": "UNRESOLVED",
+      "summary": "Future issues #3-#8 remain outside the v2.0.2 release scope.",
+      "observations": [
+        "No technical completion, issue mutation, or release claim is made for issues #3-#8."
+      ],
+      "evidenceReferences": [
+        "procedures/specops-v2.0.2-release-readiness-audit.v1.json"
+      ]
+    },
+    {
+      "id": "FRESH-CHILD-INVOCATION",
+      "severity": "INFO",
+      "disposition": "RESOLVED",
+      "summary": "The initial fresh-child zero-test result was tooling or invocation behavior, not a transformed-child validation failure.",
+      "observations": [
+        "The initial invocation executed zero tests.",
+        "The actual transformed child test assembly subsequently compiled, discovered 4 tests, passed 4, failed 0, and preserved 312 of 312 Bootstrap-materialized files."
+      ],
+      "evidenceReferences": [
+        "validation-results/specops-v2.0.2-qualified-subject.validation-result.json"
+      ]
+    }
+  ]
+}

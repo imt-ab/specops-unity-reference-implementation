@@ -1,0 +1,73 @@
+{
+  "authorityStatus": "NOT_REPOSITORY_AUTHORITY",
+  "checks": [
+    {
+      "id": "qualified-subject-binding",
+      "requirement": "Confirm that the accepted evidence binds git-commit-sha1:46a16eb725294fa43943c8256dfb36d66b75d4e4 to semver:2.0.2 and Bootstrap Source Identity f15e40d81f5612c1d31ab6f6fd52a97a3f35e508c6c2a5ef1eecdee17f4688c5."
+    },
+    {
+      "id": "bootstrap-projection",
+      "requirement": "Aggregate the accepted Bootstrap Projection result and its closed-source accounting without executing Bootstrap Projection again."
+    },
+    {
+      "id": "bootstrap-core",
+      "requirement": "Aggregate the accepted Bootstrap Core result without executing Bootstrap Core again."
+    },
+    {
+      "id": "bootstrap-execution",
+      "requirement": "Aggregate the accepted Bootstrap Execution result without executing Bootstrap Execution again."
+    },
+    {
+      "id": "bootstrap-conformance",
+      "requirement": "Aggregate the accepted Bootstrap Conformance result without executing Bootstrap Conformance again."
+    },
+    {
+      "id": "candidate-bound-evals",
+      "requirement": "Confirm the four already-produced candidate-bound eval results are PASS, contract-valid, definition-bound, and content-identity reproducible without rerunning an eval."
+    },
+    {
+      "id": "producer-unity",
+      "requirement": "Aggregate the accepted qualified producer Unity compilation and complete 14-of-14 EditMode result without running Unity again."
+    },
+    {
+      "id": "fresh-consumer-bootstrap",
+      "requirement": "Aggregate the accepted exactly-once fresh-consumer Bootstrap result with exit code 0 and 312 outputs without invoking Bootstrap again."
+    },
+    {
+      "id": "fresh-child-unity",
+      "requirement": "Aggregate the accepted transformed fresh-child compilation and 4-of-4 EditMode result, including the tooling classification of the initial zero-test invocation, without running Unity again."
+    },
+    {
+      "id": "materialized-byte-preservation",
+      "requirement": "Aggregate the accepted verification that all 312 Bootstrap-materialized child files retained exact bytes."
+    },
+    {
+      "id": "ki-002-remediation",
+      "requirement": "Aggregate the accepted evidence that collab-proxy is absent, was not transitively reintroduced, and VersionControlSettings remained unchanged."
+    },
+    {
+      "id": "producer-final-invariants",
+      "requirement": "Confirm the retained accepted producer-final evidence records the qualified candidate unchanged, a clean worktree, an empty index, and the expected local origin/main."
+    },
+    {
+      "id": "accepted-evidence-integrity",
+      "requirement": "Confirm this procedure only consumes accepted retained validation evidence and does not regenerate technical qualification."
+    }
+  ],
+  "classification": "EXTERNAL_RELEASE_BUNDLE_PROCEDURE",
+  "id": "specops-v2.0.2-release-validation-aggregation",
+  "passCondition": "PASS requires accepted evidence for all thirteen aggregation checks, exact qualified-subject and Source Identity binding, no unresolved result unknown, and no technical validation rerun.",
+  "purpose": "Materialize one aggregate technical VALIDATION_RESULT for the v2.0.2 qualified subject from already accepted validation evidence without rerunning Bootstrap, evals, Unity, EditMode, or fresh-consumer validation.",
+  "reference": "procedures/specops-v2.0.2-release-validation-aggregation.v1.json",
+  "releaseIdentity": {
+    "identifier": "2.0.2",
+    "scheme": "semver"
+  },
+  "sourceIdentity": {
+    "digest": "f15e40d81f5612c1d31ab6f6fd52a97a3f35e508c6c2a5ef1eecdee17f4688c5",
+    "profile": "specops-bootstrap-source-jcs-sha256-v1"
+  },
+  "type": "validation-definition",
+  "underlyingValidationRerunsProhibited": true,
+  "version": "1.0.0"
+}

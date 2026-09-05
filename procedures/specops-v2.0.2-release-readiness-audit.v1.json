@@ -1,0 +1,57 @@
+{
+  "authorityStatus": "NOT_REPOSITORY_AUTHORITY",
+  "broadAuditRerun": false,
+  "candidate": {
+    "revisionIdentifier": "46a16eb725294fa43943c8256dfb36d66b75d4e4",
+    "revisionScheme": "git-commit-sha1"
+  },
+  "classification": "EXTERNAL_RELEASE_BUNDLE_PROCEDURE",
+  "id": "specops-v2.0.2-release-readiness-audit",
+  "purpose": "Materialize the already completed bounded v2.0.2 release-readiness and remediation review for the qualified candidate, without performing another broad audit or authorizing release publication.",
+  "reference": "procedures/specops-v2.0.2-release-readiness-audit.v1.json",
+  "releaseIdentity": {
+    "identifier": "2.0.2",
+    "scheme": "semver"
+  },
+  "requirements": [
+    {
+      "id": "qualified-candidate",
+      "statement": "The review is bound to the qualified candidate and its approved Bootstrap Source Identity."
+    },
+    {
+      "id": "approved-remediation",
+      "statement": "The review is bounded to the approved v2.0.2 remediation and must distinguish supported remediation from deferred or out-of-scope work."
+    },
+    {
+      "id": "accepted-validation",
+      "statement": "The review consumes the already accepted candidate validation and candidate-bound eval results without rerunning validation."
+    },
+    {
+      "id": "semver-decision",
+      "statement": "The accepted SemVer determination for v2.0.2 must be preserved."
+    },
+    {
+      "id": "known-and-deferred-classification",
+      "statement": "KI-001 must remain an unresolved non-blocking known limitation; KI-002 remediation must remain supported; issue #14 must remain deferred; issues #3-#8 must remain outside release scope."
+    },
+    {
+      "id": "implementation-support",
+      "statement": "Issues #9-#13 may be recorded only as technically supported by implementation and validation evidence, without claiming issue closure."
+    },
+    {
+      "id": "fresh-child-invocation-classification",
+      "statement": "The initial fresh-child zero-test invocation must remain classified as tooling or invocation behavior because the transformed child assembly subsequently compiled and passed 4-of-4 EditMode tests."
+    },
+    {
+      "id": "pre-container-readiness",
+      "statement": "PASS may recommend pre-Container release-evidence materialization only; it must not claim Container B, finalization, tagging, publication, or release approval."
+    }
+  ],
+  "reviewAlreadyCompleted": true,
+  "sourceIdentity": {
+    "digest": "f15e40d81f5612c1d31ab6f6fd52a97a3f35e508c6c2a5ef1eecdee17f4688c5",
+    "profile": "specops-bootstrap-source-jcs-sha256-v1"
+  },
+  "type": "audit-definition",
+  "version": "1.0.0"
+}

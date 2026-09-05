@@ -1,0 +1,239 @@
+{
+  "contractVersion": "2.0.0",
+  "provenance": {
+    "contractVersion": "1.0.0",
+    "subject": {
+      "type": "repository",
+      "id": "specops-unity-reference-implementation",
+      "revision": {
+        "scheme": "git-commit-sha1",
+        "identifier": "46a16eb725294fa43943c8256dfb36d66b75d4e4"
+      }
+    },
+    "executionId": "27cf0051-8a31-48fa-8322-ec90f7bb73e0",
+    "producer": {
+      "id": "specops-v2.0.2-release-evidence-materialization-process",
+      "version": "1.0.0"
+    },
+    "executedDefinition": {
+      "type": "validation-definition",
+      "id": "specops-v2.0.2-release-validation-aggregation",
+      "version": "1.0.0",
+      "reference": "procedures/specops-v2.0.2-release-validation-aggregation.v1.json"
+    },
+    "governingContracts": [
+      {
+        "id": "validation-result.schema.json",
+        "version": "2.0.0",
+        "reference": ".specops/contracts/validation-result.schema.json"
+      },
+      {
+        "id": "evidence-provenance.schema.json",
+        "version": "1.0.0",
+        "reference": ".specops/contracts/evidence-provenance.schema.json"
+      }
+    ],
+    "targetScope": [
+      {
+        "type": "release-candidate-technical-qualification",
+        "id": "semver:2.0.2",
+        "reference": "git-commit-sha1:46a16eb725294fa43943c8256dfb36d66b75d4e4"
+      },
+      {
+        "type": "bootstrap-source-identity",
+        "id": "f15e40d81f5612c1d31ab6f6fd52a97a3f35e508c6c2a5ef1eecdee17f4688c5",
+        "reference": "specops-bootstrap-source-jcs-sha256-v1"
+      }
+    ],
+    "executedAtUtc": "2026-09-05T23:20:51.5520448Z",
+    "limitations": [
+      "This provenance records an aggregation execution over already accepted retained evidence; it is not a new technical validation run."
+    ],
+    "unresolvedUnknowns": []
+  },
+  "workItemId": "specops-v2.0.2-release-validation-qualified-subject",
+  "acceptanceOrCheckIds": [
+    "qualified-subject-binding",
+    "bootstrap-projection",
+    "bootstrap-core",
+    "bootstrap-execution",
+    "bootstrap-conformance",
+    "candidate-bound-evals",
+    "producer-unity",
+    "fresh-consumer-bootstrap",
+    "fresh-child-unity",
+    "materialized-byte-preservation",
+    "ki-002-remediation",
+    "producer-final-invariants",
+    "accepted-evidence-integrity"
+  ],
+  "overallResult": "PASS",
+  "checks": [
+    {
+      "id": "qualified-subject-binding",
+      "executed": true,
+      "result": "PASS",
+      "actualEvidence": [
+        "The retained accepted evidence and independent recalculation bind repository revision git-commit-sha1:46a16eb725294fa43943c8256dfb36d66b75d4e4 to release target semver:2.0.2 and Bootstrap Source Identity specops-bootstrap-source-jcs-sha256-v1:f15e40d81f5612c1d31ab6f6fd52a97a3f35e508c6c2a5ef1eecdee17f4688c5."
+      ],
+      "evidenceLocations": [],
+      "limitations": []
+    },
+    {
+      "id": "bootstrap-projection",
+      "executed": true,
+      "result": "PASS",
+      "actualEvidence": [
+        "Accepted retained Bootstrap Projection result: 40 PASS; Bootstrap source metadata 2, authored source inventory 397, implementation support 6, regular leaves 405, projected outputs 312."
+      ],
+      "evidenceLocations": [],
+      "limitations": []
+    },
+    {
+      "id": "bootstrap-core",
+      "executed": true,
+      "result": "PASS",
+      "actualEvidence": [
+        "Accepted retained Bootstrap Core result: 238 PASS with no failures."
+      ],
+      "evidenceLocations": [],
+      "limitations": []
+    },
+    {
+      "id": "bootstrap-execution",
+      "executed": true,
+      "result": "PASS",
+      "actualEvidence": [
+        "Accepted retained Bootstrap Execution result: 143 PASS with no failures."
+      ],
+      "evidenceLocations": [],
+      "limitations": []
+    },
+    {
+      "id": "bootstrap-conformance",
+      "executed": true,
+      "result": "PASS",
+      "actualEvidence": [
+        "Accepted retained Bootstrap Conformance result: 302 PASS with no failures."
+      ],
+      "evidenceLocations": [],
+      "limitations": []
+    },
+    {
+      "id": "candidate-bound-evals",
+      "executed": true,
+      "result": "PASS",
+      "actualEvidence": [
+        "Four exact already-produced candidate-bound eval results were preserved: specops-core-contract-integrity 6 PASS, specops-derived-state-consistency 7 PASS, unity-clean-architecture-static 6 PASS, and unity-editmode-validation 7 PASS.",
+        "Each eval subject is the qualified revision; each executed definition ID/version and calculated definition identity matches the immutable candidate definition; each eval artifact validates against eval-result.schema.json 1.0.0."
+      ],
+      "evidenceLocations": [
+        "eval-results/specops-core-contract-integrity.eval-result.json",
+        "eval-results/specops-derived-state-consistency.eval-result.json",
+        "eval-results/unity-clean-architecture-static.eval-result.json",
+        "eval-results/unity-editmode-validation.eval-result.json"
+      ],
+      "limitations": []
+    },
+    {
+      "id": "producer-unity",
+      "executed": true,
+      "result": "PASS",
+      "actualEvidence": [
+        "Accepted producer validation used Unity 6000.5.8f1 revision 5cb7df797b7d, compiled successfully, discovered all 14 required InfiniteMonkey.EditModeTests cases, passed 14, and failed 0."
+      ],
+      "evidenceLocations": [
+        "eval-results/unity-editmode-validation.eval-result.json"
+      ],
+      "limitations": []
+    },
+    {
+      "id": "fresh-consumer-bootstrap",
+      "executed": true,
+      "result": "PASS",
+      "actualEvidence": [
+        "The accepted fresh-consumer evidence records exactly one production Bootstrap invocation, exit code 0, successful Source Identity verification, and 312 materialized outputs."
+      ],
+      "evidenceLocations": [],
+      "exitCode": 0,
+      "limitations": []
+    },
+    {
+      "id": "fresh-child-unity",
+      "executed": true,
+      "result": "PASS",
+      "actualEvidence": [
+        "The accepted transformed fresh child compiled under Unity 6000.5.8f1 and its SpecOps.ValidationGame.EditModeTests assembly discovered 4 tests, passed 4, and failed 0.",
+        "The initial zero-test invocation was classified as tooling or invocation behavior; it did not invalidate the subsequent transformed-assembly result."
+      ],
+      "evidenceLocations": [],
+      "exitCode": 0,
+      "limitations": []
+    },
+    {
+      "id": "materialized-byte-preservation",
+      "executed": true,
+      "result": "PASS",
+      "actualEvidence": [
+        "The accepted retained inventory and independent read-only comparison confirm 312 of 312 Bootstrap-materialized files preserved exact bytes after fresh-child Unity validation."
+      ],
+      "evidenceLocations": [],
+      "limitations": []
+    },
+    {
+      "id": "ki-002-remediation",
+      "executed": true,
+      "result": "PASS",
+      "actualEvidence": [
+        "Accepted KI-002 remediation evidence confirms collab-proxy is absent from the candidate and fresh child, was not transitively reintroduced, and no VersionControlSettings byte mutation was observed."
+      ],
+      "evidenceLocations": [],
+      "limitations": []
+    },
+    {
+      "id": "producer-final-invariants",
+      "executed": true,
+      "result": "PASS",
+      "actualEvidence": [
+        "Retained producer-final evidence records main and HEAD at 46a16eb725294fa43943c8256dfb36d66b75d4e4, origin/main at af4cb8e7be483d90e165e64a33f4ee5b588bc028, a clean worktree, an empty index, and no untracked files."
+      ],
+      "evidenceLocations": [],
+      "limitations": []
+    },
+    {
+      "id": "accepted-evidence-integrity",
+      "executed": true,
+      "result": "PASS",
+      "actualEvidence": [
+        "This aggregation parsed and checked retained accepted result files and immutable Git objects only; Bootstrap, eval execution, Unity, EditMode, and fresh-consumer validation were not rerun."
+      ],
+      "evidenceLocations": [
+        "procedures/specops-v2.0.2-release-validation-aggregation.v1.json"
+      ],
+      "limitations": []
+    }
+  ],
+  "actualEvidence": [
+    {
+      "source": "Accepted v2.0.2 candidate validation",
+      "observation": "Bootstrap Projection 40 PASS, Core 238 PASS, Execution 143 PASS, Conformance 302 PASS; the four candidate-bound evals PASS; qualified producer Unity compiled and passed 14 of 14 EditMode tests."
+    },
+    {
+      "source": "Retained fresh-consumer validation evidence",
+      "observation": "Exactly one Bootstrap invocation exited 0 with 312 outputs; the transformed fresh child compiled and passed 4 of 4 EditMode tests; 312 of 312 materialized bytes remained preserved."
+    },
+    {
+      "source": "Accepted bounded remediation evidence",
+      "observation": "KI-002 remediation is supported: collab-proxy is absent and not transitively reintroduced, and VersionControlSettings remained byte-preserved."
+    },
+    {
+      "source": "Retained producer-final invariants",
+      "observation": "The candidate remained unchanged with clean worktree, empty index, no untracked files, and the expected local origin/main."
+    }
+  ],
+  "limitations": [
+    "This result aggregates previously accepted validation evidence and does not represent a new technical validation run.",
+    "KI-001 remains an accepted open non-blocking limitation: SENTIS_ANALYTICS_ENABLED was observed in one isolated candidate first-open and was not remediated."
+  ],
+  "unresolvedUnknowns": []
+}

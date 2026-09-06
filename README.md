@@ -2,8 +2,9 @@
 
 `specops-unity-reference-implementation` is a public reference repository demonstrating one concrete combination of SpecOps AI v2 and a selected Unity Clean Architecture.
 
-The latest published Golden Baseline is `v2.0.1`. The `main` branch is the
-current development state and may contain changes made after that release.
+The latest published Golden Baseline is `v2.0.1`. This source tree is the
+bounded `v2.0.2` Container B release-container state; publication and
+remote-main synchronization remain pending Human Authority actions.
 
 ## Current Status
 
@@ -13,13 +14,23 @@ The latest published Golden Baseline is
 The `v2.0.1` release is an immutable historical release. Its annotated tag and
 GitHub Release are the authoritative publication records for that version.
 
-The `main` branch is current development state. It may contain changes made
-after the latest published Golden Baseline and must not be assumed to be
-byte-identical to that release.
+The `v2.0.2` Container B state is distinct from the immutable technical subject
+qualified at `46a16eb725294fa43943c8256dfb36d66b75d4e4`. That subject's qualified
+Bootstrap Source Identity remains
+`f15e40d81f5612c1d31ab6f6fd52a97a3f35e508c6c2a5ef1eecdee17f4688c5`.
+Its durable pre-Container evidence remains separate from source on
+`release-evidence/v2.0.2-staging` at
+`e22a54ce6f3f056cb2df9868e1973cb59148cf55`.
+
+Container B has its own Bootstrap Source Identity in the committed projection
+manifest. Its Git commit identity is established by the materialization commit
+and is deliberately not embedded in the release-container files. The `v2.0.2`
+tag, GitHub Release, evidence finalization, and synchronization to `origin/main`
+have not occurred.
 
 For a new stable Unity project, use the latest published Golden Baseline and
-follow [INSTALL.md](INSTALL.md). Use `main` only when you intentionally want
-the repository's current development state.
+follow [INSTALL.md](INSTALL.md). Do not treat this unpublished Container B
+state as a published release.
 
 See the [changelog](CHANGELOG.md) for public change history and the
 [GitHub Releases](https://github.com/imt-ab/specops-unity-reference-implementation/releases)
@@ -39,7 +50,8 @@ for published release state.
 - Project Reclaimer.
 - A finished game.
 - A claim that this architecture is mandatory for every Unity project.
-- A claim that `main` is identical to the latest published Golden Baseline.
+- A claim that this `v2.0.2` Container B state is already published or present
+  on `origin/main`.
 
 ## Current Authority
 

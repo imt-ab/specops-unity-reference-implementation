@@ -51,6 +51,23 @@ eval definitions, and installed Skills. Inspect those artifacts directly when
 their current contents or counts matter rather than relying on duplicated
 numbers in this guide.
 
+## Current Container B Lifecycle
+
+This source tree is the bounded `v2.0.2` Container B release-container state.
+The immutable technical subject remains
+`46a16eb725294fa43943c8256dfb36d66b75d4e4`, with qualified Bootstrap Source
+Identity
+`f15e40d81f5612c1d31ab6f6fd52a97a3f35e508c6c2a5ef1eecdee17f4688c5`.
+Durable pre-Container evidence remains separate on
+`release-evidence/v2.0.2-staging` at
+`e22a54ce6f3f056cb2df9868e1973cb59148cf55`.
+
+Container B has a new Source Identity recorded in the projection manifest; its
+Git commit identity is established by the materialization commit rather than
+embedded in these files. The `v2.0.2` tag, GitHub Release, synchronization to
+`origin/main`, and release-evidence finalization remain pending separate Human
+Authority gates.
+
 The production Bootstrap is the supported construction path for generating a
 fresh project from a published Golden Baseline.
 
@@ -58,5 +75,5 @@ Release publication state is intentionally not duplicated in this deployment
 guide. Use the repository's GitHub Releases, annotated tags, and release-bound
 evidence when release state or identity matters.
 
-The `main` branch is development state and may differ from the latest published
-Golden Baseline.
+The latest published Golden Baseline remains `v2.0.1`; Container B
+materialization does not itself publish `v2.0.2`.

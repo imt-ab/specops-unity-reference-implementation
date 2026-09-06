@@ -4,6 +4,10 @@ All notable public changes to this repository are recorded here. The structure f
 
 ## [Unreleased]
 
+No changes recorded.
+
+## [2.0.2] - 2026-09-06
+
 ### Added
 
 - Added a step-by-step `INSTALL.md` guide for creating new Unity projects from
@@ -30,6 +34,23 @@ All notable public changes to this repository are recorded here. The structure f
   recovery, and source/child/qualification/evidence separation.
 - Rebound the active Bootstrap authored-source inventory and Source Identity to
   the completed v2.0.2 remediation bytes.
+
+### Release state
+
+- Container B is the bounded `2.0.2` SpecOps v2 + Unity Clean Architecture
+  Golden Baseline release-container state.
+- The immutable qualified technical subject remains
+  `46a16eb725294fa43943c8256dfb36d66b75d4e4`, with qualified Bootstrap Source
+  Identity
+  `f15e40d81f5612c1d31ab6f6fd52a97a3f35e508c6c2a5ef1eecdee17f4688c5`.
+- Durable pre-Container evidence remains separate on
+  `release-evidence/v2.0.2-staging` at
+  `e22a54ce6f3f056cb2df9868e1973cb59148cf55`.
+- Container B has a new Source Identity recorded in the projection manifest;
+  its Git commit identity is established by the materialization commit rather
+  than embedded in these files.
+- The `v2.0.2` tag, GitHub Release, synchronization to `origin/main`, and
+  release-evidence finalization remain pending separate Human Authority gates.
 
 ## [2.0.1] - 2026-08-30
 

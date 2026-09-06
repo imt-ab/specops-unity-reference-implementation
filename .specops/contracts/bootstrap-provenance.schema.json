@@ -60,7 +60,7 @@
           "const": "specops-unity-clean-architecture-golden-baseline"
         },
         "version": {
-          "const": "2.0.1"
+          "const": "2.0.2"
         },
         "sourceIdentity": {
           "type": "object",

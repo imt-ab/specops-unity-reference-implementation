@@ -1,11 +1,21 @@
 # Public Reference Repository Onboarding
 
-Status: Derived contributor guidance for the current development state of
-`specops-unity-reference-implementation`. This document is not release,
-framework, structural, or feature authority.
+Status: Derived contributor guidance for the bounded `v2.0.2` Container B
+release-container state of `specops-unity-reference-implementation`. This
+document is not release, framework, structural, or feature authority.
 
 This repository is a public reference implementation showing one concrete
 combination of SpecOps AI v2 and a selected Unity Clean Architecture.
+
+The qualified technical subject remains
+`46a16eb725294fa43943c8256dfb36d66b75d4e4`, with qualified Bootstrap Source
+Identity
+`f15e40d81f5612c1d31ab6f6fd52a97a3f35e508c6c2a5ef1eecdee17f4688c5`.
+Durable pre-Container evidence remains separate on
+`release-evidence/v2.0.2-staging` at
+`e22a54ce6f3f056cb2df9868e1973cb59148cf55`. Container B has a new Source
+Identity in the projection manifest, while its Git commit identity is
+established by the materialization commit rather than embedded here.
 
 For contribution and reference-repository development, work from the
 human-selected current development state and applicable current authority.
@@ -17,6 +27,9 @@ published GitHub Release.
 Release tags, publication state, release identities, and immutable release
 evidence are defined by their release-bound records and are intentionally not
 duplicated as mutable status in this contributor guide.
+
+The `v2.0.2` tag, GitHub Release, synchronization to `origin/main`, and
+release-evidence finalization remain pending separate Human Authority gates.
 
 ## Choose the Correct Starting Point
 

@@ -12,7 +12,8 @@
       "identifier": "46a16eb725294fa43943c8256dfb36d66b75d4e4"
     }
   },
-  "state": "DRAFT",
+  "state": "FINALIZED",
+  "finalizedAtUtc": "2026-09-06T11:08:03.929Z",
   "evidenceMembers": [
     {
       "role": "EVAL_RESULT",
@@ -108,6 +109,22 @@
       "contentIdentity": {
         "algorithm": "specops-json-jcs-sha256-v1",
         "value": "b22cec745ea16e66c5ac33b223ebaa32e55f4fd1f53160c9b63b5ea5b1e7973a"
+      }
+    },
+    {
+      "role": "AUDIT_RESULT",
+      "artifact": {
+        "id": "audit-result/specops-v2.0.2-container-b-binding",
+        "reference": "audit-results/specops-v2.0.2-container-b-binding.audit-result.json"
+      },
+      "contract": {
+        "id": "audit-result.schema.json",
+        "version": "1.0.0",
+        "reference": ".specops/contracts/audit-result.schema.json"
+      },
+      "contentIdentity": {
+        "algorithm": "specops-json-jcs-sha256-v1",
+        "value": "e4a22d68280623e67d193bd80b224ec75aa11fc6c0456308cf0f3914e94977ad"
       }
     }
   ]

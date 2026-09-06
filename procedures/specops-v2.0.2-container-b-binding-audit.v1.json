@@ -1,0 +1,107 @@
+{
+  "authorityStatus": "NOT_REPOSITORY_AUTHORITY",
+  "bindings": {
+    "containerBRevision": {
+      "identifier": "8c250f489a75763795c93af39b16a8c4af7ef252",
+      "scheme": "git-commit-sha1"
+    },
+    "containerBSourceIdentity": {
+      "digest": "13a7657702396cad16e875d4317e6a322d177eef2b39a4239b75e6dee85a05a3",
+      "profile": "specops-bootstrap-source-jcs-sha256-v1"
+    },
+    "durableInitialEvidenceCommit": {
+      "identifier": "e22a54ce6f3f056cb2df9868e1973cb59148cf55",
+      "scheme": "git-commit-sha1"
+    },
+    "qualifiedTechnicalSubjectRevision": {
+      "identifier": "46a16eb725294fa43943c8256dfb36d66b75d4e4",
+      "scheme": "git-commit-sha1"
+    },
+    "qualifiedTechnicalSubjectSourceIdentity": {
+      "digest": "f15e40d81f5612c1d31ab6f6fd52a97a3f35e508c6c2a5ef1eecdee17f4688c5",
+      "profile": "specops-bootstrap-source-jcs-sha256-v1"
+    },
+    "releaseIdentity": {
+      "identifier": "2.0.2",
+      "scheme": "semver"
+    }
+  },
+  "classification": "EXTERNAL_RELEASE_BUNDLE_PROCEDURE",
+  "id": "specops-v2.0.2-container-b-binding-audit",
+  "limitations": [
+    "This subordinate external procedure is release-bundle support material and is not repository authority.",
+    "This bounded read-only audit uses immutable Git objects and accepted historical evidence; it does not rerun technical validation, production evals, Bootstrap Projection, Bootstrap Core, Bootstrap Execution, Bootstrap Conformance, fresh-consumer construction, EditMode, or Unity.",
+    "This procedure does not re-subject any of the six inherited evidence members from qualified technical subject 46a16eb725294fa43943c8256dfb36d66b75d4e4 to Container B 8c250f489a75763795c93af39b16a8c4af7ef252.",
+    "This procedure does not authorize or perform push, tag creation, GitHub Release publication, release-asset creation or upload, remote-main synchronization, issue changes, or any publication."
+  ],
+  "purpose": "Perform a bounded read-only audit proving that committed Container B 8c250f489a75763795c93af39b16a8c4af7ef252 is the reviewed v2.0.2 release container around qualified technical subject 46a16eb725294fa43943c8256dfb36d66b75d4e4 and durable initial evidence root e22a54ce6f3f056cb2df9868e1973cb59148cf55, without requalifying technical evidence or claiming publication.",
+  "reference": "procedures/specops-v2.0.2-container-b-binding-audit.v1.json",
+  "requirements": [
+    {
+      "description": "Container B has exactly one parent and that direct parent is the qualified technical subject.",
+      "id": "container-b-direct-child-of-qualified-subject"
+    },
+    {
+      "description": "The qualified-subject to Container B range contains exactly one commit.",
+      "id": "single-commit-container-transition"
+    },
+    {
+      "description": "The qualified-subject to Container B changed-path set contains exactly the fourteen Human-Authority-reviewed paths and no others.",
+      "id": "exact-fourteen-path-container-delta"
+    },
+    {
+      "description": "Container B records repository.releasedVersion as 2.0.2.",
+      "id": "released-version-materialized"
+    },
+    {
+      "description": "The active committed Container B Bootstrap binding uses Source Identity 13a7657702396cad16e875d4317e6a322d177eef2b39a4239b75e6dee85a05a3 and independently reproduces it from immutable source.",
+      "id": "container-b-source-identity-reproduced"
+    },
+    {
+      "description": "Container B source accounting is exactly 2 Bootstrap source metadata paths, 397 authored source paths, 6 implementation-support paths, 405 regular leaves, and 312 projected outputs.",
+      "id": "container-b-accounting-exact"
+    },
+    {
+      "description": "All six inherited technical and review evidence members remain bound to qualified technical subject 46a16eb725294fa43943c8256dfb36d66b75d4e4 and none is re-subjected to Container B.",
+      "id": "qualified-subject-continuity"
+    },
+    {
+      "description": "No eval or technical validation is rerun by this binding audit.",
+      "id": "technical-validation-not-rerun"
+    },
+    {
+      "description": "The immutable initial evidence root remains exactly parentless commit e22a54ce6f3f056cb2df9868e1973cb59148cf55, with all nine paths recoverable, all eight non-manifest blobs exact, and all six recorded member identities reproducible.",
+      "id": "durable-initial-evidence-continuity"
+    },
+    {
+      "description": "Container B does not change SpecOps framework authority, Unity architecture authority, or repository-wide constraint authority, and release evidence remains derived and non-authoritative.",
+      "id": "authority-continuity"
+    },
+    {
+      "description": "Accepted candidate validation remains historical qualification evidence for the qualified subject and does not claim Container B Unity validation.",
+      "id": "technical-validation-continuity"
+    },
+    {
+      "description": "KI-001 remains represented by unchanged release-readiness evidence as an accepted non-blocking known limitation and is not marked fixed.",
+      "id": "known-limitation-continuity"
+    },
+    {
+      "description": "The v2.0.2 tag remains absent locally and remotely and pending separate Human Authority.",
+      "id": "tag-pending"
+    },
+    {
+      "description": "GitHub Release v2.0.2 remains absent and pending separate Human Authority.",
+      "id": "github-release-pending"
+    },
+    {
+      "description": "origin/main remains af4cb8e7be483d90e165e64a33f4ee5b588bc028 and remote-main synchronization remains pending separate Human Authority.",
+      "id": "remote-main-synchronization-pending"
+    },
+    {
+      "description": "At audit execution time the remote evidence branch remains e22a54ce6f3f056cb2df9868e1973cb59148cf55; a future push of the local final evidence commit requires separate Human Authority and no remote durability is claimed.",
+      "id": "final-evidence-push-pending"
+    }
+  ],
+  "type": "audit-definition",
+  "version": "1.0.0"
+}

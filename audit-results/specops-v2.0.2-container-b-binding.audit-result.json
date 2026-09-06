@@ -1,0 +1,210 @@
+{
+  "contractVersion": "1.0.0",
+  "findings": [
+    {
+      "disposition": "RESOLVED",
+      "id": "R3B-CONTAINER-B-BINDING",
+      "observations": [
+        "Container B is exactly 8c250f489a75763795c93af39b16a8c4af7ef252 and its only parent is qualified technical subject 46a16eb725294fa43943c8256dfb36d66b75d4e4.",
+        "The qualified-subject to Container B range contains exactly one commit.",
+        "Container B changes exactly these fourteen reviewed paths and no others: .specops/bootstrap/bootstrap-v1.projection-manifest.json; .specops/contracts/bootstrap-projection-manifest.schema.json; .specops/contracts/bootstrap-provenance.schema.json; .specops/specops.json; Assets/Project/Docs/SpecOps/DEPLOYMENT.md; Assets/Project/Docs/SpecOps/ONBOARDING.md; CHANGELOG.md; CONTRIBUTING.md; README.md; tools/specops/bootstrap/SpecOps.Bootstrap.psm1; tools/specops/bootstrap/tests/SpecOps.Bootstrap.Conformance.Tests.ps1; tools/specops/bootstrap/tests/SpecOps.Bootstrap.Core.Tests.ps1; tools/specops/bootstrap/tests/SpecOps.Bootstrap.Execution.Tests.ps1; tools/specops/tests/SpecOps.BootstrapProjection.Tests.ps1.",
+        ".specops/specops.json records repository.releasedVersion as 2.0.2.",
+        "The active committed Container B Bootstrap binding uses specops-bootstrap-source-jcs-sha256-v1:13a7657702396cad16e875d4317e6a322d177eef2b39a4239b75e6dee85a05a3, and that Source Identity independently reproduces from immutable Container B source.",
+        "Container B accounting is exactly bootstrap source metadata 2, authored source 397, implementation support 6, regular leaves 405, and projected outputs 312."
+      ],
+      "severity": "INFO",
+      "summary": "Committed Container B is bound as the reviewed v2.0.2 release container.",
+      "evidenceReferences": [
+        "git-commit-sha1:8c250f489a75763795c93af39b16a8c4af7ef252",
+        "specops-bootstrap-source-jcs-sha256-v1:13a7657702396cad16e875d4317e6a322d177eef2b39a4239b75e6dee85a05a3"
+      ]
+    },
+    {
+      "disposition": "RESOLVED",
+      "id": "R3B-QUALIFIED-SUBJECT-CONTINUITY",
+      "observations": [
+        "All six inherited technical and review evidence members remain bound to qualified technical subject 46a16eb725294fa43943c8256dfb36d66b75d4e4 and qualified Source Identity f15e40d81f5612c1d31ab6f6fd52a97a3f35e508c6c2a5ef1eecdee17f4688c5.",
+        "None of the six inherited evidence members is re-subjected to Container B 8c250f489a75763795c93af39b16a8c4af7ef252.",
+        "No eval or technical validation was rerun by this binding audit."
+      ],
+      "severity": "INFO",
+      "summary": "The original six evidence members retain their qualified technical subject.",
+      "evidenceReferences": [
+        "git-commit-sha1:46a16eb725294fa43943c8256dfb36d66b75d4e4",
+        "specops-bootstrap-source-jcs-sha256-v1:f15e40d81f5612c1d31ab6f6fd52a97a3f35e508c6c2a5ef1eecdee17f4688c5",
+        "git-commit-sha1:e22a54ce6f3f056cb2df9868e1973cb59148cf55"
+      ]
+    },
+    {
+      "disposition": "RESOLVED",
+      "id": "R3B-DURABLE-INITIAL-EVIDENCE-CONTINUITY",
+      "observations": [
+        "The durable initial evidence root remains exactly e22a54ce6f3f056cb2df9868e1973cb59148cf55 and has zero parents.",
+        "All nine original evidence-tree paths are recoverable from immutable Git objects.",
+        "The eight original non-manifest blobs remain exact-byte identical.",
+        "The original six manifest-member specops-json-jcs-sha256-v1 content identities independently reproduce from the exact initial Git-object bytes."
+      ],
+      "severity": "INFO",
+      "summary": "The durable initial evidence root and its frozen evidence bytes remain continuous.",
+      "evidenceReferences": [
+        "git-commit-sha1:e22a54ce6f3f056cb2df9868e1973cb59148cf55",
+        "release-manifest/specops-v2.0.2.release-manifest.json"
+      ]
+    },
+    {
+      "disposition": "RESOLVED",
+      "id": "R3B-AUTHORITY-CONTINUITY",
+      "observations": [
+        "Container B does not change Assets/Project/Docs/SpecOps/SPECOPS_V2.md.",
+        "Container B does not change Assets/Project/Docs/Architecture/ARCHITECTURE.md.",
+        "Container B does not change Assets/Project/Docs/Governance/GLOBAL_CONSTRAINTS.md.",
+        "The audit procedure, audit result, release manifest, validation results, eval results, and release-readiness evidence remain derived and non-authoritative."
+      ],
+      "severity": "INFO",
+      "summary": "Current framework, structural, and repository-wide authority is unchanged.",
+      "evidenceReferences": [
+        "Assets/Project/Docs/SpecOps/SPECOPS_V2.md",
+        "Assets/Project/Docs/Architecture/ARCHITECTURE.md",
+        "Assets/Project/Docs/Governance/GLOBAL_CONSTRAINTS.md"
+      ]
+    },
+    {
+      "disposition": "RESOLVED",
+      "id": "R3B-TECHNICAL-VALIDATION-CONTINUITY",
+      "observations": [
+        "validation-results/specops-v2.0.2-qualified-subject.validation-result.json remains accepted historical qualification evidence for qualified subject 46a16eb725294fa43943c8256dfb36d66b75d4e4.",
+        "This binding audit does not claim that Container B itself was validated by Unity.",
+        "This binding audit did not run Unity, Bootstrap validation suites, evals, fresh-consumer construction, EditMode, or any other technical validation."
+      ],
+      "severity": "INFO",
+      "summary": "Accepted candidate validation remains historical evidence for the qualified subject only.",
+      "evidenceReferences": [
+        "validation-results/specops-v2.0.2-qualified-subject.validation-result.json"
+      ]
+    },
+    {
+      "disposition": "UNRESOLVED",
+      "id": "KI-001",
+      "observations": [
+        "KI-001 remains represented by unchanged audit-results/specops-v2.0.2-release-readiness.audit-result.json.",
+        "KI-001 remains an accepted non-blocking known limitation.",
+        "KI-001 was not remediated or marked fixed by this binding audit."
+      ],
+      "severity": "LOW",
+      "summary": "KI-001 remains an accepted non-blocking known limitation.",
+      "evidenceReferences": [
+        "audit-results/specops-v2.0.2-release-readiness.audit-result.json"
+      ]
+    },
+    {
+      "disposition": "UNRESOLVED",
+      "id": "R3B-PENDING-TAG",
+      "observations": [
+        "The v2.0.2 tag is absent locally and remotely at audit execution time.",
+        "Tag creation remains pending separate Human Authority and is not authorized by this gate."
+      ],
+      "severity": "INFO",
+      "summary": "The v2.0.2 tag remains pending."
+    },
+    {
+      "disposition": "UNRESOLVED",
+      "id": "R3B-PENDING-GITHUB-RELEASE",
+      "observations": [
+        "The repository has no GitHub Release v2.0.2 at audit execution time.",
+        "GitHub Release publication remains pending separate Human Authority and is not authorized or claimed by this gate."
+      ],
+      "severity": "INFO",
+      "summary": "GitHub Release v2.0.2 remains pending."
+    },
+    {
+      "disposition": "UNRESOLVED",
+      "id": "R3B-PENDING-REMOTE-MAIN-SYNCHRONIZATION",
+      "observations": [
+        "origin/main remains af4cb8e7be483d90e165e64a33f4ee5b588bc028 at audit execution time.",
+        "Remote-main synchronization remains pending separate Human Authority and is not authorized by this gate."
+      ],
+      "severity": "INFO",
+      "summary": "Remote-main synchronization remains pending."
+    },
+    {
+      "disposition": "UNRESOLVED",
+      "id": "R3B-PENDING-FINAL-EVIDENCE-PUSH",
+      "observations": [
+        "At audit execution time origin/release-evidence/v2.0.2-staging remains e22a54ce6f3f056cb2df9868e1973cb59148cf55.",
+        "The local final evidence commit created after this audit requires a separate future Human Authority push.",
+        "No remote durability is claimed for the local finalization commit."
+      ],
+      "severity": "INFO",
+      "summary": "Final evidence push remains pending."
+    }
+  ],
+  "overallResult": "PASS",
+  "provenance": {
+    "contractVersion": "1.0.0",
+    "executedAtUtc": "2026-09-06T10:36:09.366Z",
+    "executedDefinition": {
+      "id": "specops-v2.0.2-container-b-binding-audit",
+      "reference": "procedures/specops-v2.0.2-container-b-binding-audit.v1.json",
+      "type": "audit-definition",
+      "version": "1.0.0"
+    },
+    "executionId": "d2f61e74-0471-4781-b67c-c4713a745262",
+    "governingContracts": [
+      {
+        "id": "audit-result.schema.json",
+        "reference": ".specops/contracts/audit-result.schema.json",
+        "version": "1.0.0"
+      },
+      {
+        "id": "evidence-provenance.schema.json",
+        "reference": ".specops/contracts/evidence-provenance.schema.json",
+        "version": "1.0.0"
+      }
+    ],
+    "limitations": [
+      "This bounded read-only audit inspected immutable Git objects and current local and remote refs; it did not rerun technical validation, production evals, Bootstrap Projection, Bootstrap Core, Bootstrap Execution, Bootstrap Conformance, fresh-consumer construction, EditMode, or Unity.",
+      "This audit does not re-subject any of the six inherited evidence members from qualified technical subject 46a16eb725294fa43943c8256dfb36d66b75d4e4 to Container B 8c250f489a75763795c93af39b16a8c4af7ef252.",
+      "This audit and its procedure do not authorize push, tag creation, GitHub Release publication, release assets, remote-main synchronization, issue changes, or publication."
+    ],
+    "producer": {
+      "id": "specops-v2-release-evidence-materialization-process",
+      "version": "1.0.0"
+    },
+    "subject": {
+      "id": "specops-unity-reference-implementation",
+      "revision": {
+        "identifier": "8c250f489a75763795c93af39b16a8c4af7ef252",
+        "scheme": "git-commit-sha1"
+      },
+      "type": "repository"
+    },
+    "targetScope": [
+      {
+        "id": "semver:2.0.2",
+        "reference": "git-commit-sha1:8c250f489a75763795c93af39b16a8c4af7ef252",
+        "type": "release-container-binding"
+      },
+      {
+        "id": "specops-unity-reference-implementation",
+        "reference": "git-commit-sha1:46a16eb725294fa43943c8256dfb36d66b75d4e4",
+        "type": "qualified-technical-subject"
+      },
+      {
+        "id": "qualified-technical-subject",
+        "reference": "specops-bootstrap-source-jcs-sha256-v1:f15e40d81f5612c1d31ab6f6fd52a97a3f35e508c6c2a5ef1eecdee17f4688c5",
+        "type": "bootstrap-source-identity"
+      },
+      {
+        "id": "container-b",
+        "reference": "specops-bootstrap-source-jcs-sha256-v1:13a7657702396cad16e875d4317e6a322d177eef2b39a4239b75e6dee85a05a3",
+        "type": "bootstrap-source-identity"
+      },
+      {
+        "id": "release-evidence/v2.0.2-staging",
+        "reference": "git-commit-sha1:e22a54ce6f3f056cb2df9868e1973cb59148cf55",
+        "type": "durable-evidence-root"
+      }
+    ],
+    "unresolvedUnknowns": []
+  }
+}

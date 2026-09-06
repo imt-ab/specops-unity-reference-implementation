@@ -154,7 +154,7 @@ try{
     Assert-Equal Accounting 'authored source count' $manifest.authoredSourceInventory.Count 397
     Assert-Equal Accounting 'implementation support count' $mirror.Support.Count 6
     Assert-True Accounting 'conformance suite is dynamically accounted support' ($mirror.Support-ccontains'tools/specops/bootstrap/tests/SpecOps.Bootstrap.Conformance.Tests.ps1')
-    Assert-Equal Accounting 'source identity frozen' $mirror.Record.SourceIdentity.digest '13a7657702396cad16e875d4317e6a322d177eef2b39a4239b75e6dee85a05a3'
+    Assert-Equal Accounting 'source identity frozen' $mirror.Record.SourceIdentity.digest '90f8d9a50c159dc08245f94c631953e9c70a9ced8c22fcd73ad5e55fd2d49c56'
 
     $publishRoot=Join-Path $tempRoot 'published';[void][IO.Directory]::CreateDirectory($publishRoot)
     $destinationA=Join-Path $publishRoot 'DeterminismA'
@@ -231,7 +231,7 @@ try{
     Assert-Equal Provenance 'exact top-level shape' (@($provenance.PSObject.Properties.Name|Sort-Object)-join',') 'authorityStatus,bootstrap,classification,contentInputs,contractVersion,evidenceStatus,sourceBaseline'
     Assert-Equal Provenance 'source baseline id' $provenance.sourceBaseline.id 'specops-unity-clean-architecture-golden-baseline'
     Assert-Equal Provenance 'source baseline version' $provenance.sourceBaseline.version '2.0.2'
-    Assert-Equal Provenance 'source identity' $provenance.sourceBaseline.sourceIdentity.digest '13a7657702396cad16e875d4317e6a322d177eef2b39a4239b75e6dee85a05a3'
+    Assert-Equal Provenance 'source identity' $provenance.sourceBaseline.sourceIdentity.digest '90f8d9a50c159dc08245f94c631953e9c70a9ced8c22fcd73ad5e55fd2d49c56'
     Assert-Equal Provenance 'contract version' $provenance.bootstrap.contractVersion '1.0.0';Assert-Equal Provenance 'implementation version' $provenance.bootstrap.implementationVersion '1.0.0'
     foreach($term in @('DestinationPath','sourcePath','stagingPath','timestamp','username','machine','git','releaseStatus','validationStatus','PASS','approval')){Assert-True Provenance "prohibited semantic absent: $term" (-not$provenanceText.Contains($term,[StringComparison]::OrdinalIgnoreCase))}
 
@@ -394,7 +394,7 @@ $result=[ordered]@{
     Result=$(if($script:Failures.Count){'FAIL'}else{'PASS'});Tests=$script:Tests;Categories=$script:Categories;Failures=@($script:Failures)
     AcceptanceCriteria=@(1..16|ForEach-Object{'AC-F2-{0:D3}'-f$_});RegularLeafCount=405;BootstrapSourceMetadataCount=2
     AuthoredFiles=397;ImplementationSupportFiles=6;OutputCount=312
-    SourceIdentity='13a7657702396cad16e875d4317e6a322d177eef2b39a4239b75e6dee85a05a3'
+    SourceIdentity='90f8d9a50c159dc08245f94c631953e9c70a9ced8c22fcd73ad5e55fd2d49c56'
     GoldenBaselineId='specops-unity-clean-architecture-golden-baseline';GoldenBaselineVersion='2.0.2'
     BootstrapContractVersion='1.0.0';BootstrapImplementationVersion='1.0.0'
     UnityExecuted=$false;RealHumanDestinationUsed=$false;GitRequired=$false;ExternalRuntimeOrPackageIntroduced=$false

@@ -4,7 +4,12 @@ All notable public changes to this repository are recorded here. The structure f
 
 ## [Unreleased]
 
-No changes recorded.
+### Changed
+
+- Synchronized mutable current-main repository-instance documentation after
+  publication of the immutable `v2.0.2` Golden Baseline.
+- Rebound the development Bootstrap Source Identity to the synchronized
+  authored source bytes without modifying the `v2.0.2` release.
 
 ## [2.0.2] - 2026-09-06
 
@@ -51,6 +56,14 @@ No changes recorded.
   than embedded in these files.
 - The `v2.0.2` tag, GitHub Release, synchronization to `origin/main`, and
   release-evidence finalization remain pending separate Human Authority gates.
+
+> Historical note: this release-state section records the state at Container B
+> materialization. Release evidence was subsequently finalized at
+> `cf5eee4de0b17b62eeb8bea62f33491bd56fcaf9`; the annotated `v2.0.2` tag was
+> published targeting `8c250f489a75763795c93af39b16a8c4af7ef252`; and the immutable GitHub Release
+> `SpecOps v2.0.2 - Golden Baseline` was published. Container B was subsequently
+> promoted to `main`. The immutable released source snapshot was not rewritten
+> after publication.
 
 ## [2.0.1] - 2026-08-30
 

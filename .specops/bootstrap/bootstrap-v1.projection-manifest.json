@@ -11,7 +11,7 @@
   },
   "sourceIdentity": {
     "profile": "specops-bootstrap-source-jcs-sha256-v1",
-    "digest": "13a7657702396cad16e875d4317e6a322d177eef2b39a4239b75e6dee85a05a3"
+    "digest": "90f8d9a50c159dc08245f94c631953e9c70a9ced8c22fcd73ad5e55fd2d49c56"
   },
   "canonicalOrdering": {
     "bootstrapSourceMetadata": "path-ordinal-ascending",
@@ -4535,8 +4535,8 @@
     {
       "sourcePath": "Assets/Project/Docs/SpecOps/DEPLOYMENT.md",
       "byteIdentity": {
-        "byteLength": 4829,
-        "sha256": "9ad7a038adc014017ac481b5ea4939b341aa9f284a715bfe44e16826a8fa6fca"
+        "byteLength": 4425,
+        "sha256": "b0cf4cf4a2b15f8121ecc651e740dc7267e39e486de99fa7bc8303001e1e98de"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "PUBLIC_REPOSITORY_INSTANCE"
@@ -4553,8 +4553,8 @@
     {
       "sourcePath": "Assets/Project/Docs/SpecOps/ONBOARDING.md",
       "byteIdentity": {
-        "byteLength": 6000,
-        "sha256": "88f670f567c1ff7af85030fff4ae62b204129208574fb383fc4c7c6351e3c9ed"
+        "byteLength": 5500,
+        "sha256": "114915c54ccf652f4e8c8076977939874df8417e545f003154f94763bde4757c"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "PUBLIC_REPOSITORY_INSTANCE"
@@ -5398,8 +5398,8 @@
     {
       "sourcePath": "CHANGELOG.md",
       "byteIdentity": {
-        "byteLength": 4863,
-        "sha256": "4d16b9b6a89941e4c3de40a4dc46000a47486688670eeb1394cfb19f8ef4a730"
+        "byteLength": 5627,
+        "sha256": "2553080b1ea320ebda6588d0dee4ffb6fcc35e869883ffb58e4081370262ea74"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "PUBLIC_REPOSITORY_INSTANCE"
@@ -5407,8 +5407,8 @@
     {
       "sourcePath": "CONTRIBUTING.md",
       "byteIdentity": {
-        "byteLength": 5906,
-        "sha256": "2ae16a5b75164c1ea357ea809ccb43fd27400b986d1d30acfa1605103af0e4c6"
+        "byteLength": 5504,
+        "sha256": "65c82e3d181f1185e4c731e311d4d70b564bb79e2a81c233f9cea251d9e27489"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "PUBLIC_REPOSITORY_INSTANCE"
@@ -5416,8 +5416,8 @@
     {
       "sourcePath": "INSTALL.md",
       "byteIdentity": {
-        "byteLength": 14816,
-        "sha256": "726573854b12f8746199eeba9038fa99ba981752792ac7a65ca488c913b45357"
+        "byteLength": 14315,
+        "sha256": "446827cd753aacdb07751dc05d5d90fcd756eb790f09c34cd4166340b7f0285a"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "PUBLIC_REPOSITORY_INSTANCE"
@@ -6159,8 +6159,8 @@
     {
       "sourcePath": "README.md",
       "byteIdentity": {
-        "byteLength": 10926,
-        "sha256": "c8e4491fd0a991ebdf22e7dce0fd372bcd934c0e52875afc866529a26946526c"
+        "byteLength": 10406,
+        "sha256": "77151b20ec34dd251a49ff7bf9bf9fc58f85e617728f3b52385fa972c0dcbf4b"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "PUBLIC_REPOSITORY_INSTANCE"

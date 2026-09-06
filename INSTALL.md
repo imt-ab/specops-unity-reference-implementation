@@ -18,7 +18,7 @@ Latest Golden Baseline
 
 This installation guide has been reviewed for:
 
-- **SpecOps AI Golden Baseline:** v2.0.1
+- **SpecOps AI Golden Baseline:** v2.0.2
 - **Unity Editor:** 6000.5.8f1
 - **Platform:** 64-bit Windows
 - **Bootstrap runtime:** PowerShell 7 or later
@@ -27,7 +27,7 @@ The installation workflow is intended to remain stable across compatible
 Golden Baseline releases, but package versions, Unity versions, known issues,
 and Bootstrap requirements may change.
 
-If the latest published Golden Baseline is newer than v2.0.1, review that
+If the latest published Golden Baseline is newer than v2.0.2, review that
 release's notes and current known issues before using version-specific values
 from this guide.
 
@@ -133,7 +133,7 @@ ProjectSettings\ProjectVersion.txt
 
 Install the exact editor version recorded there through Unity Hub.
 
-For the current v2.0.1 Golden Baseline this is:
+For the current v2.0.2 Golden Baseline this is:
 
 ```text
 Unity 6000.5.8f1
@@ -304,7 +304,7 @@ without first understanding its cause.
 
 ## 10. Known First-Open Behaviors
 
-The current Golden Baseline has documented non-blocking known issues.
+The current Golden Baseline has a documented non-blocking known issue.
 
 ### AI Inference analytics define
 
@@ -326,28 +326,8 @@ See:
 
 [KI-001](https://github.com/imt-ab/specops-unity-reference-implementation/issues/1)
 
-### Unity Version Control panel
-
-Opening the Unity Version Control panel can cause Unity's Version Control
-package to change:
-
-```text
-ProjectSettings/VersionControlSettings.asset
-```
-
-to use the Unity Version Control provider.
-
-Plain project opening does not require this panel.
-
-If your project uses Git or another VCS, do not open or configure the Unity
-Version Control panel unless that is intentional.
-
-See:
-
-[KI-002](https://github.com/imt-ab/specops-unity-reference-implementation/issues/2)
-
-Check the repository's current open issues for newer known limitations when
-using a later Golden Baseline release.
+Check the repository's current open issues for later or newly identified
+limitations before starting a project.
 
 ## 11. Set Up Your Own Version Control
 

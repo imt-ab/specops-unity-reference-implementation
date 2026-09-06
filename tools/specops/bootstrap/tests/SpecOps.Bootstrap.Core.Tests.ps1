@@ -205,7 +205,7 @@ try{
     $output=New-BootstrapProspectiveOutputMap $source $inputs '1.0.0'
     Assert-True Provenance 'filesystem schema mutation after materialization is neutral' $output.Bytes.ContainsKey('.specops/bootstrap.json')
 $static=Test-BootstrapByteMapStatic $output
-Assert-Equal Integration 'Source Identity reproduced' $record.SourceIdentity.digest '13a7657702396cad16e875d4317e6a322d177eef2b39a4239b75e6dee85a05a3'
+Assert-Equal Integration 'Source Identity reproduced' $record.SourceIdentity.digest '90f8d9a50c159dc08245f94c631953e9c70a9ced8c22fcd73ad5e55fd2d49c56'
 Assert-Equal Integration 'all authored files verified' $source.Bytes.Count 397
 Assert-True Integration 'implementation module recognized as support' ($source.ImplementationSupportPaths-ccontains'tools/specops/bootstrap/SpecOps.Bootstrap.psm1')
 Assert-True Integration 'core tests recognized as support' ($source.ImplementationSupportPaths-ccontains'tools/specops/bootstrap/tests/SpecOps.Bootstrap.Core.Tests.ps1')

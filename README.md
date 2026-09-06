@@ -2,35 +2,26 @@
 
 `specops-unity-reference-implementation` is a public reference repository demonstrating one concrete combination of SpecOps AI v2 and a selected Unity Clean Architecture.
 
-The latest published Golden Baseline is `v2.0.1`. This source tree is the
-bounded `v2.0.2` Container B release-container state; publication and
-remote-main synchronization remain pending Human Authority actions.
+The latest published Golden Baseline is `v2.0.2`. This `main` source tree is
+mutable current development and remains distinct from the immutable published
+release, even where their histories previously shared the same commit.
 
 ## Current Status
 
 The latest published Golden Baseline is
-[`v2.0.1`](https://github.com/imt-ab/specops-unity-reference-implementation/releases/tag/v2.0.1).
+[`v2.0.2`](https://github.com/imt-ab/specops-unity-reference-implementation/releases/tag/v2.0.2).
 
-The `v2.0.1` release is an immutable historical release. Its annotated tag and
-GitHub Release are the authoritative publication records for that version.
+The `v2.0.2` release is published and immutable. Its annotated tag, GitHub
+Release, and release-bound evidence are the authoritative publication and
+identity records for that version.
 
-The `v2.0.2` Container B state is distinct from the immutable technical subject
-qualified at `46a16eb725294fa43943c8256dfb36d66b75d4e4`. That subject's qualified
-Bootstrap Source Identity remains
-`f15e40d81f5612c1d31ab6f6fd52a97a3f35e508c6c2a5ef1eecdee17f4688c5`.
-Its durable pre-Container evidence remains separate from source on
-`release-evidence/v2.0.2-staging` at
-`e22a54ce6f3f056cb2df9868e1973cb59148cf55`.
+The `main` branch is mutable current development. It may move beyond the latest
+immutable release, so contributors must not infer that future `main` state is
+the published Golden Baseline.
 
-Container B has its own Bootstrap Source Identity in the committed projection
-manifest. Its Git commit identity is established by the materialization commit
-and is deliberately not embedded in the release-container files. The `v2.0.2`
-tag, GitHub Release, evidence finalization, and synchronization to `origin/main`
-have not occurred.
-
-For a new stable Unity project, use the latest published Golden Baseline and
-follow [INSTALL.md](INSTALL.md). Do not treat this unpublished Container B
-state as a published release.
+For a new stable Unity project, use the published `v2.0.2` release source and
+follow [INSTALL.md](INSTALL.md), rather than using current development from
+`main`.
 
 See the [changelog](CHANGELOG.md) for public change history and the
 [GitHub Releases](https://github.com/imt-ab/specops-unity-reference-implementation/releases)
@@ -50,8 +41,8 @@ for published release state.
 - Project Reclaimer.
 - A finished game.
 - A claim that this architecture is mandatory for every Unity project.
-- A claim that this `v2.0.2` Container B state is already published or present
-  on `origin/main`.
+- A claim that mutable current development on `main` necessarily equals the
+  latest immutable published release.
 
 ## Current Authority
 
@@ -87,14 +78,14 @@ The repository uses `InfiniteMonkey.*` assembly names. VContainer is present for
 ## Latest Published Golden Baseline
 
 The latest published Golden Baseline is
-[`v2.0.1`](https://github.com/imt-ab/specops-unity-reference-implementation/releases/tag/v2.0.1).
+[`v2.0.2`](https://github.com/imt-ab/specops-unity-reference-implementation/releases/tag/v2.0.2).
 
 That release is immutable. Detailed release identities, qualification evidence,
 validation results, evidence hashes, and publication records belong to the
 annotated tag, GitHub Release, and release-bound evidence rather than being
 duplicated here as mutable current-state claims.
 
-For `v2.0.1`:
+For `v2.0.2`:
 
 - Unity editor: `6000.5.8f1` (revision `5cb7df797b7d`).
 - Default IDE target: JetBrains Rider.

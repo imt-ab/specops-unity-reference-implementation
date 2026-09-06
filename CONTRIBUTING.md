@@ -2,7 +2,11 @@
 
 Thank you for helping improve `specops-unity-reference-implementation`. Contributions should strengthen its purpose as a public SpecOps AI v2 + Unity Clean Architecture reference and Golden Baseline without turning it into a generic framework or finished game.
 
-This source tree is the bounded `v2.0.2` Container B release-container state. The qualified technical subject remains `46a16eb725294fa43943c8256dfb36d66b75d4e4`, with qualified Bootstrap Source Identity `f15e40d81f5612c1d31ab6f6fd52a97a3f35e508c6c2a5ef1eecdee17f4688c5`. Durable pre-Container evidence remains separate on `release-evidence/v2.0.2-staging` at `e22a54ce6f3f056cb2df9868e1973cb59148cf55`. Container B has a new Source Identity in the projection manifest; its Git commit identity is established by the materialization commit rather than embedded in these files. The `v2.0.2` tag, GitHub Release, synchronization to `origin/main`, and release-evidence finalization remain pending separate Human Authority actions.
+The `main` branch is mutable current development. The latest immutable
+published Golden Baseline is `v2.0.2`; its released state and identities belong
+to the annotated tag, GitHub Release, and release-bound evidence. Current
+development may move beyond that immutable snapshot and must not be treated as
+the release itself.
 
 ## Start With Authority
 

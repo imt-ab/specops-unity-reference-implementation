@@ -12,7 +12,7 @@ This project uses a structured and scalable folder layout to clearly separate:
 
 The goal is clarity, consistency, and predictable asset placement as the project grows.
 
-Scope: The structure defined in this document refers to the Assets/Project subtree. To maintain a clean workspace, all production assets and code are contained here. Standard Unity folders or project-wide configurations that must reside directly under Assets (such as Assets/Plugins or Assets/ScriptTemplates) are documented separately in the "Other Project-Level Folders" section.
+Scope: This document defines the structure for project-owned production assets and code under the Assets/Project subtree. Standard Unity folders, project-wide configuration, and approved vendor-owned package subtrees that must remain directly under Assets are documented separately in the "Other Project-Level Folders" section. Unmodified vendor source retained outside Assets/Project remains external to the project-owned Clean Architecture layers even when Unity compiles or executes it.
 
 ---
 
@@ -22,7 +22,7 @@ Scope: The structure defined in this document refers to the Assets/Project subtr
 Art/        → Visual assets (models, materials, textures, shaders)
 Audio/      → Music and sound effects
 Content/    → Runtime gameplay assets and configuration
-Code/       → All C# source code
+Code/       → Project-owned C# source code
 Docs/       → Documentation
 Editor/     → Editor-only tooling
 ```
@@ -36,6 +36,8 @@ These folders live directly under `Assets` and are outside `Assets/Project`:
 `Assets/Scenes` → Unity’s default scenes folder (currently contains `SampleScene`). Prefer placing production scenes in `Assets/Project/Content/Scenes`.
 
 `Assets/Plugins` → Third‑party/native plugins when used.
+
+`Assets/<Vendor>/...` → Approved vendor-owned package subtrees may retain unmodified third-party runtime, sample, or reference source when package structure, licensing, metadata and GUID identity, reference behavior, or updateability requires preservation. Such source is not project-owned production implementation or a Clean Architecture layer merely because Unity compiles it, including into a default Unity assembly. Any intentional production dependency onto vendor runtime APIs or assemblies requires a separate architecture and dependency decision.
 
 `Assets/ScriptTemplates` → Custom C# script templates used to enforce consistent file and class creation patterns.
 ---
@@ -139,13 +141,13 @@ Contains all URP-related configuration.
 
 `Assets/Project/Code`
 
-All C# source code and assembly definitions (`.asmdef`). Each major system is isolated into its own assembly to ensure clean dependency management.
+Project-owned C# source code and assembly definitions (`.asmdef`). Each major project-owned runtime system is isolated into its own assembly to ensure clean dependency management. Project-owned adaptations or replacements of vendor source belong here and follow the normal namespace, architecture, dependency, and testing rules.
 
 ## Runtime
 
 `Assets/Project/Code/Runtime`
 
-Contains gameplay and runtime systems.
+Contains project-owned gameplay and runtime systems.
 
 * **AI** → AI logic and behavior systems
 * **Application** → Use cases and orchestration

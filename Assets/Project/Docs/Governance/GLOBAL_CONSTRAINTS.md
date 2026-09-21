@@ -27,13 +27,20 @@ This repository remains a public reference implementation and Golden Baseline ca
 - Unity version changes, package changes, assembly-topology changes, release operations, and repository-wide configuration changes are never incidental edits.
 - User-global IDE, shell, agent, MCP, or tool configuration must not be silently modified.
 
-## Project Placement and Namespaces
+## Project Placement, Vendor Source, and Namespaces
 
-- Runtime C# belongs under `Assets/Project/Code/Runtime/<Layer>/`.
+- Project-owned runtime C# belongs under `Assets/Project/Code/Runtime/<Layer>/`.
+- Unmodified third-party or vendor source **MAY** remain under an approved vendor-owned subtree of `Assets/` outside `Assets/Project/` when preserving package structure, metadata, samples, reference behavior, licensing structure, or updateability requires it.
+- Retained vendor source outside `Assets/Project/` remains external to project-owned code and is not one of the project's Clean Architecture runtime layers merely because Unity compiles or executes it.
+- Project-owned production runtime code **MUST NOT** use vendor sample or reference source as its production implementation or acquire an accidental dependency on it.
+- An intentional production dependency from project-owned code onto a vendor runtime API or assembly requires a separate explicit integration decision under the applicable architecture and dependency authority.
+- Project-owned adaptations or replacements of vendor source must follow the normal project placement, namespace, architecture, dependency, and testing rules.
+- Vendor source that Unity compiles into a default assembly **MAY** remain intact for authorized sample, reference, or validation purposes. Compilation or runtime issues in retained vendor source must be observed and reported rather than silently repaired as incidental cleanup.
+- Preserve existing vendor package structure, Unity `.meta` files, and GUID identity.
 - EditMode and PlayMode tests belong under `Assets/Project/Code/Tests/EditMode/` or `PlayMode/`.
-- Editor-only C# belongs under `Assets/Project/Editor/`.
+- Editor-only project-owned C# belongs under `Assets/Project/Editor/`.
 - Production content follows the stable layout documented by `Assets/Project/README.md`.
-- C# namespaces must follow the root namespace of the containing assembly. Additional nesting must reflect an intentional code boundary rather than incidental folder depth.
+- Project-owned C# namespaces must follow the root namespace of the containing assembly. Additional nesting must reflect an intentional code boundary rather than incidental folder depth.
 
 ## Architecture Conformance
 

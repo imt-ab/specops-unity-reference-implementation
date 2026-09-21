@@ -14,7 +14,7 @@ $script:TrackedStateInlineTextMaxCombinedBytes = 65536
 $script:SupportedDefinitionIdentities = [ordered]@{
     'specops-core-contract-integrity' = 'c9406453833d46e6813186cfbae5ba249a0c8e7c76af460b292073412cd23dd2'
     'specops-derived-state-consistency' = '4702aae1c11777990afab0073fbe35f07e86611d0837b3748998f8801a9c5612'
-    'unity-clean-architecture-static' = 'aa07fa7eb27c04755372b981fb330646d1f3b9378f422336c24080368d87d64f'
+    'unity-clean-architecture-static' = '5a61d0ec4dae7f2fdc2dceccac22360c8cedcdfcedd3273dfa02a8d7dab380e6'
     'unity-editmode-validation' = 'e1b74181d6229313d9c379d51b095325bdfc924ceea6e98436fd0db3dd233033'
 }
 $script:ProducerPaths = @(

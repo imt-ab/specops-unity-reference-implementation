@@ -46,6 +46,7 @@ namespace InfiniteMonkey.EditModeTests
                 "Assets/Project/Code/Runtime/Composition/InfiniteMonkey.Composition.asmdef",
                 "InfiniteMonkey.Application",
                 "InfiniteMonkey.Domain",
+                "InfiniteMonkey.AI",
                 "InfiniteMonkey.Infrastructure",
                 "InfiniteMonkey.Presentation",
                 "InfiniteMonkey.Utility"),

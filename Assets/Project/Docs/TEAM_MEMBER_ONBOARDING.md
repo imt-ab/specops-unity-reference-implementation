@@ -205,7 +205,7 @@ Assets/Project/
    - VContainer LifetimeScopes and registrations **only**
    - **NO** gameplay logic
    - Wires all concrete implementations to interfaces
-   - Depends on Application + Domain + Infrastructure + Presentation + Utility
+   - Depends on Application + Domain + AI + Infrastructure + Presentation + Utility
    - Assembly: `InfiniteMonkey.Composition`
 
 7. **Utility**
@@ -222,7 +222,7 @@ Application   -> Domain, Utility
 AI            -> Application, Domain, Utility
 Infrastructure -> Application, Domain, Utility
 Presentation  -> Application, Utility
-Composition   -> Application, Domain, Infrastructure, Presentation, Utility
+Composition   -> Application, Domain, AI, Infrastructure, Presentation, Utility
 Utility       -> []
 ```
 
@@ -233,7 +233,7 @@ Utility       -> []
 - **AI:** Depends on Application, Domain, and Utility.
 - **Infrastructure:** Depends on Application, Domain, and Utility.
 - **Presentation:** Depends on Application and Utility (and Unity APIs).
-- **Composition:** Depends on Application, Domain, Infrastructure, Presentation, and Utility (for wiring only).
+- **Composition:** Depends on Application, Domain, AI, Infrastructure, Presentation, and Utility (for wiring only).
 - **Utility:** References no runtime layer; it may be referenced by every runtime layer except Domain.
 
 **Violations of these dependency rules are not permitted.**

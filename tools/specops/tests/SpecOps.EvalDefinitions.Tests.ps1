@@ -288,7 +288,7 @@ try {
         'InfiniteMonkey.AI' = @('InfiniteMonkey.Application', 'InfiniteMonkey.Domain', 'InfiniteMonkey.Utility')
         'InfiniteMonkey.Infrastructure' = @('InfiniteMonkey.Application', 'InfiniteMonkey.Domain', 'InfiniteMonkey.Utility')
         'InfiniteMonkey.Presentation' = @('InfiniteMonkey.Application', 'InfiniteMonkey.Utility')
-        'InfiniteMonkey.Composition' = @('InfiniteMonkey.Application', 'InfiniteMonkey.Domain', 'InfiniteMonkey.Infrastructure', 'InfiniteMonkey.Presentation', 'InfiniteMonkey.Utility')
+        'InfiniteMonkey.Composition' = @('InfiniteMonkey.Application', 'InfiniteMonkey.Domain', 'InfiniteMonkey.AI', 'InfiniteMonkey.Infrastructure', 'InfiniteMonkey.Presentation', 'InfiniteMonkey.Utility')
         'InfiniteMonkey.Utility' = @()
     }
     $graphAssemblyCoverage = Compare-SpecOpsIdCoverage -ExpectedIds @($expectedGraph.Keys) -ActualIds @($actualGraph.PSObject.Properties.Name)

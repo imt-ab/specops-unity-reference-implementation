@@ -4,7 +4,7 @@
   "definitionVersion": "1.0.0",
   "contentIdentity": {
     "algorithm": "specops-json-jcs-sha256-v1",
-    "value": "aa07fa7eb27c04755372b981fb330646d1f3b9378f422336c24080368d87d64f"
+    "value": "5a61d0ec4dae7f2fdc2dceccac22360c8cedcdfcedd3273dfa02a8d7dab380e6"
   },
   "description": "Derived deterministic static definition for the Unity Clean Architecture boundaries declared by ARCHITECTURE.md; it is not structural authority.",
   "targetScope": [
@@ -150,6 +150,7 @@
             "InfiniteMonkey.Composition": [
               "InfiniteMonkey.Application",
               "InfiniteMonkey.Domain",
+              "InfiniteMonkey.AI",
               "InfiniteMonkey.Infrastructure",
               "InfiniteMonkey.Presentation",
               "InfiniteMonkey.Utility"

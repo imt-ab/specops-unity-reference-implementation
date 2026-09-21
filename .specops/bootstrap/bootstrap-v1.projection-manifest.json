@@ -11,7 +11,7 @@
   },
   "sourceIdentity": {
     "profile": "specops-bootstrap-source-jcs-sha256-v1",
-    "digest": "90f8d9a50c159dc08245f94c631953e9c70a9ced8c22fcd73ad5e55fd2d49c56"
+    "digest": "2b239ced73d9f29d5c2cb7dd5dbcaf8f42d5d7561ae1477821e06a5b02a7eb2a"
   },
   "canonicalOrdering": {
     "bootstrapSourceMetadata": "path-ordinal-ascending",
@@ -434,8 +434,8 @@
     {
       "sourcePath": ".specops/evals/unity-clean-architecture-static.eval.json",
       "byteIdentity": {
-        "byteLength": 9360,
-        "sha256": "9d4214eedb4a348f47b8534d65413c363491b5378d61711094df10ba1010d948"
+        "byteLength": 9395,
+        "sha256": "8515643778a42c34820c27426825a7768e21b5b57d9ec9279186ad776cb13e1b"
       },
       "disposition": "TRANSFORM_SCOPED",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -448,7 +448,7 @@
           "selectorClass": "JSON_MEMBER_NAME_OR_STRING_VALUE_TOKEN",
           "selector": "every exact ordinal substring segment InfiniteMonkey inside parsed JSON member-name or string-value tokens, including both member names and string values",
           "expectedSourceValue": "InfiniteMonkey",
-          "expectedMatchCount": 45,
+          "expectedMatchCount": 46,
           "replacement": {
             "kind": "CONTENT_INPUT",
             "name": "CodeNamespaceRoot"
@@ -471,7 +471,7 @@
           "id": "z-recalculate-content-identity",
           "selectorClass": "EVAL_DEFINITION_CONTENT_IDENTITY",
           "selector": "/contentIdentity/value",
-          "expectedSourceValue": "aa07fa7eb27c04755372b981fb330646d1f3b9378f422336c24080368d87d64f",
+          "expectedSourceValue": "5a61d0ec4dae7f2fdc2dceccac22360c8cedcdfcedd3273dfa02a8d7dab380e6",
           "expectedMatchCount": 1,
           "replacement": {
             "kind": "DETERMINISTIC_DERIVATION",
@@ -3021,8 +3021,8 @@
     {
       "sourcePath": "Assets/Project/Code/Tests/EditMode/ArchitectureBoundaryTests.cs",
       "byteIdentity": {
-        "byteLength": 9948,
-        "sha256": "5c82ac92571220f5f894103278c68489a8559929115c4ba020d1f53bd1fbe7e1"
+        "byteLength": 9985,
+        "sha256": "f5a106dcee9052e59d109f397b011e81b22300aebeb37a2dca9bd73afb532e88"
       },
       "disposition": "TRANSFORM_SCOPED",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -3035,7 +3035,7 @@
           "selectorClass": "CSHARP_UTF8_TOKEN",
           "selector": "exact UTF-8 InfiniteMonkey spans in C# identifier tokens and namespace/assembly string segments; comments with spaced source attribution are excluded",
           "expectedSourceValue": "InfiniteMonkey",
-          "expectedMatchCount": 34,
+          "expectedMatchCount": 35,
           "replacement": {
             "kind": "CONTENT_INPUT",
             "name": "CodeNamespaceRoot"
@@ -4062,8 +4062,8 @@
     {
       "sourcePath": "Assets/Project/Docs/AI/GENERATE_ARCHITECTURE_CONTEXT_PROMPT.md",
       "byteIdentity": {
-        "byteLength": 6171,
-        "sha256": "601ba0d4b61962fc56b841770468b9071c0b4338ac2855ed953e084f09b00d7b"
+        "byteLength": 6175,
+        "sha256": "911d10f2cddf39d63d48b05f8cb53c182dc2ce94eebd545e5944bf6974b3d99e"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "LEGACY_MIGRATION_OR_DEVELOPMENT"
@@ -4110,8 +4110,8 @@
     {
       "sourcePath": "Assets/Project/Docs/Architecture/ARCHITECTURE.md",
       "byteIdentity": {
-        "byteLength": 2988,
-        "sha256": "c1de2702bc92c5d40fca450110dc2963524fb469431a208db97f652b549f344f"
+        "byteLength": 2996,
+        "sha256": "5a85fd42b6367c9be888b7ebbfdb204ca86e2f68831668c2f6b14e222a39c129"
       },
       "disposition": "TRANSFORM_SCOPED",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -5022,8 +5022,8 @@
     {
       "sourcePath": "Assets/Project/Docs/TEAM_MEMBER_ONBOARDING.md",
       "byteIdentity": {
-        "byteLength": 24988,
-        "sha256": "b68f131d5e5bac3ef257d378cc8ad8e86bec0252b339c4f7bfc0b3e5574fa768"
+        "byteLength": 25001,
+        "sha256": "28c8c0ef453c2d9b326fb30af34b4ec73d65be4ca8988ecb19543a92a897c85e"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "PUBLIC_REPOSITORY_INSTANCE"
@@ -5040,8 +5040,8 @@
     {
       "sourcePath": "Assets/Project/Docs/UnityCleanArchitecture.md",
       "byteIdentity": {
-        "byteLength": 5589,
-        "sha256": "6a7d6880207978ff98d2367c866a752e4ad47913a377014a0909566abea17932"
+        "byteLength": 5601,
+        "sha256": "6bee0519d19caf2f1eb1d35fe6f983197ed1c3a085d2b8cee42e58a2105008f2"
       },
       "disposition": "TRANSFORM_SCOPED",
       "projectionRole": "REUSABLE_CHILD_CONTENT",
@@ -6208,7 +6208,7 @@
       "sourcePath": "tools/specops/SpecOps.Eval.psm1",
       "byteIdentity": {
         "byteLength": 101582,
-        "sha256": "2d7c836220ec6e7ea09a961471e636abaa95473aa3a2a11328b05ff302f4ee25"
+        "sha256": "b655194ce1000b7fa8bd4948b1e0a084d7bce2d6f2779cad27bf7c42978009d9"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "VCS_HOSTING_SPECIFIC"
@@ -6252,8 +6252,8 @@
     {
       "sourcePath": "tools/specops/tests/SpecOps.Eval.Tests.ps1",
       "byteIdentity": {
-        "byteLength": 56920,
-        "sha256": "21eb44eda1ee3f095a7d5f763635768611b02026212f6b5fbdef058f703b2e8a"
+        "byteLength": 59413,
+        "sha256": "e1ce811f2da6b3c330579a845fb04cc82ae6e78fbf405223e308833182c280d8"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "SOURCE_VALIDATION_TEST"
@@ -6261,8 +6261,8 @@
     {
       "sourcePath": "tools/specops/tests/SpecOps.EvalDefinitions.Tests.ps1",
       "byteIdentity": {
-        "byteLength": 28252,
-        "sha256": "e8a963b19a46966774ea9748e9c51d744188c38dc7391bfacd4f2d1e4d6a6045"
+        "byteLength": 28273,
+        "sha256": "c0b09a56023541eff8e4947c185f7b634113ed20d78cd88d1a8aa88fd2972085"
       },
       "disposition": "EXCLUDE",
       "projectionRole": "SOURCE_VALIDATION_TEST"

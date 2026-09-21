@@ -22,7 +22,7 @@ This document defines responsibilities and allowed dependency directions for pro
   - Depends on Application + Utility; can reference `UnityEngine`.
 - Composition
   - VContainer LifetimeScopes and registrations only; no gameplay logic.
-  - Wires all concrete implementations to interfaces; may depend on Application, Domain, Infrastructure, Presentation, and Utility.
+  - Wires all concrete implementations to interfaces; may depend on Application, Domain, AI, Infrastructure, Presentation, and Utility.
 - Utility
   - Cross-cutting helpers and shared utilities (e.g., logging interfaces).
 
@@ -35,7 +35,7 @@ The arrows and references below express allowed dependency directions. They do n
 - AI: -> Application, Domain, Utility
 - Infrastructure: -> Application, Domain, Utility
 - Presentation: -> Application, Utility (and Unity APIs as needed)
-- Composition: -> Application, Domain, Infrastructure, Presentation, Utility (wiring only)
+- Composition: -> Application, Domain, AI, Infrastructure, Presentation, Utility (wiring only)
 - Utility: depends on no runtime layer; it is a standalone cross-cutting leaf that may be referenced by Application, AI, Infrastructure, Presentation, and Composition, but deliberately not by Domain.
 
 No runtime-layer dependencies other than those listed above are allowed. Violations are not permitted.

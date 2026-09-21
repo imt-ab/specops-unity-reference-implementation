@@ -33,7 +33,7 @@ The repository uses these layers:
 | `AI` | AI-related policies and coordination used by the runtime | Depends on `Application`, `Domain`, and `Utility` |
 | `Infrastructure` | Adapters for files, services, persistence, and external systems | Depends on `Application`, `Domain`, and `Utility` |
 | `Presentation` | Unity-facing UI, input, scene hooks, and interaction flow | Depends on `Application`, `Utility`, and Unity APIs as needed |
-| `Composition` | Dependency wiring and lifetime scope setup | Depends on `Application`, `Domain`, `Infrastructure`, `Presentation`, and `Utility` for wiring only |
+| `Composition` | Dependency wiring and lifetime scope setup | Depends on `Application`, `Domain`, `AI`, `Infrastructure`, `Presentation`, and `Utility` for wiring only |
 | `Utility` | Shared technical helpers and cross-cutting abstractions | References no runtime layer; may be referenced by every runtime layer except `Domain` |
 
 The concrete assemblies in this repository follow the `InfiniteMonkey.*` naming convention.
@@ -46,7 +46,7 @@ The concrete assemblies in this repository follow the `InfiniteMonkey.*` naming 
 - `Presentation` may depend on `Application` and `Utility`, plus Unity APIs as needed.
 - `Presentation` converts Unity events into application calls.
 - `Infrastructure` contains adapters, not business rules.
-- `Composition` may depend on `Application`, `Domain`, `Infrastructure`, `Presentation`, and `Utility`; it wires objects together and should not hold gameplay logic.
+- `Composition` may depend on `Application`, `Domain`, `AI`, `Infrastructure`, `Presentation`, and `Utility`; it wires objects together and should not hold gameplay logic.
 - `Utility` references no runtime layer. It may be referenced by `Application`, `AI`, `Infrastructure`, `Presentation`, and `Composition`, but deliberately not by `Domain`.
 - `Utility` should stay small and should not become a hidden application layer.
 

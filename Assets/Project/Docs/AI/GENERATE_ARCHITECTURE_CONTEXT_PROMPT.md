@@ -137,7 +137,7 @@ Before writing the files:
   AI -> Application, Domain, Utility
   Infrastructure -> Application, Domain, Utility
   Presentation -> Application, Utility
-  Composition -> Application, Domain, Infrastructure, Presentation, Utility
+  Composition -> Application, Domain, AI, Infrastructure, Presentation, Utility
   Utility -> [] and is not referenced by Domain
 - Ensure logging rule references IMonkeyLogger.
 - Ensure the testing summary reflects the current `Testing and Validation` section of `GLOBAL_CONSTRAINTS.md` without turning available frameworks or template conventions into mandatory ceremony.

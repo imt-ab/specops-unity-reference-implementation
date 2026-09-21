@@ -122,6 +122,7 @@ try{
  Test-Case 'all E8C3 check IDs are owned'{ $expected=@('contracts-json-parse','contracts-id-unique','contracts-version-consistent','contracts-draft-declared','contracts-references-resolve','contracts-schema-valid','authority-routes-resolve','feature-authority-triplets','feature-state-schema-valid','feature-id-directory-match','acceptance-id-exact-match','state-reference-resolution','state-lifecycle-consistency','runtime-asmdef-set','runtime-assembly-names','engine-independence-flags','runtime-project-reference-graph','domain-application-source-boundary','generated-artifacts-untracked');$actual=@($results.Values|ForEach-Object{@($_.checkResults)}|Where-Object{$_.executed}|ForEach-Object{$_.id});Assert-Set $expected $actual 'E8C3 owner set.' }
  Test-Case 'non-Unity definitions PASS'{foreach($id in $definitionIds[0..2]){Assert-Equal PASS $results[$id].overallResult "$id result."}}
  Test-Case 'ignored local cache does not affect subject checks'{Assert-Equal PASS $results['unity-clean-architecture-static'].overallResult 'Ignored cache affected tracked subject.'}
+ Test-Case 'unused Composition to AI reference remains optional'{$composition=Get-Content -Raw (Join-Path $clean 'Assets/Project/Code/Runtime/Composition/InfiniteMonkey.Composition.asmdef')|ConvertFrom-Json -Depth 100;Assert-True (-not(@($composition.references)-ccontains'InfiniteMonkey.AI')) 'Canonical fixture unexpectedly requires Composition to reference AI.';Assert-Equal PASS (@($results['unity-clean-architecture-static'].checkResults|Where-Object id -eq 'runtime-project-reference-graph')[0].result) 'Omitted optional edge was rejected.'}
  Test-Case 'seven Unity checks are NOT_EXECUTED'{$unity=$results['unity-editmode-validation'];Assert-Equal 7 @($unity.checkResults).Count 'Unity coverage.';foreach($c in $unity.checkResults){Assert-Equal False $c.executed 'Unity executed.';Assert-Equal NOT_EXECUTED $c.result 'Unity result.';Assert-Equal UNITY_ADAPTER_NOT_INSTALLED $c.notExecutedReason 'Unity reason.';Assert-Equal 0 @($c.observations).Count 'Unity observations.'}}
  Test-Case 'Unity aggregate INCONCLUSIVE'{Assert-Equal INCONCLUSIVE $results['unity-editmode-validation'].overallResult 'Unity aggregate.'}
  $unityDefinition=Get-Content -Raw (Join-Path $clean '.specops/evals/unity-editmode-validation.eval.json')|ConvertFrom-Json -Depth 100
@@ -217,6 +218,26 @@ try{
  Test-Case 'CSharp boundary defect detected'{Assert-Equal FAIL (@($architectureResult.checkResults|Where-Object id -eq 'domain-application-source-boundary')[0].result) 'Source check.'}
  Test-Case 'tracked generated artifact detected'{Assert-Equal FAIL (@($architectureResult.checkResults|Where-Object id -eq 'generated-artifacts-untracked')[0].result) 'Generated check.'}
  Test-Case 'truthful FAIL CLI exits 3'{$cli=Invoke-Cli $architectureVariant @('eval','-DefinitionId','unity-clean-architecture-static');Assert-Equal 3 $cli.ExitCode 'FAIL exit.';Assert-Equal FAIL (($cli.Stdout|ConvertFrom-Json).overallResult) 'FAIL stdout.'}
+
+ $compositionAiVariant=Join-Path $tempBase 'composition-ai-positive';New-VariantFixture $clean $compositionAiVariant
+ Set-JsonFile (Join-Path $compositionAiVariant 'Assets/Project/Code/Runtime/Composition/InfiniteMonkey.Composition.asmdef') {param($d)$d.references=@($d.references)+@('InfiniteMonkey.AI')};Commit-Repo $compositionAiVariant 'Composition to AI positive regression'
+ $compositionAiResult=Invoke-FixtureEval $compositionAiVariant 'unity-clean-architecture-static'
+ Test-Case 'Composition to AI is accepted by the real graph evaluator'{Assert-Equal PASS (@($compositionAiResult.checkResults|Where-Object id -eq 'runtime-project-reference-graph')[0].result) 'Composition -> AI graph check.';Assert-Equal PASS $compositionAiResult.overallResult 'Composition -> AI static evaluation.'}
+
+ $prohibitedAiEdges=@(
+  @('application-ai-negative','Application','InfiniteMonkey.Application','InfiniteMonkey.AI'),
+  @('presentation-ai-negative','Presentation','InfiniteMonkey.Presentation','InfiniteMonkey.AI'),
+  @('ai-composition-negative','AI','InfiniteMonkey.AI','InfiniteMonkey.Composition')
+ )
+ foreach($edge in $prohibitedAiEdges){
+  $variant=Join-Path $tempBase $edge[0];New-VariantFixture $clean $variant
+  $asmdefPath=Join-Path $variant "Assets/Project/Code/Runtime/$($edge[1])/$($edge[2]).asmdef"
+  $target=$edge[3]
+  Set-JsonFile $asmdefPath {param($d)$d.references=@($d.references)+@($target)};Commit-Repo $variant "$($edge[2]) to $target negative regression"
+  $result=Invoke-FixtureEval $variant 'unity-clean-architecture-static'
+  $expectedEdge="$($edge[2])->$target"
+  Test-Case "$expectedEdge remains rejected by the real graph evaluator"{$check=@($result.checkResults|Where-Object id -eq 'runtime-project-reference-graph')[0];Assert-Equal FAIL $check.result "$expectedEdge graph check.";Assert-True ((@($check.observations)-join"`n").Contains($expectedEdge,[StringComparison]::Ordinal)) "$expectedEdge was not reported."}
+ }
 
  $unresolvedProjectVariant=Join-Path $tempBase 'unresolved-project-variant';New-VariantFixture $clean $unresolvedProjectVariant
  Write-Utf8 (Join-Path $unresolvedProjectVariant 'Assets/Project/Code/Tests/Broken.Project.asmdef') '{not-json'

@@ -37,6 +37,22 @@ Work must be divided into explicit, reviewable slices. Each slice identifies its
 
 Changes must be minimal relative to the authorized outcome. Permission for one change does not authorize cleanup, broad refactoring, dependency changes, settings changes, publication, or adjacent migration work.
 
+## Proportionality and Evidence Efficiency
+
+SpecOps work must use the smallest amount of work and evidence that can reliably support the current decision or gate.
+
+- Perform a check only when required by authority or when its result can materially affect a decision, risk classification, required Human Authority, implementation safety, acceptance or validation verdict, or release/publication safety. Stop gathering evidence once the current gate is sufficiently supported.
+- Reuse still-valid evidence. A new phase, message, executor, approval, or status transition does not by itself invalidate prior evidence.
+- When relevant source, authority, or execution state changes, reconcile delta-first: inspect the exact change, determine which conclusions it can affect, and re-check only those conclusions.
+- Logical lifecycle separation does not require separate conversations, executor runs, or approval messages. Multiple explicitly bounded actions may be authorized together when authority allows, but permission for one action must never be inferred as permission for another.
+- Tool or native-environment inspection must be classified by its actual side effects and repository or external-system consequences, not only by an intention to read or inspect.
+- Derived-state synchronization must remain subordinate to substantive work and must not become an artificial repeated gate.
+- Review at meaningful decision boundaries. After a bounded correction, re-review the affected delta and necessary follow-on effects rather than unchanged evidence, except where authority explicitly requires broader review.
+
+These rules do not lower risk classification or bypass required Human Authority, protected-area controls, validation, review, permission, or release/publication requirements.
+
+Detailed operational application is documented in [`PROPORTIONALITY_AND_EVIDENCE_EFFICIENCY.md`](PROPORTIONALITY_AND_EVIDENCE_EFFICIENCY.md). That guide is subordinate guidance and cannot override current authority.
+
 ## Logical Responsibilities
 
 SpecOps separates logical responsibilities such as:

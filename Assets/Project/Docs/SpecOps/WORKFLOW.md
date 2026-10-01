@@ -41,6 +41,20 @@ Check authority alignment, cross-feature effects, architectural drift, protected
 
 Findings should be canonical, scoped, and evidence-linked. Resolve bounded mechanical issues without unrelated rewrites. Present consequential choices to Human Authority rather than selecting them silently.
 
+### Human Authority Request Presentation
+
+When explicit Human Authority is requested for a bounded consequential action, present the requested approval in a reviewable structure when practical. Separate:
+
+- approval or work-item identifier;
+- preconditions and baseline evidence;
+- authorized actions and targets;
+- explicitly unauthorized actions;
+- stop conditions.
+
+Exact SHAs, hashes, paths, versions, branches, and other scope-defining evidence **SHOULD** be presented as separate list items where practical.
+
+This is derived process guidance only. Formatting does not grant authority, change authority semantics, or widen scope. Human approval remains bounded by the explicitly stated actions, targets, conditions, and exclusions.
+
 ## 4. Plan a Bounded Slice
 
 A slice identifies:

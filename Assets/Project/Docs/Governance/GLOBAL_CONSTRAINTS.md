@@ -40,7 +40,8 @@ This repository remains a public reference implementation and Golden Baseline ca
 - EditMode and PlayMode tests belong under `Assets/Project/Code/Tests/EditMode/` or `PlayMode/`.
 - Editor-only project-owned C# belongs under `Assets/Project/Editor/`.
 - Production content follows the stable layout documented by `Assets/Project/README.md`.
-- Project-owned C# namespaces must follow the root namespace of the containing assembly. Additional nesting must reflect an intentional code boundary rather than incidental folder depth.
+- Project-owned production C# namespaces must follow the root namespace of the containing assembly. Additional nesting must reflect an intentional code boundary rather than incidental folder depth.
+- Dedicated project-owned EditMode and PlayMode test assemblies **MAY** use concise responsibility-oriented namespaces such as `Camera`, `Selection`, `UI`, `Architecture`, or `Integration` without repeating assembly, project, or test-mode identity. Test namespace nesting must remain intentional and must not merely mirror incidental filesystem depth.
 
 ## Architecture Conformance
 

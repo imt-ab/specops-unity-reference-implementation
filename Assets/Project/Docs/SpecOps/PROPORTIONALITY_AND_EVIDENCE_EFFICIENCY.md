@@ -14,6 +14,8 @@ Normative proportionality and evidence-efficiency rules belong in the governing 
 
 Use the smallest amount of work that can reliably answer the current decision question.
 
+Start from an observable user/product outcome. Distinguish binding invariants, quality goals, implementation candidates and diagnostic measurements; a measured value or inherited fixture parameter does not establish a product requirement.
+
 A check is justified when its result can materially change:
 
 - the decision;
@@ -57,6 +59,8 @@ Examples:
 
 Static analysis remains useful, but should not replace a low-cost native test when the engine or tool owns important import semantics.
 
+Seek early representative native/runtime gameplay evidence where safe, useful and authorized; do not require another exploratory phase when existing evidence already answers the decision.
+
 ## 2. Separate Diagnostics from Verified Defects
 
 Use explicit evidence states:
@@ -70,6 +74,8 @@ Use explicit evidence states:
 
 A static GUID or reference-closure warning is diagnostic evidence. It is not automatically proof of a broken Unity binding.
 
+Separate the runtime response, test verdict, safe diagnostic continuation and formal acceptance decision. Determine whether a failed check affects only its criterion, dependent evidence or the whole operation. Preserve historical FAIL/INCONCLUSIVE results and binding acceptance requirements even when independent diagnostics continue.
+
 ## 3. Every Check Must Have a Decision Question
 
 Before performing a new check, state internally:
@@ -77,6 +83,8 @@ Before performing a new check, state internally:
 > What decision could change if this result is different?
 
 If there is no concrete answer, skip the check.
+
+For proposed hard thresholds and runtime guards, identify the protected outcome, failure consequence and practical effect of stopping. Prioritize genuine product defects and risk over arbitrary numerical precision; an invisible defect can still be serious.
 
 Good examples:
 
@@ -102,12 +110,12 @@ Typical goal: identify only what is needed to decide the next safe action, such 
 - whether a native isolated test is possible;
 - what Human Authority would be required for real mutation.
 
-If two similar stop conditions occur in succession, reassess the method instead of automatically adding another audit layer.
+If similar stop conditions recur, reassess the workflow, requirement or mechanism instead of automatically adding another pilot, guard, audit or approval stage.
 
 Ask whether the real problem is:
 
 - the implementation mechanism;
-- the validation criterion;
+- the validation criterion or an unsupported requirement;
 - an incomplete permission boundary;
 - a tool limitation;
 - an actual vendor defect.
@@ -166,6 +174,8 @@ Keep separate authorization for consequential boundaries such as:
 - commit/push/merge/release/publication.
 
 Do not create additional approval gates for normal sub-steps already covered by an explicit bounded authorization unless new evidence changes risk, scope, permission, acceptance, or safety.
+
+Before scheduling corrections to changed intent, map affected requirements, runtime behavior, tests and reporting together. Obtain the necessary scope and reconcile those consequences coherently. When expressly authorized, prefer one bounded execution covering predictable implementation, fixes and targeted validation instead of serial partial edits and repeated AI runs.
 
 ## 7. Reuse Evidence Aggressively but Safely
 
@@ -386,6 +396,8 @@ Continue only if another check can materially affect:
 
 "More confidence" by itself is not enough when the next check is expensive and cannot change the decision.
 
+Scope an operational stop to the affected activity and invalid evidence dependencies. Continuing diagnostics does not grant acceptance PASS or permission to bypass a runtime guard. Existing mandatory stops remain binding until amended by applicable Human Authority.
+
 ## 14. Vendor Import Default Pattern
 
 For future vendor `.unitypackage` work, use this default unless authority or evidence requires otherwise:
@@ -438,6 +450,6 @@ Before starting a substantial SpecOps-governed task, ask:
 - Can the continuation prompt describe only the delta instead of reconstructing all prior context?
 - Is the next review tied to a real decision, or merely to a status transition?
 - Can a derived-state update be folded into the next meaningful authorized slice?
-- After two stops, should we reassess the method rather than add another audit?
+- After similar blockers recur, should we reassess the workflow, requirement or mechanism rather than add another pilot, guard or approval stage?
 - Can the next check materially change the decision?
 - If not, stop gathering evidence.

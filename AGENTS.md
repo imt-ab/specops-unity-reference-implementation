@@ -22,6 +22,12 @@ ADRs record decision history and rationale. They do not replace current architec
 - Treat tool capability, MCP availability, and executor access as capability only, never as authorization.
 - Protect `Packages/*` and `ProjectSettings/*`; modify them only under separate explicit authorization.
 - Preserve Unity `.meta` files and matching asset metadata. Do not mutate generated Unity directories.
+- Identify the intended observable outcome and binding requirements before choosing mechanisms.
+- Challenge unsupported hard thresholds and unnecessary automatic stops before introducing them; changing binding requirements still needs applicable authority.
+- Separate runtime faults, diagnostic findings, test verdicts and acceptance decisions.
+- Propagate Human-approved design changes coherently across affected requirements, implementation, tests and reporting within authorized scope.
+- Use proportionate validation, reuse valid evidence and preserve actionable findings and historical failures.
+- Stop the affected activity at its applicable permission, safety, authority or evidence boundary; preserve explicit mandatory stops.
 
 ## Repository Instance
 

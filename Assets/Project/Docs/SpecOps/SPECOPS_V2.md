@@ -23,9 +23,13 @@ A verdict must follow evidence. Evidence must identify its source, scope, and li
 
 Validation claims must state what was actually inspected or executed. Tool availability, prior results, documentation intent, and a plausible implementation do not by themselves prove current conformance or success.
 
+Runtime response, technical test verdict, permission for further bounded development or diagnostics, and feature acceptance/publication/release eligibility are distinct decisions. A failed required criterion blocks the corresponding acceptance PASS; it does not automatically invalidate independent diagnostic observations or require stopping unrelated authorized work. Assess affected evidence dependencies and safety before continuation. Continuation must not conceal a defect, override applicable authority or manufacture passing evidence.
+
 ## Specification Before Implementation
 
 Consequential implementation begins from explicit intent and applicable authority. Feature work requires stable specification, constraints, and acceptance criteria before its implementation slice is authorized.
+
+Engineering requirements must serve identifiable product intent, operational correctness, safety, compatibility or maintainability outcomes. Experimental measurements, diagnostic thresholds, implementation preferences and inherited fixture parameters must not become mandatory product behavior without justification and applicable authority. Each new hard threshold or automatic runtime guard must identify its purpose, failure consequence and proportionate response. Invisible defects may still be severe; user-visible impact is not the only measure of risk.
 
 Acceptance criteria must be identifiable, deterministic enough to validate, and stable for the duration of an implementation slice. A material change to an acceptance criterion invalidates the affected plan and permission; work returns to specification and review.
 
@@ -36,6 +40,8 @@ Ambiguity, missing authority, or conflict between feature intent and higher-scop
 Work must be divided into explicit, reviewable slices. Each slice identifies its intended outcome, affected scope, validation, and stop boundary.
 
 Changes must be minimal relative to the authorized outcome. Permission for one change does not authorize cleanup, broad refactoring, dependency changes, settings changes, publication, or adjacent migration work.
+
+When Human-approved intent changes, reconcile its affected requirements, runtime behavior, validation and reporting consequences together through delta-based reconciliation and the required bounded authorization. Avoid serial partial corrections that knowingly leave implementation or tests enforcing a superseded decision. This rule does not authorize mutations outside the approved scope.
 
 ## Proportionality and Evidence Efficiency
 
@@ -135,6 +141,8 @@ Stop before mutation or further consequential action when:
 - a derived artifact conflicts with current authority.
 
 A stop must report the blocking evidence and must not silently repair, widen scope, or substitute inference for authority.
+
+Apply stopping to the narrowest affected activity consistent with actual safety, applicable authority, permission and evidentiary correctness. Unsafe operations, invalid evidence dependencies and consequential actions without permission must still stop. Do not narrow an explicit existing mandatory stop without applicable Human Authority.
 
 ## VCS Neutrality
 

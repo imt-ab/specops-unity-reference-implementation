@@ -27,6 +27,12 @@ ADRs record decision history and rationale. They do not replace current architec
 - Separate runtime faults, diagnostic findings, test verdicts and acceptance decisions.
 - Propagate Human-approved design changes coherently across affected requirements, implementation, tests and reporting within authorized scope.
 - Use proportionate validation, reuse valid evidence and preserve actionable findings and historical failures.
+- Validation is change-based by default, not an automatic full-feature or project-wide regression.
+- Identify the exact change, affected contracts, risks and dependent tests before selecting validation.
+- Reuse trustworthy existing PASS evidence for unaffected behavior. Run directly affected tests and only the immediate regressions justified by the impact analysis.
+- Expand validation only when changed authority, risk, dependencies, conflicting evidence or mandatory acceptance criteria require it. Record the reason for broader coverage.
+- Preserve historical FAIL/INCONCLUSIVE evidence and all mandatory safety, Human Authority and acceptance gates.
+- Do not repeat a test suite merely because a new phase, model, executor or conversation has started.
 - Stop the affected activity at its applicable permission, safety, authority or evidence boundary; preserve explicit mandatory stops.
 
 ## Repository Instance
